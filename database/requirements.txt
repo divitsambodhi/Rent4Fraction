@@ -1,0 +1,7 @@
+# Event Equipment Rental Platform — database tooling dependencies
+# Install with:  pip install -r requirements.txt
+# Or with uv:    uv pip install -r requirements.txt
+
+PyMySQL==1.1.1
+python-dotenv==1.0.1
+cryptography>=41.0.0
