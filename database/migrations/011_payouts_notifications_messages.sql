@@ -1,4 +1,4 @@
-﻿-- =============================================================================
+-- =============================================================================
 -- Migration 011 — payouts, notifications, messages
 -- =============================================================================
 
@@ -14,6 +14,8 @@ CREATE TABLE IF NOT EXISTS payouts (
     created_at        DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at        DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     PRIMARY KEY (payout_id),
+    CONSTRAINT chk_payouts_amounts
+        CHECK (gross_amount >= 0.00 AND commission_amount >= 0.00 AND net_amount = gross_amount - commission_amount),
     UNIQUE KEY uq_payouts_vendor_order_id (vendor_order_id),
     INDEX idx_payouts_vendor_id (vendor_id),
     INDEX idx_payouts_status    (status),
@@ -32,8 +34,9 @@ CREATE TABLE IF NOT EXISTS notifications (
     is_read         TINYINT(1)      NOT NULL DEFAULT 0,
     created_at      DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP,
     PRIMARY KEY (notification_id),
-    INDEX idx_notifications_user_id (user_id),
-    INDEX idx_notifications_is_read (is_read),
+    INDEX idx_notifications_user_id     (user_id),
+    INDEX idx_notifications_is_read     (is_read),
+    INDEX idx_notifications_user_unread (user_id, is_read, created_at),
     CONSTRAINT fk_notifications_user_id
         FOREIGN KEY (user_id) REFERENCES users (user_id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
@@ -47,9 +50,11 @@ CREATE TABLE IF NOT EXISTS messages (
     is_read      TINYINT(1)      NOT NULL DEFAULT 0,
     created_at   DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP,
     PRIMARY KEY (message_id),
-    INDEX idx_messages_sender_id    (sender_id),
-    INDEX idx_messages_receiver_id  (receiver_id),
-    INDEX idx_messages_equipment_id (equipment_id),
+    INDEX idx_messages_sender_id          (sender_id),
+    INDEX idx_messages_receiver_id        (receiver_id),
+    INDEX idx_messages_equipment_id       (equipment_id),
+    INDEX idx_messages_sender_receiver    (sender_id, receiver_id, created_at),
+    INDEX idx_messages_receiver_sender    (receiver_id, sender_id, created_at),
     CONSTRAINT fk_messages_sender_id
         FOREIGN KEY (sender_id)    REFERENCES users     (user_id)      ON DELETE RESTRICT,
     CONSTRAINT fk_messages_receiver_id

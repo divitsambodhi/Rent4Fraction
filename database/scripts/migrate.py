@@ -1,4 +1,4 @@
-﻿#!/usr/bin/env python3
+#!/usr/bin/env python3
 """
 migrate.py — Database migration runner for Event Equipment Rental Platform.
 
@@ -51,6 +51,7 @@ def _base_cfg() -> dict:
         charset         = "utf8mb4",
         connect_timeout = 5,
         autocommit      = False,
+        init_command    = "SET time_zone = '+00:00'",
     )
 
 
@@ -78,13 +79,16 @@ def get_root_connection(database: str | None = None) -> pymysql.Connection:
 # ---------------------------------------------------------------------------
 # MySQL readiness wait
 # ---------------------------------------------------------------------------
-def wait_for_mysql(max_retries: int = 30, delay: float = 2.0) -> None:
+def wait_for_mysql(database: str | None = None, max_retries: int = 30, delay: float = 2.0) -> None:
     host = os.getenv("MYSQL_HOST", "localhost")
     port = os.getenv("MYSQL_PORT", "3306")
     print(f"Waiting for MySQL at {host}:{port} ...")
     for attempt in range(1, max_retries + 1):
         try:
-            conn = get_connection()
+            if database:
+                conn = get_connection()
+            else:
+                conn = get_root_connection()
             conn.close()
             print("MySQL is ready.")
             return
@@ -170,7 +174,8 @@ def apply_migration(conn: pymysql.Connection, filepath: Path) -> None:
 # Commands
 # ---------------------------------------------------------------------------
 def cmd_up() -> None:
-    wait_for_mysql()
+    db = os.getenv("MYSQL_DATABASE", "event_rental")
+    wait_for_mysql(database=db)
     conn = get_connection()
     ensure_tracking(conn)
     applied = applied_set(conn)
@@ -200,7 +205,8 @@ def cmd_up() -> None:
 
 
 def cmd_status() -> None:
-    wait_for_mysql()
+    db = os.getenv("MYSQL_DATABASE", "event_rental")
+    wait_for_mysql(database=db)
     conn = get_connection()
     ensure_tracking(conn)
     applied = applied_set(conn)
@@ -219,6 +225,7 @@ def cmd_reset(yes: bool = False) -> None:
     host = os.getenv("MYSQL_HOST", "localhost")
     db   = os.getenv("MYSQL_DATABASE", "event_rental")
     user = os.getenv("MYSQL_USER",     "rental_user")
+    user_pass = os.getenv("MYSQL_PASSWORD", "rental_pass")
 
     if host not in ("localhost", "127.0.0.1"):
         print(
@@ -245,7 +252,10 @@ def cmd_reset(yes: bool = False) -> None:
             f"CREATE DATABASE `{db}` "
             f"CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci"
         )
+        cur.execute(f"CREATE USER IF NOT EXISTS '{user}'@'%' IDENTIFIED BY '{user_pass}'")
         cur.execute(f"GRANT ALL PRIVILEGES ON `{db}`.* TO '{user}'@'%'")
+        cur.execute(f"CREATE USER IF NOT EXISTS '{user}'@'localhost' IDENTIFIED BY '{user_pass}'")
+        cur.execute(f"GRANT ALL PRIVILEGES ON `{db}`.* TO '{user}'@'localhost'")
         cur.execute("FLUSH PRIVILEGES")
     root_conn.commit()
     root_conn.close()

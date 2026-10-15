@@ -1,4 +1,4 @@
-﻿-- =============================================================================
+-- =============================================================================
 -- Migration 001 — users, vendors
 -- =============================================================================
 
@@ -37,6 +37,8 @@ CREATE TABLE IF NOT EXISTS vendors (
     created_at      DATETIME         NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at      DATETIME         NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     PRIMARY KEY (vendor_id),
+    CONSTRAINT chk_vendors_commission_rate
+        CHECK (commission_rate >= 0.00 AND commission_rate <= 100.00),
     UNIQUE KEY uq_vendors_user_id (user_id),
     INDEX idx_vendors_approval_status (approval_status),
     CONSTRAINT fk_vendors_user_id

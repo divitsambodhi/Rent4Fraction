@@ -1,4 +1,4 @@
-﻿-- =============================================================================
+-- =============================================================================
 -- Migration 005 — coupons
 -- =============================================================================
 
@@ -14,5 +14,13 @@ CREATE TABLE IF NOT EXISTS coupons (
     used_count       INT UNSIGNED    NOT NULL DEFAULT 0,
     is_active        TINYINT(1)      NOT NULL DEFAULT 1,
     PRIMARY KEY (coupon_id),
+    CONSTRAINT chk_coupons_dates
+        CHECK (valid_to >= valid_from),
+    CONSTRAINT chk_coupons_value
+        CHECK (value > 0.00),
+    CONSTRAINT chk_coupons_min_order_amount
+        CHECK (min_order_amount >= 0.00),
+    CONSTRAINT chk_coupons_percent_limit
+        CHECK (type != 'percent' OR value <= 100.00),
     UNIQUE KEY uq_coupons_code (code)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;

@@ -1,4 +1,4 @@
-﻿erDiagram
+erDiagram
     users {
         BIGINT_UNSIGNED user_id PK
         VARCHAR128 firebase_uid UK
@@ -182,7 +182,7 @@
         BIGINT_UNSIGNED return_id FK
         BIGINT_UNSIGNED booking_item_id FK
         INT quantity_returned
-        ENUM condition
+        ENUM item_condition
     }
     damage_reports {
         BIGINT_UNSIGNED report_id PK

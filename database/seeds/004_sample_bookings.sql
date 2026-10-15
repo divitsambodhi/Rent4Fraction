@@ -1,4 +1,4 @@
-﻿-- =============================================================================
+-- =============================================================================
 -- Seed 004 — 3 sample bookings
 --
 --  Booking 1 (multi-vendor, confirmed):
@@ -159,7 +159,7 @@ WHERE NOT EXISTS (SELECT 1 FROM returns WHERE vendor_order_id = @vo2_id);
 SET @return2_id = (SELECT return_id FROM returns WHERE vendor_order_id = @vo2_id);
 
 -- Return item
-INSERT INTO return_items (return_id, booking_item_id, quantity_returned, condition)
+INSERT INTO return_items (return_id, booking_item_id, quantity_returned, item_condition)
 SELECT @return2_id, @bi2_id, 1, 'minor_damage'
 WHERE NOT EXISTS (SELECT 1 FROM return_items WHERE return_id = @return2_id AND booking_item_id = @bi2_id);
 
@@ -229,3 +229,78 @@ WHERE NOT EXISTS (SELECT 1 FROM payments WHERE booking_id = @booking3_id AND tra
 
 -- Update coupon used_count
 UPDATE coupons SET used_count = 1 WHERE code = 'WELCOME100' AND used_count = 0;
+
+-- ============================================================
+-- Availability Blocks (Maintenance)
+-- ============================================================
+INSERT INTO availability (equipment_id, start_date, end_date, quantity_blocked, reason, status)
+SELECT @eq_speaker_id, '2026-05-01', '2026-05-03', 1, 'maintenance', 'active'
+WHERE NOT EXISTS (
+    SELECT 1 FROM availability
+    WHERE equipment_id = @eq_speaker_id AND start_date = '2026-05-01' AND end_date = '2026-05-03'
+);
+
+-- ============================================================
+-- Payouts (for completed Booking 2 vendor order)
+-- Gross: 2400.00, Commission (10%): 240.00, Net: 2160.00
+-- ============================================================
+INSERT INTO payouts (vendor_id, vendor_order_id, gross_amount, commission_amount, net_amount, status, paid_at)
+SELECT @vendor1_id, @vo2_id, 2400.00, 240.00, 2160.00, 'paid', '2025-08-25 15:00:00'
+WHERE NOT EXISTS (SELECT 1 FROM payouts WHERE vendor_order_id = @vo2_id);
+
+-- ============================================================
+-- Cart Items
+-- ============================================================
+INSERT INTO cart_items (user_id, equipment_id, quantity, start_date, end_date)
+SELECT @cust1_id, @eq_mic_id, 1, '2026-07-10', '2026-07-12'
+WHERE NOT EXISTS (
+    SELECT 1 FROM cart_items
+    WHERE user_id = @cust1_id AND equipment_id = @eq_mic_id
+      AND start_date = '2026-07-10' AND end_date = '2026-07-12'
+);
+
+-- ============================================================
+-- Wishlist
+-- ============================================================
+INSERT INTO wishlist (user_id, equipment_id)
+SELECT @cust1_id, @eq_fairy_id
+WHERE NOT EXISTS (SELECT 1 FROM wishlist WHERE user_id = @cust1_id AND equipment_id = @eq_fairy_id);
+
+INSERT INTO wishlist (user_id, equipment_id)
+SELECT @cust2_id, @eq_speaker_id
+WHERE NOT EXISTS (SELECT 1 FROM wishlist WHERE user_id = @cust2_id AND equipment_id = @eq_speaker_id);
+
+-- ============================================================
+-- Notifications
+-- ============================================================
+SET @v1_user_id = (SELECT user_id FROM users WHERE firebase_uid = 'dev-vendor-1-uid-replace-me');
+
+INSERT INTO notifications (user_id, type, title, message, is_read)
+SELECT @cust1_id, 'booking_confirmed', 'Booking Confirmed!', 'Your booking for Grand Wedding Reception has been confirmed.', 0
+WHERE NOT EXISTS (SELECT 1 FROM notifications WHERE user_id = @cust1_id AND title = 'Booking Confirmed!');
+
+INSERT INTO notifications (user_id, type, title, message, is_read)
+SELECT @v1_user_id, 'order_received', 'New Order Received', 'You have an incoming order for Grand Wedding Reception.', 1
+WHERE NOT EXISTS (SELECT 1 FROM notifications WHERE user_id = @v1_user_id AND title = 'New Order Received');
+
+INSERT INTO notifications (user_id, type, title, message, is_read)
+SELECT @cust2_id, 'return_processed', 'Return Inspected', 'Your equipment return for Corporate Annual Meet has been completed.', 0
+WHERE NOT EXISTS (SELECT 1 FROM notifications WHERE user_id = @cust2_id AND title = 'Return Inspected');
+
+-- ============================================================
+-- Messages (Direct message thread between Customer 1 and Vendor 1)
+-- ============================================================
+INSERT INTO messages (sender_id, receiver_id, equipment_id, body, is_read, created_at)
+SELECT @cust1_id, @v1_user_id, @eq_speaker_id, 'Hi Suresh, can we arrange venue delivery for 8:00 AM on Dec 20?', 1, '2025-12-14 11:00:00'
+WHERE NOT EXISTS (
+    SELECT 1 FROM messages
+    WHERE sender_id = @cust1_id AND receiver_id = @v1_user_id AND equipment_id = @eq_speaker_id
+);
+
+INSERT INTO messages (sender_id, receiver_id, equipment_id, body, is_read, created_at)
+SELECT @v1_user_id, @cust1_id, @eq_speaker_id, 'Hello Aisha, yes! 8:00 AM delivery to Taj Lands End is scheduled.', 0, '2025-12-14 11:20:00'
+WHERE NOT EXISTS (
+    SELECT 1 FROM messages
+    WHERE sender_id = @v1_user_id AND receiver_id = @cust1_id AND equipment_id = @eq_speaker_id
+);
+

@@ -1,4 +1,4 @@
-﻿-- =============================================================================
+-- =============================================================================
 -- Seed 002 — Category tree
 -- Idempotent: ON DUPLICATE KEY UPDATE on UNIQUE(parent_id, name).
 -- Top-level categories have parent_id = NULL.
@@ -6,15 +6,20 @@
 
 -- ── Top-level categories ─────────────────────────────────────────────────────
 INSERT INTO categories (name, description, parent_id, is_active)
-VALUES
-    ('Sound',        'Audio and sound equipment for events',                NULL, 1),
-    ('Lighting',     'Lighting rigs, spots and decorative lights',          NULL, 1),
-    ('Furniture',    'Tables, chairs and seating for events',               NULL, 1),
-    ('Tents & Decor','Tent structures and decorative elements',             NULL, 1)
-AS new_data
-ON DUPLICATE KEY UPDATE
-    description = new_data.description,
-    is_active   = new_data.is_active;
+SELECT 'Sound', 'Audio and sound equipment for events', NULL, 1
+WHERE NOT EXISTS (SELECT 1 FROM categories WHERE name = 'Sound' AND parent_id IS NULL);
+
+INSERT INTO categories (name, description, parent_id, is_active)
+SELECT 'Lighting', 'Lighting rigs, spots and decorative lights', NULL, 1
+WHERE NOT EXISTS (SELECT 1 FROM categories WHERE name = 'Lighting' AND parent_id IS NULL);
+
+INSERT INTO categories (name, description, parent_id, is_active)
+SELECT 'Furniture', 'Tables, chairs and seating for events', NULL, 1
+WHERE NOT EXISTS (SELECT 1 FROM categories WHERE name = 'Furniture' AND parent_id IS NULL);
+
+INSERT INTO categories (name, description, parent_id, is_active)
+SELECT 'Tents & Decor', 'Tent structures and decorative elements', NULL, 1
+WHERE NOT EXISTS (SELECT 1 FROM categories WHERE name = 'Tents & Decor' AND parent_id IS NULL);
 
 -- ── Sub-categories — Sound ───────────────────────────────────────────────────
 INSERT INTO categories (name, description, parent_id, is_active)

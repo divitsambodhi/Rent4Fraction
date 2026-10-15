@@ -1,4 +1,4 @@
-﻿-- =============================================================================
+-- =============================================================================
 -- Migration 008 — deliveries, returns, return_items, damage_reports
 -- =============================================================================
 
@@ -39,8 +39,10 @@ CREATE TABLE IF NOT EXISTS return_items (
     return_id         BIGINT UNSIGNED NOT NULL,
     booking_item_id   BIGINT UNSIGNED NOT NULL,
     quantity_returned INT             NOT NULL,
-    condition         ENUM('good','minor_damage','major_damage','lost') NOT NULL DEFAULT 'good',
+    item_condition    ENUM('good','minor_damage','major_damage','lost') NOT NULL DEFAULT 'good',
     PRIMARY KEY (return_item_id),
+    CONSTRAINT chk_return_items_quantity_returned
+        CHECK (quantity_returned > 0),
     INDEX idx_return_items_return_id       (return_id),
     INDEX idx_return_items_booking_item_id (booking_item_id),
     CONSTRAINT fk_return_items_return_id
@@ -60,6 +62,8 @@ CREATE TABLE IF NOT EXISTS damage_reports (
     resolved_by           BIGINT UNSIGNED,
     created_at            DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP,
     PRIMARY KEY (report_id),
+    CONSTRAINT chk_damage_reports_damage_cost
+        CHECK (damage_cost >= 0.00),
     UNIQUE KEY uq_damage_reports_return_item_id (return_item_id),
     INDEX idx_damage_reports_resolved_by (resolved_by),
     CONSTRAINT fk_damage_reports_return_item_id

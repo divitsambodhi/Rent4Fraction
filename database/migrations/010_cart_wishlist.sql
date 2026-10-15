@@ -1,4 +1,4 @@
-﻿-- =============================================================================
+-- =============================================================================
 -- Migration 010 — cart_items, wishlist
 -- =============================================================================
 
@@ -12,6 +12,10 @@ CREATE TABLE IF NOT EXISTS cart_items (
     created_at   DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at   DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     PRIMARY KEY (cart_item_id),
+    CONSTRAINT chk_cart_items_dates
+        CHECK (end_date >= start_date),
+    CONSTRAINT chk_cart_items_quantity
+        CHECK (quantity > 0),
     UNIQUE KEY uq_cart_items_user_equip_dates (user_id, equipment_id, start_date, end_date),
     INDEX idx_cart_items_equipment_id (equipment_id),
     CONSTRAINT fk_cart_items_user_id

@@ -1,4 +1,4 @@
-﻿-- =============================================================================
+-- =============================================================================
 -- Migration 006 — bookings, vendor_orders, booking_items
 -- =============================================================================
 
@@ -30,6 +30,8 @@ CREATE TABLE IF NOT EXISTS bookings (
         CHECK (end_date >= start_date),
     CONSTRAINT chk_bookings_total_amount
         CHECK (total_amount = subtotal - discount + tax + delivery_fee + security_deposit),
+    CONSTRAINT chk_bookings_amounts
+        CHECK (subtotal >= 0.00 AND discount >= 0.00 AND tax >= 0.00 AND delivery_fee >= 0.00 AND security_deposit >= 0.00 AND total_amount >= 0.00),
     INDEX idx_bookings_user_id        (user_id),
     INDEX idx_bookings_status         (status),
     INDEX idx_bookings_payment_status (payment_status),
@@ -54,12 +56,14 @@ CREATE TABLE IF NOT EXISTS vendor_orders (
     created_at       DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at       DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     PRIMARY KEY (vendor_order_id),
+    CONSTRAINT chk_vendor_orders_subtotal
+        CHECK (subtotal >= 0.00),
     UNIQUE KEY uq_vendor_orders_booking_vendor (booking_id, vendor_id),
     INDEX idx_vendor_orders_vendor_id (vendor_id),
     INDEX idx_vendor_orders_status    (status),
     INDEX idx_vendor_orders_booking_status (booking_id, status),
     CONSTRAINT fk_vendor_orders_booking_id
-        FOREIGN KEY (booking_id) REFERENCES bookings (booking_id) ON DELETE CASCADE,
+        FOREIGN KEY (booking_id) REFERENCES bookings (booking_id) ON DELETE RESTRICT,
     CONSTRAINT fk_vendor_orders_vendor_id
         FOREIGN KEY (vendor_id)  REFERENCES vendors  (vendor_id)  ON DELETE RESTRICT
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
@@ -78,11 +82,18 @@ CREATE TABLE IF NOT EXISTS booking_items (
     PRIMARY KEY (booking_item_id),
     CONSTRAINT chk_booking_items_quantity
         CHECK (quantity > 0),
+    CONSTRAINT chk_booking_items_price_per_day
+        CHECK (price_per_day >= 0.00),
+    CONSTRAINT chk_booking_items_days
+        CHECK (days >= 1),
+    CONSTRAINT chk_booking_items_total_price
+        CHECK (total_price >= 0.00),
     INDEX idx_booking_items_vendor_order_id (vendor_order_id),
     INDEX idx_booking_items_booking_id      (booking_id),
     INDEX idx_booking_items_equipment_id    (equipment_id),
     INDEX idx_booking_items_item_status     (item_status),
     INDEX idx_booking_items_booking_equipment (booking_id, equipment_id),
+    INDEX idx_booking_items_eq_status       (equipment_id, item_status),
     CONSTRAINT fk_booking_items_vendor_order_id
         FOREIGN KEY (vendor_order_id) REFERENCES vendor_orders (vendor_order_id) ON DELETE RESTRICT,
     CONSTRAINT fk_booking_items_booking_id

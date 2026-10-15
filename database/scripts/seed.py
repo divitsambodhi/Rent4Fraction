@@ -1,4 +1,4 @@
-﻿#!/usr/bin/env python3
+#!/usr/bin/env python3
 """
 seed.py — Apply development seed data to the database.
 
@@ -36,6 +36,7 @@ def get_connection() -> pymysql.Connection:
         charset         = "utf8mb4",
         autocommit      = False,
         connect_timeout = 5,
+        init_command    = "SET time_zone = '+00:00'",
     )
 
 

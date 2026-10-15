@@ -1,4 +1,4 @@
-﻿-- =============================================================================
+-- =============================================================================
 -- Migration 003 — categories, equipment, equipment_images
 -- =============================================================================
 
@@ -33,12 +33,19 @@ CREATE TABLE IF NOT EXISTS equipment (
     created_at         DATETIME         NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at         DATETIME         NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     PRIMARY KEY (equipment_id),
+    CONSTRAINT chk_equipment_price_per_day
+        CHECK (price_per_day >= 0.00),
+    CONSTRAINT chk_equipment_security_deposit
+        CHECK (security_deposit >= 0.00),
     CONSTRAINT chk_equipment_quantity
         CHECK (quantity >= 0),
-    INDEX idx_equipment_vendor_id   (vendor_id),
-    INDEX idx_equipment_category_id (category_id),
-    INDEX idx_equipment_status      (status),
+    CONSTRAINT chk_equipment_min_rental_days
+        CHECK (min_rental_days >= 1),
+    INDEX idx_equipment_vendor_id     (vendor_id),
+    INDEX idx_equipment_category_id   (category_id),
+    INDEX idx_equipment_status        (status),
     INDEX idx_equipment_vendor_status (vendor_id, status),
+    FULLTEXT INDEX ft_equipment_name_desc (name, description),
     CONSTRAINT fk_equipment_vendor_id
         FOREIGN KEY (vendor_id)   REFERENCES vendors    (vendor_id)   ON DELETE RESTRICT,
     CONSTRAINT fk_equipment_category_id

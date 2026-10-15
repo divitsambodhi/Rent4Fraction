@@ -1,4 +1,4 @@
-﻿-- =============================================================================
+-- =============================================================================
 -- Migration 007 — payments
 -- =============================================================================
 
@@ -16,6 +16,8 @@ CREATE TABLE IF NOT EXISTS payments (
     payment_date     DATETIME,
     created_at       DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP,
     PRIMARY KEY (payment_id),
+    CONSTRAINT chk_payments_amount
+        CHECK (amount > 0.00),
     UNIQUE KEY uq_payments_transaction_id (transaction_id),
     INDEX idx_payments_booking_id (booking_id),
     INDEX idx_payments_status     (status),
