@@ -12,10 +12,13 @@
 database/
 ├── .env.example                                  # Template for DB connection strings & ports
 ├── .gitignore                                    # Excludes .env, *.pyc, and local artifacts
-├── docker-compose.yml                            # MySQL 8.4 + Adminer container setup
+├── RUN_ME_FIRST.md                               # Step-by-step beginner guide for Windows setup
 ├── requirements.txt                              # Python tooling dependencies (PyMySQL, dotenv, cryptography)
 ├── README.md                                     # Setup, commands, and operator guide
 ├── SUMMARY.md                                    # This comprehensive architecture & explanation guide
+│
+├── manual/                                       # One-time SQL scripts for workbench / client setup
+│   └── 00_create_database_and_user.sql           # Database & rental_user creation script
 │
 ├── docs/
 │   ├── erd.mmd                                   # Complete Mermaid ER diagram (22 tables + relationships)
@@ -61,9 +64,8 @@ database/
 | **Character Set** | `utf8mb4` with `utf8mb4_0900_ai_ci` | Full Unicode support (emojis, international names, symbols) with accent-insensitive and case-insensitive collation. |
 | **Authentication Strategy** | **Firebase Authentication** | **No passwords exist in the database.** Only `firebase_uid` (`VARCHAR(128) UNIQUE`) is stored. Security and credential management remain offloaded to Firebase. |
 | **Migration Strategy** | **Plain SQL Files (001–013)** | Framework-agnostic. Decoupled from backend frameworks (FastAPI/SQLAlchemy or Node.js) so schemas can be applied by CI/CD, raw CLI, or container boot scripts. |
-| **Containerization** | **Docker & Docker Compose** | Spins up identical, reproducible environments containing both MySQL 8.4 and Adminer Web GUI with single commands. |
-| **Admin UI** | **Adminer (`adminer:latest`)** | Lightweight browser interface (listening on port 8080) for visual database management without needing desktop software. |
-| **Scripting & Tooling** | **Python 3.11+** | Native cross-platform scripting for migration management, seeding, and verification without heavy external framework bloat. |
+| **Local Environment** | **Windows MySQL Service + Workbench** | Runs directly on local Windows MySQL Server (8.0.16+ or 8.4 LTS) with MySQL Workbench for inspection. |
+| **Scripting & Tooling** | **Python 3.10+** | Native cross-platform scripting for migration management, seeding, and verification without heavy external framework bloat. |
 | **Driver / Libraries** | `PyMySQL==1.1.1`, `cryptography>=41.0.0`, `python-dotenv==1.0.1` | Pure-Python MySQL client; `cryptography` enables secure `caching_sha2_password` authentication used by MySQL 8+. |
 
 ---

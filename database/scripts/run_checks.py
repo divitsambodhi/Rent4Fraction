@@ -34,10 +34,10 @@ load_dotenv(BASE_DIR / ".env")
 # ---------------------------------------------------------------------------
 def get_connection() -> pymysql.Connection:
     return pymysql.connect(
-        host            = os.getenv("MYSQL_HOST",     "localhost"),
+        host            = os.getenv("MYSQL_HOST",     "127.0.0.1"),
         port            = int(os.getenv("MYSQL_PORT", "3306")),
         user            = os.getenv("MYSQL_USER",     "rental_user"),
-        password        = os.getenv("MYSQL_PASSWORD", "rental_pass"),
+        password        = os.getenv("MYSQL_PASSWORD", ""),
         database        = os.getenv("MYSQL_DATABASE", "event_rental"),
         charset         = "utf8mb4",
         autocommit      = False,
@@ -265,8 +265,12 @@ def chk_booking_item_order_mismatch(cur):
 
 
 def chk_booking_item_min_days(cur):
-    # E10 has min_rental_days = 2
-    eq10_id = scalar(cur, "SELECT equipment_id FROM equipment WHERE min_rental_days >= 2 LIMIT 1")
+    # Select equipment with min_rental_days >= 2 from an APPROVED vendor
+    eq10_id = scalar(cur, "SELECT e.equipment_id FROM equipment e JOIN vendors v ON v.vendor_id = e.vendor_id WHERE e.min_rental_days >= 2 AND v.approval_status = 'approved' AND e.status = 'active' LIMIT 1")
+    if not eq10_id:
+        # If no approved vendor equipment has min_rental_days >= 2, update an existing one temporarily inside transaction
+        eq10_id = scalar(cur, "SELECT e.equipment_id FROM equipment e JOIN vendors v ON v.vendor_id = e.vendor_id WHERE v.approval_status = 'approved' AND e.status = 'active' LIMIT 1")
+        cur.execute("UPDATE equipment SET min_rental_days = 2 WHERE equipment_id = %s", (eq10_id,))
     v_id    = scalar(cur, "SELECT vendor_id FROM equipment WHERE equipment_id = %s", (eq10_id,))
     cust_id = scalar(cur, "SELECT user_id FROM users WHERE firebase_uid = 'dev-customer-1-uid-replace-me'")
     addr_id = scalar(cur, "SELECT address_id FROM addresses WHERE user_id = %s LIMIT 1", (cust_id,))
@@ -341,7 +345,7 @@ def chk_views_execution(cur):
 def run_sql_file(filepath: Path) -> None:
     wait_for_mysql()
     print(f"\n── Executing {filepath.name} via PyMySQL ────────────────────────────")
-    sql_text = filepath.read_text(encoding="utf-8")
+    sql_text = filepath.read_text(encoding="utf-8-sig")
     statements = [stmt.strip() for stmt in sql_text.split(";") if stmt.strip() and not stmt.strip().startswith("--")]
 
     conn = get_connection()
@@ -400,7 +404,7 @@ def main() -> None:
     check("15. Booking item min_rental_days trigger", chk_booking_item_min_days, expect_error="minimum rental days")
     check("16. Return item vendor order mismatch trigger", chk_return_item_mismatched_order, expect_error="vendor order")
     check("17. Payment refund ceiling trigger", chk_refund_exceeding_paid, expect_error="exceeds total successful payments")
-    check("18. Booking total_amount CHECK constraint", chk_total_amount_check, expect_error="")
+    check("18. Booking total_amount CHECK constraint", chk_total_amount_check, expect_error="chk_bookings_total_amount")
     check("19. Views execution & non-duplication", chk_views_execution)
 
     total  = len(Results)

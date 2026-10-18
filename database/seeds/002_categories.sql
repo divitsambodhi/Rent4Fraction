@@ -30,9 +30,8 @@ FROM (
     SELECT 'DJ Equipment',          'DJ consoles, mixers and turntables'
 ) AS new_data
 JOIN categories c ON c.name = 'Sound' AND c.parent_id IS NULL
-AS alias_row
 ON DUPLICATE KEY UPDATE
-    description = alias_row.description,
+    description = VALUES(description),
     is_active   = 1;
 
 -- ── Sub-categories — Lighting ────────────────────────────────────────────────
@@ -43,9 +42,8 @@ FROM (
     SELECT 'Fairy Lights',         'String lights and canopy lighting'
 ) AS new_data
 JOIN categories c ON c.name = 'Lighting' AND c.parent_id IS NULL
-AS alias_row
 ON DUPLICATE KEY UPDATE
-    description = alias_row.description,
+    description = VALUES(description),
     is_active   = 1;
 
 -- ── Sub-categories — Furniture ────────────────────────────────────────────────
@@ -56,7 +54,6 @@ FROM (
     SELECT 'Tables',         'Round, rectangular and cocktail tables'
 ) AS new_data
 JOIN categories c ON c.name = 'Furniture' AND c.parent_id IS NULL
-AS alias_row
 ON DUPLICATE KEY UPDATE
-    description = alias_row.description,
+    description = VALUES(description),
     is_active   = 1;

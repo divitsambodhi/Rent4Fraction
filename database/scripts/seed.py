@@ -28,10 +28,10 @@ load_dotenv(BASE_DIR / ".env")
 
 def get_connection() -> pymysql.Connection:
     return pymysql.connect(
-        host            = os.getenv("MYSQL_HOST",     "localhost"),
+        host            = os.getenv("MYSQL_HOST",     "127.0.0.1"),
         port            = int(os.getenv("MYSQL_PORT", "3306")),
         user            = os.getenv("MYSQL_USER",     "rental_user"),
-        password        = os.getenv("MYSQL_PASSWORD", "rental_pass"),
+        password        = os.getenv("MYSQL_PASSWORD", ""),
         database        = os.getenv("MYSQL_DATABASE", "event_rental"),
         charset         = "utf8mb4",
         autocommit      = False,
@@ -55,25 +55,42 @@ def wait_for_mysql(max_retries: int = 30, delay: float = 2.0) -> None:
     sys.exit(1)
 
 
+def clean_sql_comments(sql_text: str) -> str:
+    clean_lines = []
+    for line in sql_text.splitlines():
+        stripped = line.strip()
+        if stripped.startswith("--"):
+            clean_lines.append("")
+        else:
+            clean_lines.append(line)
+    return "\n".join(clean_lines)
+
+
 def split_sql(sql_text: str) -> list[str]:
     if SPLIT_MARKER in sql_text:
         raw_parts = sql_text.split(SPLIT_MARKER)
-    else:
-        raw_parts = sql_text.split(";")
+        result: list[str] = []
+        for part in raw_parts:
+            meaningful = [
+                line for line in part.splitlines()
+                if line.strip() and not line.strip().startswith("--")
+            ]
+            if meaningful:
+                result.append("\n".join(meaningful).strip())
+        return result
 
+    cleaned = clean_sql_comments(sql_text)
+    raw_parts = cleaned.split(";")
     result: list[str] = []
     for part in raw_parts:
-        meaningful = [
-            line for line in part.splitlines()
-            if line.strip() and not line.strip().startswith("--")
-        ]
-        if meaningful:
-            result.append(part.strip())
+        trimmed = part.strip()
+        if trimmed:
+            result.append(trimmed)
     return result
 
 
 def apply_seed(conn: pymysql.Connection, filepath: Path) -> None:
-    sql_text   = filepath.read_text(encoding="utf-8")
+    sql_text   = filepath.read_text(encoding="utf-8-sig")
     statements = split_sql(sql_text)
     with conn.cursor() as cur:
         for stmt in statements:

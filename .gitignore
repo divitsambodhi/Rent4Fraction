@@ -147,3 +147,13 @@ vite.config.ts.timestamp-*
 
 # Turbo Repo
 .turbo
+
+# Local personal documentation & raw dumps
+database/docs/guide/
+database/docs/
+database/SUMMARY.md
+database/RUN_ME_FIRST.md
+database/manual/00_create_database_and_user.sql
+database/er_schema.sql
+DATABASE_HARDENING_CHANGELOG.md
+database/DATABASE_HARDENING_CHANGELOG.md
