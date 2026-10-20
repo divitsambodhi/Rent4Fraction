@@ -1,0 +1,49 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 450" width="600" height="450" fill="none">
+  <rect width="600" height="450" fill="#F4F1EA"/>
+  <rect x="20" y="20" width="560" height="410" rx="16" fill="#EDE8DF"/>
+  <circle cx="300" cy="225" r="160" fill="#762B36" fill-opacity="0.04"/>
+
+  <!-- Overhead Truss Line -->
+  <line x1="80" y1="80" x2="520" y2="80" stroke="#3D3638" stroke-width="8"/>
+  <line x1="80" y1="100" x2="520" y2="100" stroke="#3D3638" stroke-width="4"/>
+  <path d="M80 80L110 100M110 80L140 100M140 80L170 100M170 80L200 100M200 80L230 100M230 80L260 100M260 80L290 100M290 80L320 100M320 80L350 100M350 80L380 100M380 80L410 100M410 80L440 100M440 80L470 100M470 80L500 100" stroke="#3D3638" stroke-width="2"/>
+
+  <!-- Light Fixtures Hanging -->
+  <!-- Fixture 1 -->
+  <g transform="translate(130, 100)">
+    <line x1="25" y1="0" x2="25" y2="30" stroke="#252122" stroke-width="4"/>
+    <path d="M5 30H45L40 90H10L5 30Z" fill="#252122" stroke="#3D3638" stroke-width="2"/>
+    <ellipse cx="25" cy="90" rx="15" ry="5" fill="#762B36"/>
+    <!-- Light Beam -->
+    <polygon points="10,95 40,95 65,260 -15,260" fill="#762B36" fill-opacity="0.12"/>
+  </g>
+
+  <!-- Fixture 2 -->
+  <g transform="translate(240, 100)">
+    <line x1="25" y1="0" x2="25" y2="30" stroke="#252122" stroke-width="4"/>
+    <path d="M5 30H45L40 90H10L5 30Z" fill="#252122" stroke="#3D3638" stroke-width="2"/>
+    <ellipse cx="25" cy="90" rx="15" ry="5" fill="#B7791F"/>
+    <!-- Light Beam -->
+    <polygon points="10,95 40,95 85,260 -35,260" fill="#B7791F" fill-opacity="0.12"/>
+  </g>
+
+  <!-- Fixture 3 -->
+  <g transform="translate(350, 100)">
+    <line x1="25" y1="0" x2="25" y2="30" stroke="#252122" stroke-width="4"/>
+    <path d="M5 30H45L40 90H10L5 30Z" fill="#252122" stroke="#3D3638" stroke-width="2"/>
+    <ellipse cx="25" cy="90" rx="15" ry="5" fill="#762B36"/>
+    <!-- Light Beam -->
+    <polygon points="10,95 40,95 65,260 -15,260" fill="#762B36" fill-opacity="0.12"/>
+  </g>
+
+  <!-- Fixture 4 -->
+  <g transform="translate(440, 100)">
+    <line x1="25" y1="0" x2="25" y2="30" stroke="#252122" stroke-width="4"/>
+    <path d="M5 30H45L40 90H10L5 30Z" fill="#252122" stroke="#3D3638" stroke-width="2"/>
+    <ellipse cx="25" cy="90" rx="15" ry="5" fill="#B7791F"/>
+    <!-- Light Beam -->
+    <polygon points="10,95 40,95 85,260 -35,260" fill="#B7791F" fill-opacity="0.12"/>
+  </g>
+
+  <text x="300" y="415" text-anchor="middle" font-family="Inter, sans-serif" font-size="12" font-weight="600" fill="#762B36" letter-spacing="1.5">LED PAR CAN LIGHT RIG (8-PACK)</text>
+</svg>

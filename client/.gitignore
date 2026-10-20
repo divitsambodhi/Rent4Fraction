@@ -1,0 +1,42 @@
+# Dependencies
+node_modules
+.pnp
+.pnp.js
+
+# Production output
+dist
+dist-ssr
+build
+.next
+
+# Environment variables
+.env
+.env.*
+!.env.example
+
+# Logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+# Editor / OS
+.DS_Store
+Thumbs.db
+.vscode/*
+!.vscode/extensions.json
+.idea
+
+# v0 / temporary
+__v0_*
+.vercel/
+
+# TypeScript cache
+*.tsbuildinfo
+
+# Personal / agent prompt documentation & screenshots
+docs/
+MOVE_TO_CLIENT.md

@@ -1,0 +1,191 @@
+@import '@fontsource-variable/inter';
+@import '@fontsource-variable/fraunces';
+@import '@fontsource-variable/fraunces/wght-italic.css';
+@import 'tailwindcss';
+
+@custom-variant dark (&:where([data-theme="dark"], [data-theme="dark"] *));
+
+@theme inline {
+  --color-brand: var(--brand);
+  --color-brand-hover: var(--brand-hover);
+  --color-surface: var(--surface);
+  --color-success: var(--success);
+  --color-warning: var(--warning);
+  --color-info: var(--info);
+  --color-danger: var(--danger);
+
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+
+  --font-serif: 'Fraunces Variable', Georgia, 'Times New Roman', serif;
+  --font-sans: 'Inter Variable', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+
+  --radius-container: 16px;
+  --radius-card: 12px;
+  --radius-control: 10px;
+}
+
+:root {
+  --brand: #762B36;
+  --brand-hover: #60212B;
+  --background: #F7F6F3;
+  --surface: #FFFFFF;
+  --text-primary: #252629;
+  --text-secondary: #68686D;
+  --border: #E5E2DE;
+  --success: #16804A;
+  --warning: #B7791F;
+  --info: #356AC3;
+  --danger: #C43D43;
+
+  --foreground: #252629;
+  --card: #FFFFFF;
+  --card-foreground: #252629;
+  --popover: #FFFFFF;
+  --popover-foreground: #252629;
+  --primary: #762B36;
+  --primary-foreground: #FFFFFF;
+  --secondary: color-mix(in srgb, #762B36 10%, #FFFFFF);
+  --secondary-foreground: #60212B;
+  --muted: color-mix(in srgb, #E5E2DE 55%, #F7F6F3);
+  --muted-foreground: #68686D;
+  --accent: color-mix(in srgb, #762B36 8%, #FFFFFF);
+  --accent-foreground: #762B36;
+  --destructive: #C43D43;
+  --destructive-foreground: #FFFFFF;
+  --input: #E5E2DE;
+  --ring: #762B36;
+
+  --radius: 10px;
+}
+
+[data-theme="dark"] {
+  --brand: #B65362;
+  --brand-hover: #C86B79;
+  --background: #191A1D;
+  --surface: #232428;
+  --text-primary: #F2F0EE;
+  --text-secondary: #B8B7BC;
+  --border: #393A40;
+  --success: #4CC58A;
+  --warning: #E6B65C;
+  --info: #79A9FF;
+  --danger: #FF777B;
+
+  --foreground: #F2F0EE;
+  --card: #232428;
+  --card-foreground: #F2F0EE;
+  --popover: #232428;
+  --popover-foreground: #F2F0EE;
+  --primary: #B65362;
+  --primary-foreground: #FFFFFF;
+  --secondary: color-mix(in srgb, #B65362 16%, #232428);
+  --secondary-foreground: #F2F0EE;
+  --muted: color-mix(in srgb, #393A40 50%, #191A1D);
+  --muted-foreground: #B8B7BC;
+  --accent: color-mix(in srgb, #B65362 14%, #232428);
+  --accent-foreground: #F2F0EE;
+  --destructive: #FF777B;
+  --destructive-foreground: #191A1D;
+  --input: #393A40;
+  --ring: #B65362;
+}
+
+/* Global base styles */
+html {
+  scroll-behavior: smooth;
+  font-family: var(--font-sans);
+}
+
+body {
+  margin: 0;
+  background-color: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-sans);
+  overflow-x: hidden;
+  position: relative;
+}
+
+/* Paper grain overlay */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background-image: url('/noise.svg');
+  background-repeat: repeat;
+  opacity: 0.035;
+  pointer-events: none;
+  z-index: 9999;
+}
+
+[data-theme="dark"] body::before {
+  opacity: 0.02;
+}
+
+/* Headings font */
+h1, h2, h3, .font-serif {
+  font-family: var(--font-serif);
+}
+
+/* Tabular figures for numbers, body & price */
+.tabular-nums, .font-tabular {
+  font-variant-numeric: tabular-nums;
+}
+
+/* Restrained motion */
+@keyframes floatGentle {
+  0%, 100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-6px);
+  }
+}
+
+.animate-float {
+  animation: floatGentle 6s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, ::before, ::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* Custom focus style */
+*:focus-visible {
+  outline: 2px solid var(--ring);
+  outline-offset: 2px;
+}
+
+/* Accessible high-contrast text selection */
+::selection {
+  background-color: var(--brand);
+  color: #ffffff !important;
+}
+
+::-moz-selection {
+  background-color: var(--brand);
+  color: #ffffff !important;
+}
+

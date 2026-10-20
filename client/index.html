@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Rent4Fraction — Premium Event Equipment Rental Marketplace</title>
+    <meta
+      name="description"
+      content="Rent pro audio, stage lighting, DJ gear, seating, and event decor across India. Verified vendors, transparent pricing, and safe deposits."
+    />
+    <meta name="theme-color" content="#762B36" id="theme-meta" />
+    <script>
+      (function () {
+        try {
+          var saved = localStorage.getItem('r4f-theme');
+          var theme = saved;
+          if (!theme || theme === 'system') {
+            theme = window.matchMedia('(prefers-color-scheme: dark)').matches
+              ? 'dark'
+              : 'light';
+          }
+          if (theme === 'dark') {
+            document.documentElement.setAttribute('data-theme', 'dark');
+            var meta = document.getElementById('theme-meta');
+            if (meta) meta.setAttribute('content', '#191A1D');
+          } else {
+            document.documentElement.removeAttribute('data-theme');
+            var meta = document.getElementById('theme-meta');
+            if (meta) meta.setAttribute('content', '#762B36');
+          }
+        } catch (e) {
+          /* fallback */
+        }
+      })();
+    </script>
+  </head>
+  <body class="min-h-screen bg-background text-foreground antialiased selection:bg-brand selection:text-white">
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>

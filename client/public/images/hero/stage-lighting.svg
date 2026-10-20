@@ -1,0 +1,104 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1440 680" width="1440" height="680" fill="none">
+  <defs>
+    <linearGradient id="bgGrad2" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#28131B"/>
+      <stop offset="50%" stop-color="#150B10"/>
+      <stop offset="100%" stop-color="#0B080A"/>
+    </linearGradient>
+    <radialGradient id="stageAmberGlow" cx="60%" cy="40%" r="55%">
+      <stop offset="0%" stop-color="#E6B65C" stop-opacity="0.32"/>
+      <stop offset="60%" stop-color="#762B36" stop-opacity="0.2"/>
+      <stop offset="100%" stop-color="#0B080A" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="laserBeam1" x1="80%" y1="0%" x2="20%" y2="100%">
+      <stop offset="0%" stop-color="#B65362" stop-opacity="0.45"/>
+      <stop offset="100%" stop-color="#B65362" stop-opacity="0"/>
+    </linearGradient>
+    <linearGradient id="laserBeam2" x1="60%" y1="0%" x2="90%" y2="100%">
+      <stop offset="0%" stop-color="#E6B65C" stop-opacity="0.4"/>
+      <stop offset="100%" stop-color="#E6B65C" stop-opacity="0"/>
+    </linearGradient>
+    <linearGradient id="laserBeam3" x1="40%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#79A9FF" stop-opacity="0.3"/>
+      <stop offset="100%" stop-color="#79A9FF" stop-opacity="0"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Background Layer -->
+  <rect width="1440" height="680" fill="url(#bgGrad2)"/>
+  <rect width="1440" height="680" fill="url(#stageAmberGlow)"/>
+
+  <!-- Crossing Moving-Head Spot Beams -->
+  <polygon points="980,-20 1020,-20 300,680 200,680" fill="url(#laserBeam1)"/>
+  <polygon points="780,-20 820,-20 1350,680 1250,680" fill="url(#laserBeam2)"/>
+  <polygon points="620,-20 660,-20 100,680 0,680" fill="url(#laserBeam3)"/>
+  <polygon points="1120,-20 1160,-20 850,680 750,680" fill="url(#laserBeam1)" opacity="0.6"/>
+
+  <!-- Cascading Fairy Light Strings in the Background (Right Half) -->
+  <g stroke="#E6B65C" stroke-width="1" stroke-dasharray="2 8" opacity="0.4">
+    <line x1="820" y1="40" x2="820" y2="520"/>
+    <line x1="880" y1="40" x2="880" y2="540"/>
+    <line x1="940" y1="40" x2="940" y2="500"/>
+    <line x1="1000" y1="40" x2="1000" y2="550"/>
+    <line x1="1060" y1="40" x2="1060" y2="530"/>
+    <line x1="1120" y1="40" x2="1120" y2="560"/>
+    <line x1="1180" y1="40" x2="1180" y2="510"/>
+    <line x1="1240" y1="40" x2="1240" y2="540"/>
+    <line x1="1300" y1="40" x2="1300" y2="520"/>
+  </g>
+
+  <!-- Glowing Fairy Bulbs -->
+  <g fill="#E6B65C">
+    <circle cx="820" cy="120" r="4" filter="blur(1px)"/>
+    <circle cx="820" cy="240" r="4.5"/>
+    <circle cx="820" cy="380" r="3.5"/>
+    
+    <circle cx="880" cy="180" r="4"/>
+    <circle cx="880" cy="320" r="5" filter="blur(1px)"/>
+    
+    <circle cx="940" cy="140" r="4.5"/>
+    <circle cx="940" cy="280" r="4"/>
+    <circle cx="940" cy="420" r="5"/>
+
+    <circle cx="1000" cy="200" r="5"/>
+    <circle cx="1000" cy="350" r="4"/>
+
+    <circle cx="1060" cy="160" r="4"/>
+    <circle cx="1060" cy="300" r="5" filter="blur(1px)"/>
+    <circle cx="1060" cy="460" r="3.5"/>
+
+    <circle cx="1120" cy="220" r="5"/>
+    <circle cx="1120" cy="380" r="4"/>
+
+    <circle cx="1180" cy="170" r="4.5"/>
+    <circle cx="1180" cy="310" r="4"/>
+
+    <circle cx="1240" cy="210" r="5"/>
+    <circle cx="1240" cy="390" r="4.5"/>
+  </g>
+
+  <!-- Truss Silhouette across top -->
+  <rect x="550" y="20" width="850" height="12" fill="#20181A"/>
+  <line x1="550" y1="32" x2="1400" y2="32" stroke="#3D3033" stroke-width="2"/>
+
+  <!-- Hanging Moving Heads -->
+  <g transform="translate(780, 32)">
+    <rect x="-10" y="0" width="20" height="18" fill="#181314"/>
+    <ellipse cx="0" cy="28" rx="16" ry="12" fill="#2D2225"/>
+    <circle cx="0" cy="30" r="6" fill="#E6B65C"/>
+  </g>
+  <g transform="translate(980, 32)">
+    <rect x="-10" y="0" width="20" height="18" fill="#181314"/>
+    <ellipse cx="0" cy="28" rx="16" ry="12" fill="#2D2225"/>
+    <circle cx="0" cy="30" r="6" fill="#B65362"/>
+  </g>
+  <g transform="translate(1180, 32)">
+    <rect x="-10" y="0" width="20" height="18" fill="#181314"/>
+    <ellipse cx="0" cy="28" rx="16" ry="12" fill="#2D2225"/>
+    <circle cx="0" cy="30" r="6" fill="#E6B65C"/>
+  </g>
+
+  <!-- Ambient Light Orbs -->
+  <circle cx="950" cy="280" r="40" fill="#E6B65C" opacity="0.12" filter="blur(20px)"/>
+  <circle cx="1150" cy="220" r="60" fill="#B65362" opacity="0.15" filter="blur(30px)"/>
+</svg>

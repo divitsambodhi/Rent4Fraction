@@ -1,0 +1,34 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 450" width="600" height="450" fill="none">
+  <rect width="600" height="450" fill="#F4F1EA"/>
+  <rect x="20" y="20" width="560" height="410" rx="16" fill="#EDE8DF"/>
+  <circle cx="300" cy="225" r="160" fill="#762B36" fill-opacity="0.04"/>
+
+  <!-- DJ Console Base -->
+  <rect x="90" y="100" width="420" height="250" rx="14" fill="#231F20" stroke="#3D3638" stroke-width="4"/>
+  
+  <!-- Left Jog Wheel -->
+  <circle cx="180" cy="225" r="65" fill="#181516" stroke="#4D4447" stroke-width="3"/>
+  <circle cx="180" cy="225" r="50" fill="#2E282A" stroke="#762B36" stroke-width="2"/>
+  <circle cx="180" cy="225" r="22" fill="#141213"/>
+  <circle cx="180" cy="225" r="6" fill="#762B36"/>
+
+  <!-- Right Jog Wheel -->
+  <circle cx="420" cy="225" r="65" fill="#181516" stroke="#4D4447" stroke-width="3"/>
+  <circle cx="420" cy="225" r="50" fill="#2E282A" stroke="#762B36" stroke-width="2"/>
+  <circle cx="420" cy="225" r="22" fill="#141213"/>
+  <circle cx="420" cy="225" r="6" fill="#762B36"/>
+
+  <!-- Center Mixer Section -->
+  <rect x="260" y="115" width="80" height="220" rx="6" fill="#1A1718" stroke="#352F31" stroke-width="2"/>
+  <line x1="280" y1="210" x2="280" y2="290" stroke="#443D40" stroke-width="3"/>
+  <line x1="320" y1="210" x2="320" y2="290" stroke="#443D40" stroke-width="3"/>
+  <rect x="272" y="240" width="16" height="10" rx="2" fill="#762B36"/>
+  <rect x="312" y="260" width="16" height="10" rx="2" fill="#762B36"/>
+  <!-- Crossfader -->
+  <line x1="280" y1="315" x2="320" y2="315" stroke="#443D40" stroke-width="4"/>
+  <rect x="295" y="308" width="10" height="14" rx="2" fill="#F4F1EA"/>
+  <!-- Center Screen / VU -->
+  <rect x="275" y="130" width="50" height="40" rx="4" fill="#0D0B0C" stroke="#762B36" stroke-width="1.5"/>
+
+  <text x="300" y="405" text-anchor="middle" font-family="Inter, sans-serif" font-size="12" font-weight="600" fill="#762B36" letter-spacing="1.5">DJ CONTROLLER + MIXER RIG</text>
+</svg>
