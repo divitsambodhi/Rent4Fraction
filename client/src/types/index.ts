@@ -19,7 +19,7 @@ export interface EquipmentListingView {
   delivery_available: boolean
   avg_rating: number
   review_count: number
-  specifications: Record<string, string>
+  specifications: Record<string, string | number>
   vendor_id: string
   vendor_name: string
   category_id: string
@@ -128,3 +128,8 @@ export interface FAQItem {
 }
 
 export * from './account'
+export * from './checkout'
+export * from './vendor'
+export * from './help'
+export * from './admin'
+

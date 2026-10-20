@@ -156,6 +156,8 @@ export async function getBookingDetail(bookingId: string): Promise<BookingDetail
   return found ? JSON.parse(JSON.stringify(found)) : null
 }
 
+export const getBookingById = getBookingDetail
+
 export async function cancelBooking(bookingId: string, reason?: string): Promise<BookingDetail> {
   await delay(200)
   const state = loadAccountState()

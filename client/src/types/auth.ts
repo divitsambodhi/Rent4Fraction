@@ -18,10 +18,17 @@ export interface AuthUser {
   role: Role
   avatarInitials: string
   email_verified: boolean
+  status?: 'active' | 'deactivated'
+  joined_at?: string
+  last_login?: string
+  bookings_count?: number
   vendor?: {
     vendor_id: number | string
     business_name: string
     approval_status: 'pending' | 'approved' | 'rejected' | 'suspended'
+    commission_rate?: number
+    rejection_reason?: string
+    suspension_reason?: string
   }
 }
 

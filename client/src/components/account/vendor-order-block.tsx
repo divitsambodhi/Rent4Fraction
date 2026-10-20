@@ -7,7 +7,7 @@ import { DeliveryTracker } from './delivery-tracker'
 import { ReturnInspectionPanel } from './return-inspection-panel'
 import { DamageReportCard } from './damage-report-card'
 import { Button } from '@/components/ui/button'
-import { AlertTriangle, MessageSquare } from 'lucide-react'
+import { AlertTriangle, MessageSquare, Truck } from 'lucide-react'
 import type { BookingItemDetail, VendorOrder } from '@/types/account'
 import { cn } from '@/lib/utils'
 
@@ -119,6 +119,18 @@ export function VendorOrderBlock({
       {/* Delivery Tracking (if available) */}
       {order.delivery && (
         <DeliveryTracker delivery={order.delivery} />
+      )}
+
+      {/* When no delivery or return row is created yet */}
+      {!order.delivery && !order.return && !isRejected && (
+        <div className="p-3 rounded-[10px] bg-muted/40 border border-border/70 text-xs text-muted-foreground flex items-center gap-2.5">
+          <Truck className="size-4 shrink-0 text-brand" />
+          <span>
+            {order.fulfilment_type === 'pickup'
+              ? 'Pickup will be arranged by the vendor'
+              : 'Delivery will be arranged by the vendor'}
+          </span>
+        </div>
       )}
 
       {/* Return & Inspection Panel (if available) */}

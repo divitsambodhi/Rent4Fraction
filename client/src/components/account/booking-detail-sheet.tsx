@@ -29,6 +29,7 @@ interface BookingDetailSheetProps {
   bookingId: string | null
   onClose: () => void
   onBookingUpdated?: () => void
+  mode?: 'customer' | 'admin'
 }
 
 function formatDate(dateStr: string): string {
@@ -43,6 +44,7 @@ export function BookingDetailSheet({
   bookingId,
   onClose,
   onBookingUpdated,
+  mode = 'customer',
 }: BookingDetailSheetProps) {
   const [booking, setBooking] = useState<BookingDetail | null>(null)
   const [loading, setLoading] = useState(false)
@@ -272,7 +274,11 @@ export function BookingDetailSheet({
 
           {/* Sticky Footer */}
           <footer className="px-5 py-3.5 border-t border-border bg-surface/95 backdrop-blur-md flex items-center justify-between gap-3 shrink-0">
-            {canCancel ? (
+            {mode === 'admin' ? (
+              <span className="text-xs text-muted-foreground font-mono">
+                Admin Console · Read-only view
+              </span>
+            ) : canCancel ? (
               <Button
                 type="button"
                 variant="outline"

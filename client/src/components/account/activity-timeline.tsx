@@ -53,7 +53,7 @@ export function ActivityTimeline({ activity, className }: ActivityTimelineProps)
 
       <div className="relative pl-6 space-y-4 before:absolute before:left-2.5 before:top-2 before:bottom-2 before:w-[2px] before:bg-border">
         {displayList.map((item, index) => {
-          const Icon = TYPE_ICONS[item.type] || Clock
+          const Icon = (item.type ? TYPE_ICONS[item.type] : null) || Clock
           const isFirst = index === 0
 
           return (

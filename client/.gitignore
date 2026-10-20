@@ -40,3 +40,16 @@ __v0_*
 # Personal / agent prompt documentation & screenshots
 docs/
 MOVE_TO_CLIENT.md
+PLAN_*.md
+*.png
+*.jpg
+*.jpeg
+*.webp
+*.webm
+!public/**/*
+_v0/
+__v0/
+scratch/
+*.tmp
+*.temp
+coverage/

@@ -4,10 +4,15 @@ import { ScrollManager } from '@/components/shared/scroll-manager'
 import { HomePage } from '@/pages/home-page'
 import { CatalogPage } from '@/pages/catalog-page'
 import { EquipmentDetailPage } from '@/pages/equipment-detail-page'
-import { ComingSoonPage } from '@/pages/coming-soon-page'
 import { NotFoundPage } from '@/pages/not-found-page'
 import { AuthPage } from '@/pages/auth-page'
 import { AccountPage } from '@/pages/account-page'
+import { CheckoutPage } from '@/pages/checkout-page'
+import { HelpPage } from '@/pages/help-page'
+import { VendorPage } from '@/pages/vendor-page'
+import { InventoryPage } from '@/pages/inventory-page'
+import { VendorOrdersPage } from '@/pages/vendor-orders-page'
+import { AdminPage } from '@/pages/admin-page'
 import { RequireRole } from '@/components/auth/require-role'
 import { VendorDashboardPreview } from '@/pages/preview/vendor-dashboard-preview'
 import { AdminDashboardPreview } from '@/pages/preview/admin-dashboard-preview'
@@ -62,7 +67,7 @@ export const router = createBrowserRouter([
         path: 'checkout',
         element: (
           <RequireRole roles={['customer']}>
-            <ComingSoonPage />
+            <CheckoutPage />
           </RequireRole>
         ),
       },
@@ -76,13 +81,13 @@ export const router = createBrowserRouter([
       },
       {
         path: 'help',
-        element: <ComingSoonPage />,
+        element: <HelpPage />,
       },
       {
         path: 'vendor',
         element: (
           <RequireRole roles={['vendor']}>
-            <ComingSoonPage />
+            <VendorPage />
           </RequireRole>
         ),
       },
@@ -90,7 +95,7 @@ export const router = createBrowserRouter([
         path: 'vendor/inventory',
         element: (
           <RequireRole roles={['vendor']} requireApprovedVendor>
-            <ComingSoonPage />
+            <InventoryPage />
           </RequireRole>
         ),
       },
@@ -98,7 +103,7 @@ export const router = createBrowserRouter([
         path: 'vendor/orders',
         element: (
           <RequireRole roles={['vendor']} requireApprovedVendor>
-            <ComingSoonPage />
+            <VendorOrdersPage />
           </RequireRole>
         ),
       },
@@ -106,7 +111,7 @@ export const router = createBrowserRouter([
         path: 'admin',
         element: (
           <RequireRole roles={['admin']}>
-            <ComingSoonPage />
+            <AdminPage />
           </RequireRole>
         ),
       },

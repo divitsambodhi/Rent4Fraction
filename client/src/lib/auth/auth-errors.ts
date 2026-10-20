@@ -9,6 +9,7 @@ export type AuthErrorCode =
   | 'auth/operation-not-allowed'
   | 'auth/requires-recent-login'
   | 'auth/wrong-password'
+  | 'auth/user-disabled'
 
 export class AuthError extends Error {
   code: AuthErrorCode
@@ -41,6 +42,8 @@ export function mapAuthError(code: string): string {
       return 'Enter a valid email address.'
     case 'auth/too-many-requests':
       return 'Too many attempts. Please wait a few minutes and try again.'
+    case 'auth/user-disabled':
+      return 'This account has been deactivated. Contact support.'
     case 'auth/network-request-failed':
       return 'Network problem. Check your connection and try again.'
     default:

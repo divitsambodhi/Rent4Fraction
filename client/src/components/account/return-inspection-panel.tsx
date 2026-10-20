@@ -8,14 +8,21 @@ interface ReturnInspectionPanelProps {
 }
 
 export function ItemConditionBadge({ condition }: { condition: ItemCondition }) {
-  const styles: Record<ItemCondition, string> = {
+  const normalizedKey = (
+    condition === 'Good' ? 'good' :
+    condition === 'Minor damage' ? 'minor_damage' :
+    condition === 'Major damage' ? 'major_damage' :
+    condition === 'Lost' ? 'lost' : condition
+  ) as 'good' | 'minor_damage' | 'major_damage' | 'lost'
+
+  const styles: Record<'good' | 'minor_damage' | 'major_damage' | 'lost', string> = {
     good: 'bg-success/15 text-success border-success/30',
     minor_damage: 'bg-muted text-muted-foreground border-border',
     major_damage: 'bg-danger/15 text-danger border-danger/30',
     lost: 'bg-danger/15 text-danger border-danger/30',
   }
 
-  const labels: Record<ItemCondition, string> = {
+  const labels: Record<'good' | 'minor_damage' | 'major_damage' | 'lost', string> = {
     good: 'Good condition',
     minor_damage: 'Minor wear / damage',
     major_damage: 'Major damage',
@@ -26,11 +33,11 @@ export function ItemConditionBadge({ condition }: { condition: ItemCondition }) 
     <span
       className={cn(
         'inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-semibold border',
-        styles[condition] || styles.good
+        styles[normalizedKey] || styles.good
       )}
     >
       <span className="size-1.5 rounded-full bg-current shrink-0" />
-      <span>{labels[condition] || condition}</span>
+      <span>{labels[normalizedKey] || condition}</span>
     </span>
   )
 }

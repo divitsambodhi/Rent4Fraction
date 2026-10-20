@@ -1,18 +1,20 @@
-import React, { createContext, useContext, useEffect, useState } from 'react'
+import React, { createContext, useContext, useEffect, useState, useMemo, useCallback } from 'react'
+import type { CartLine, CartPeriod } from '@/types/checkout'
+import {
+  getCart,
+  saveCart,
+  getDemoCartLines,
+  updateCartLine,
+  removeCartLine,
+  moveCartLineToWishlist,
+  applyDatesToAll,
+  CART_STORAGE_KEY,
+} from '@/lib/api/cart'
+import { groupByPeriod, rentalDays } from '@/lib/pricing'
+import { MOCK_EQUIPMENT } from '@/lib/api/mock-data'
+import { toast } from 'sonner'
 
-export interface CartItem {
-  id: string
-  equipment_id: string
-  name: string
-  price_per_day: number
-  security_deposit: number
-  primary_image_url: string
-  vendor_name: string
-  quantity: number
-  start_date?: string
-  end_date?: string
-  days: number
-}
+export type CartItem = CartLine
 
 export interface AddToCartInput {
   equipment_id: string
@@ -24,115 +26,198 @@ export interface AddToCartInput {
   quantity: number
   start_date?: string
   end_date?: string
+  category?: string
+  category_id?: string
+  vendor_id?: string
+  delivery_available?: boolean
 }
 
 interface CartContextType {
-  items: CartItem[]
+  items: CartLine[]
+  lines: CartLine[]
   cartCount: number
+  groupedPeriods: CartPeriod[]
   addToCart: (input: AddToCartInput) => void
-  removeFromCart: (id: string) => void
-  updateQuantity: (id: string, quantity: number) => void
+  removeFromCart: (cartItemId: string) => CartLine | undefined
+  updateQuantity: (cartItemId: string, quantity: number) => void
+  updateLineDates: (cartItemId: string, startDate: string, endDate: string) => void
+  restoreLine: (line: CartLine) => void
+  moveToWishlist: (cartItemId: string) => Promise<void>
+  applyPeriodToAll: (periodKey: string) => { conflicts: { equipment_id: string; name: string; available: number }[] }
+  loadDemoItems: () => void
   clearCart: () => void
+  refreshCart: () => void
 }
-
-const CART_STORAGE_KEY = 'r4f-cart-items-v1'
 
 const CartContext = createContext<CartContextType | undefined>(undefined)
 
 export function CartProvider({ children }: { children: React.ReactNode }) {
-  const [items, setItems] = useState<CartItem[]>(() => {
-    if (typeof window === 'undefined') return []
-    try {
-      const saved = localStorage.getItem(CART_STORAGE_KEY)
-      return saved ? JSON.parse(saved) : []
-    } catch {
-      return []
-    }
-  })
+  const [lines, setLines] = useState<CartLine[]>(() => getCart())
+
+  const refreshCart = useCallback(() => {
+    setLines(getCart())
+  }, [])
 
   useEffect(() => {
-    try {
-      localStorage.setItem(CART_STORAGE_KEY, JSON.stringify(items))
-      // Also sync legacy key for backwards compatibility
-      const totalCount = items.reduce((acc, it) => acc + it.quantity, 0)
-      localStorage.setItem('r4f-cart-count', String(totalCount))
-    } catch {
-      // Ignore
-    }
-  }, [items])
-
-  const addToCart = (input: AddToCartInput) => {
-    const from = input.start_date
-    const to = input.end_date
-    const compositeId = `${input.equipment_id}_${from || 'none'}_${to || 'none'}`
-
-    let days = 1
-    if (from && to) {
-      const d1 = new Date(from).getTime()
-      const d2 = new Date(to).getTime()
-      days = Math.max(1, Math.round((d2 - d1) / 86400000) + 1)
+    const handleCartUpdated = (e: Event) => {
+      const customEvent = e as CustomEvent<CartLine[]>
+      if (customEvent.detail) {
+        setLines(customEvent.detail)
+      } else {
+        setLines(getCart())
+      }
     }
 
-    setItems((prev) => {
-      const existingIdx = prev.findIndex((item) => item.id === compositeId)
+    const handleStorage = (e: StorageEvent) => {
+      if (e.key === CART_STORAGE_KEY) {
+        setLines(getCart())
+      }
+    }
+
+    window.addEventListener('r4f-cart-updated', handleCartUpdated)
+    window.addEventListener('storage', handleStorage)
+
+    return () => {
+      window.removeEventListener('r4f-cart-updated', handleCartUpdated)
+      window.removeEventListener('storage', handleStorage)
+    }
+  }, [])
+
+  const cartCount = useMemo(
+    () => lines.reduce((acc, it) => acc + it.quantity, 0),
+    [lines],
+  )
+
+  const groupedPeriods = useMemo(
+    () => groupByPeriod(lines),
+    [lines],
+  )
+
+  const addToCart = useCallback((input: AddToCartInput) => {
+    const from = input.start_date || '2026-11-12'
+    const to = input.end_date || '2026-11-14'
+    const days = rentalDays(from, to)
+
+    const eqId = String(input.equipment_id)
+    const mock = MOCK_EQUIPMENT.find((e) => String(e.equipment_id) === eqId)
+
+    const compositeId = `${eqId}_${from}_${to}`
+
+    setLines((prev) => {
+      const existingIdx = prev.findIndex(
+        (it) => it.equipment_id === eqId && it.start_date === from && it.end_date === to,
+      )
+
+      let updated: CartLine[]
       if (existingIdx >= 0) {
-        // Merge identical item + dates
-        const updated = [...prev]
+        updated = [...prev]
         updated[existingIdx] = {
           ...updated[existingIdx],
           quantity: updated[existingIdx].quantity + input.quantity,
           days,
         }
-        return updated
+      } else {
+        const newLine: CartLine = {
+          cart_item_id: compositeId,
+          equipment_id: eqId,
+          name: input.name || mock?.name || 'Equipment Item',
+          category: input.category || mock?.category_name || 'Equipment',
+          category_id: input.category_id || mock?.category_id || '1',
+          vendor_id: input.vendor_id || mock?.vendor_id || '1',
+          vendor_name: input.vendor_name || mock?.vendor_name || 'Vendor Partner',
+          price_per_day: input.price_per_day ?? mock?.price_per_day ?? 1000,
+          security_deposit: input.security_deposit ?? mock?.security_deposit ?? 2000,
+          quantity: Math.max(1, input.quantity || 1),
+          start_date: from,
+          end_date: to,
+          days,
+          primary_image_url: input.primary_image_url || mock?.primary_image_url || '/images/equipment/line-array-speaker.svg',
+          delivery_available: input.delivery_available ?? mock?.delivery_available ?? true,
+          min_rental_days: mock?.min_rental_days ?? 1,
+          max_available_quantity: 6,
+        }
+        updated = [...prev, newLine]
       }
 
-      const newItem: CartItem = {
-        id: compositeId,
-        equipment_id: input.equipment_id,
-        name: input.name,
-        price_per_day: input.price_per_day,
-        security_deposit: input.security_deposit,
-        primary_image_url: input.primary_image_url,
-        vendor_name: input.vendor_name,
-        quantity: input.quantity,
-        start_date: from,
-        end_date: to,
-        days,
-      }
-
-      return [...prev, newItem]
+      saveCart(updated)
+      return updated
     })
-  }
+  }, [])
 
-  const removeFromCart = (id: string) => {
-    setItems((prev) => prev.filter((item) => item.id !== id))
-  }
+  const removeFromCart = useCallback((cartItemId: string): CartLine | undefined => {
+    const { updatedLines, removed } = removeCartLine(cartItemId)
+    setLines(updatedLines)
+    return removed
+  }, [])
 
-  const updateQuantity = (id: string, quantity: number) => {
+  const restoreLine = useCallback((line: CartLine) => {
+    setLines((prev) => {
+      const updated = [...prev, line]
+      saveCart(updated)
+      return updated
+    })
+  }, [])
+
+  const updateQuantity = useCallback((cartItemId: string, quantity: number) => {
     if (quantity <= 0) {
-      removeFromCart(id)
+      removeFromCart(cartItemId)
       return
     }
-    setItems((prev) =>
-      prev.map((item) => (item.id === id ? { ...item, quantity } : item)),
-    )
-  }
+    const updated = updateCartLine(cartItemId, { quantity })
+    setLines(updated)
+  }, [removeFromCart])
 
-  const clearCart = () => {
-    setItems([])
-  }
+  const updateLineDates = useCallback((cartItemId: string, startDate: string, endDate: string) => {
+    const updated = updateCartLine(cartItemId, {
+      start_date: startDate,
+      end_date: endDate,
+    })
+    setLines(updated)
+  }, [])
 
-  const cartCount = items.reduce((acc, it) => acc + it.quantity, 0)
+  const moveToWishlist = useCallback(async (cartItemId: string) => {
+    const updated = await moveCartLineToWishlist(cartItemId)
+    setLines(updated)
+    toast.success('Moved to wishlist')
+  }, [])
+
+  const applyPeriodToAll = useCallback((periodKey: string) => {
+    const { updatedLines, conflicts } = applyDatesToAll(periodKey, lines)
+    setLines(updatedLines)
+    return { conflicts }
+  }, [lines])
+
+  const loadDemoItems = useCallback(() => {
+    const demo = getDemoCartLines()
+    saveCart(demo)
+    setLines(demo)
+    toast.success('Added demo items to cart', {
+      description: 'Loaded 4 items across 2 rental periods.',
+    })
+  }, [])
+
+  const clearCart = useCallback(() => {
+    saveCart([])
+    setLines([])
+  }, [])
 
   return (
     <CartContext.Provider
       value={{
-        items,
+        items: lines,
+        lines,
         cartCount,
+        groupedPeriods,
         addToCart,
         removeFromCart,
         updateQuantity,
+        updateLineDates,
+        restoreLine,
+        moveToWishlist,
+        applyPeriodToAll,
+        loadDemoItems,
         clearCart,
+        refreshCart,
       }}
     >
       {children}

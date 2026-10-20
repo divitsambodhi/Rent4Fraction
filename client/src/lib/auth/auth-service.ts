@@ -86,6 +86,10 @@ export const mockAuthService: AuthService = {
       throw new AuthError('auth/invalid-credential')
     }
 
+    if (record.user.status === 'deactivated') {
+      throw new AuthError('auth/user-disabled')
+    }
+
     // Reset rate limit on success
     resetFailedAttempts(email)
     activeUser = record.user

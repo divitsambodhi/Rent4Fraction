@@ -20,9 +20,15 @@ import {
   MOCK_NOTIFICATIONS,
   MOCK_VENDORS,
 } from './mock-data'
+import {
+  getAllStoredEquipment,
+  getInventoryItemById,
+} from './equipment-store'
 
 export * from './canonical-ids'
 export * from './equipment-detail'
+export * from './equipment-store'
+export * from './vendor-store'
 export { MOCK_CATEGORIES, MOCK_EQUIPMENT, MOCK_FAQS, MOCK_NOTIFICATIONS, MOCK_VENDORS }
 
 export interface CatalogSearchParams {
@@ -117,20 +123,24 @@ export async function searchEquipment(
     throw new Error('Failed to retrieve equipment listings. Simulated error active (?simulate=error).')
   }
 
+  const stored = getAllStoredEquipment()
+  const activeItems = stored.filter((eq) => eq.status === 'active')
+  const dataset: EquipmentListingView[] = activeItems.length > 0 ? activeItems : MOCK_EQUIPMENT
+
   // Calculate facets from complete catalog
   const facetCategories = CANONICAL_CATEGORIES.map((c) => ({
     id: c.id,
-    count: MOCK_EQUIPMENT.filter((eq) => eq.category_id === c.id).length,
+    count: dataset.filter((eq) => eq.category_id === c.id).length,
   }))
 
   const facetVendors = CANONICAL_VENDORS.map((v) => ({
     id: v.id,
-    count: MOCK_EQUIPMENT.filter((eq) => eq.vendor_id === v.id).length,
+    count: dataset.filter((eq) => eq.vendor_id === v.id).length,
   }))
 
-  const allPrices = MOCK_EQUIPMENT.map((eq) => eq.price_per_day)
-  const priceMin = Math.min(...allPrices)
-  const priceMax = Math.max(...allPrices)
+  const allPrices = dataset.map((eq) => eq.price_per_day)
+  const priceMin = allPrices.length > 0 ? Math.min(...allPrices) : 450
+  const priceMax = allPrices.length > 0 ? Math.max(...allPrices) : 5000
 
   if (shouldSimulate('empty', params.simulate)) {
     return {
@@ -151,7 +161,7 @@ export async function searchEquipment(
   const targetCategoryIds = params.category ? resolveCategoryIds(params.category) : null
 
   // 2. Filter dataset
-  const filtered = MOCK_EQUIPMENT.filter((item) => {
+  const filtered = dataset.filter((item) => {
     // Keyword search (name, description, category name)
     if (params.q && params.q.trim()) {
       const q = params.q.trim().toLowerCase()
@@ -252,12 +262,15 @@ export async function searchEquipment(
  */
 export async function getCategoryTree(): Promise<CategoryTreeGroup[]> {
   await new Promise((resolve) => setTimeout(resolve, 60))
+  const stored = getAllStoredEquipment()
+  const activeItems = stored.filter((eq) => eq.status === 'active')
+  const dataset = activeItems.length > 0 ? activeItems : MOCK_EQUIPMENT
 
   return CANONICAL_GROUPS.map((group) => {
     const groupCategories = CANONICAL_CATEGORIES.filter((c) =>
       group.categoryIds.includes(c.id),
     ).map((c) => {
-      const count = MOCK_EQUIPMENT.filter((eq) => eq.category_id === c.id).length
+      const count = dataset.filter((eq) => eq.category_id === c.id).length
       return {
         ...c,
         count,
@@ -306,12 +319,18 @@ export async function getFeaturedEquipment(): Promise<EquipmentListingView[]> {
   if (shouldSimulate('error')) {
     throw new Error('Failed to load featured event equipment. Simulated error active (?simulate=error).')
   }
-  // Featured items: 1 through 8 (one from each canonical category)
-  return MOCK_EQUIPMENT.slice(0, 8).map((eq) => ({ ...eq }))
+  const stored = getAllStoredEquipment()
+  const activeItems = stored.filter((eq) => eq.status === 'active')
+  const dataset = activeItems.length > 0 ? activeItems : MOCK_EQUIPMENT
+  return dataset.slice(0, 8).map((eq) => ({ ...eq }))
 }
 
 export async function getEquipmentById(id: string): Promise<EquipmentListingView | null> {
   await new Promise((resolve) => setTimeout(resolve, 80))
+  const stored = getInventoryItemById(id)
+  if (stored) {
+    return { ...stored }
+  }
   const item = MOCK_EQUIPMENT.find((eq) => eq.equipment_id === id)
   return item ? { ...item } : null
 }
@@ -323,3 +342,4 @@ export async function getFaqs(): Promise<FAQItem[]> {
 
 export * from './account'
 export * from './account-store'
+export * from './cart'

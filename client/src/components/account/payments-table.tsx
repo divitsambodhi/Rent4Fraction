@@ -24,6 +24,8 @@ const METHOD_ICONS: Record<PaymentMethod, typeof CreditCard> = {
   netbanking: Building2,
   cod: Banknote,
   wallet: Wallet,
+  original_method: CreditCard,
+  bank_transfer: Building2,
 }
 
 const METHOD_LABELS: Record<PaymentMethod, string> = {
@@ -32,6 +34,8 @@ const METHOD_LABELS: Record<PaymentMethod, string> = {
   netbanking: 'Netbanking',
   cod: 'Cash on delivery',
   wallet: 'Wallet',
+  original_method: 'Original method',
+  bank_transfer: 'Bank transfer',
 }
 
 function formatDate(dateStr: string): string {

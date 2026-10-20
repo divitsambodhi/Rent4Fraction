@@ -103,6 +103,36 @@ const TYPE_CONFIG: Record<
     color: 'text-brand',
     border: 'border-brand/20',
   },
+  dispute_resolved: {
+    icon: CheckCircle2,
+    bg: 'bg-success/15',
+    color: 'text-success',
+    border: 'border-success/30',
+  },
+  payout_processed: {
+    icon: Clock,
+    bg: 'bg-warning/15',
+    color: 'text-warning',
+    border: 'border-warning/30',
+  },
+  payout_paid: {
+    icon: Wallet,
+    bg: 'bg-success/15',
+    color: 'text-success',
+    border: 'border-success/30',
+  },
+  vendor_approved: {
+    icon: CheckCircle2,
+    bg: 'bg-success/15',
+    color: 'text-success',
+    border: 'border-success/30',
+  },
+  new_order: {
+    icon: PackageCheck,
+    bg: 'bg-brand/10',
+    color: 'text-brand',
+    border: 'border-brand/20',
+  },
 }
 
 function formatRelativeTime(dateStr: string): string {

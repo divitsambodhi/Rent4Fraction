@@ -44,6 +44,8 @@ export type PaymentMethod =
   | 'netbanking'
   | 'cod'
   | 'wallet'
+  | 'original_method'
+  | 'bank_transfer'
 
 export type PaymentStatus =
   | 'pending'
@@ -70,6 +72,10 @@ export type ItemCondition =
   | 'minor_damage'
   | 'major_damage'
   | 'lost'
+  | 'Good'
+  | 'Minor damage'
+  | 'Major damage'
+  | 'Lost'
 
 export type DamageReportStatus =
   | 'reported'
@@ -89,6 +95,11 @@ export type NotificationType =
   | 'refund_processed'
   | 'review_reminder'
   | 'message_received'
+  | 'dispute_resolved'
+  | 'payout_processed'
+  | 'payout_paid'
+  | 'vendor_approved'
+  | 'new_order'
 
 export type AddressLabel = 'Home' | 'Office' | 'Venue' | 'Other'
 
@@ -111,11 +122,13 @@ export interface Address extends AddressSnapshot {
 }
 
 export interface ActivityTimelineEvent {
-  id: string
-  title: string
+  id?: string
+  title?: string
   description?: string
   timestamp: string
-  type: 'order' | 'delivery' | 'payment' | 'return' | 'inspection' | 'system'
+  type?: 'order' | 'delivery' | 'payment' | 'return' | 'inspection' | 'system'
+  actor?: 'Customer' | 'You' | 'Admin' | 'System' | string
+  event?: string
 }
 
 export interface DamageReport {
@@ -124,11 +137,17 @@ export interface DamageReport {
   equipment_name: string
   description: string
   repair_cost: number
+  claimed_amount?: number
+  damage_cost?: number
   deducted_from_deposit: number
   status: DamageReportStatus
   dispute_reason?: string
   filed_at: string
   resolved_at?: string
+  resolved_by?: string
+  resolution_note?: string
+  resolution_notes?: string
+  dispute_resolution?: string
 }
 
 export interface ItemReview {
@@ -174,6 +193,8 @@ export interface BookingItemDetail {
   status: BookingItemStatus
   vendor_id: string
   vendor_name: string
+  security_deposit?: number
+  category?: string
   review: ItemReview | null
   damage_report: DamageReport | null
 }
@@ -189,6 +210,7 @@ export interface VendorOrder {
   item_ids: string[]
   delivery?: DeliveryTrackerData | null
   return?: ReturnInspectionData | null
+  fulfilment_type?: 'delivery' | 'pickup'
 }
 
 export interface DepositSummaryData {
@@ -272,7 +294,7 @@ export interface Conversation {
 }
 
 export interface AppNotificationTarget {
-  tab: 'bookings' | 'inbox' | 'wishlist' | 'addresses' | 'profile' | 'payments' | 'reviews'
+  tab?: 'bookings' | 'inbox' | 'wishlist' | 'addresses' | 'profile' | 'payments' | 'reviews' | string
   booking_id?: string
   thread_id?: string
   address_id?: string
@@ -286,6 +308,8 @@ export interface AppNotification {
   created_at: string
   read: boolean
   target: AppNotificationTarget
+  user_id?: string
+  link?: string
 }
 
 export interface ReviewToWrite {
