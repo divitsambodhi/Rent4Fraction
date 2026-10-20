@@ -29,7 +29,7 @@ export function DeliveryProofDialog({
         <DialogHeader className="space-y-1">
           <div className="flex items-center gap-2 text-success">
             <CheckCircle2 className="size-5" />
-            <span className="text-xs font-bold uppercase tracking-wider">
+            <span className="text-xs font-semibold text-success">
               Proof of Delivery
             </span>
           </div>

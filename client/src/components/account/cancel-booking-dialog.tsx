@@ -64,7 +64,7 @@ export function CancelBookingDialog({
         <DialogHeader className="space-y-1">
           <div className="flex items-center gap-2 text-danger">
             <AlertTriangle className="size-5" />
-            <span className="text-xs font-bold uppercase tracking-wider">
+            <span className="text-xs font-semibold text-danger">
               Cancel Booking
             </span>
           </div>

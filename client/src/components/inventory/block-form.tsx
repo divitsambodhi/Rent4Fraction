@@ -80,7 +80,7 @@ export function BlockForm({
   return (
     <form onSubmit={handleSubmit} className="p-4 rounded-xl border border-border bg-muted/20 space-y-4">
       <div className="flex items-center justify-between">
-        <h4 className="text-xs font-bold uppercase tracking-wider text-foreground flex items-center gap-1.5">
+        <h4 className="text-xs font-semibold text-foreground flex items-center gap-1.5">
           <Calendar className="size-3.5 text-brand" />
           <span>Add New Availability Block</span>
         </h4>

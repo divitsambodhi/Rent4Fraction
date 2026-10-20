@@ -19,6 +19,7 @@ export interface FilterBarProps<T extends string = string> {
   onStatusChange?: (status: T) => void
   extraFilters?: React.ReactNode
   onClearAll?: () => void
+  variant?: 'cards' | 'pills'
   className?: string
 }
 
@@ -31,13 +32,47 @@ export function FilterBar<T extends string = string>({
   onStatusChange,
   extraFilters,
   onClearAll,
+  variant,
   className,
 }: FilterBarProps<T>) {
   const hasActiveFilters = Boolean(searchQuery || (activeStatus && activeStatus !== 'all'))
+  const useCards = variant ? variant === 'cards' : Boolean(statusPills && statusPills.some((p) => typeof p.count === 'number'))
 
   return (
-    <div className={cn('space-y-3.5', className)}>
-      <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
+    <div className={cn('space-y-3', className)}>
+      {/* Count Cards Filter (Taste List Pattern: 61px tall, 12px padding, 13px label, 16/600 value, 8px gap) */}
+      {statusPills && statusPills.length > 0 && useCards && (
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-2">
+          {statusPills.map((pill) => {
+            const isActive = activeStatus === pill.id
+            const countDisplay = typeof pill.count === 'number' ? pill.count : 0
+
+            return (
+              <button
+                key={pill.id}
+                type="button"
+                onClick={() => onStatusChange?.(pill.id)}
+                className={cn(
+                  'h-[61px] p-3 rounded-[8px] border text-left transition-colors flex flex-col justify-between cursor-pointer select-none',
+                  isActive
+                    ? 'border-[1.5px] border-brand bg-brand/5'
+                    : 'border-border bg-surface hover:bg-muted/30'
+                )}
+              >
+                <span className="text-[13px] text-muted-foreground font-normal leading-tight truncate">
+                  {pill.label}
+                </span>
+                <span className="text-base font-semibold text-foreground tabular-nums leading-none">
+                  {countDisplay}
+                </span>
+              </button>
+            )
+          })}
+        </div>
+      )}
+
+      {/* Search Input & Action Bar */}
+      <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-2.5">
         {/* Search input */}
         {onSearchChange !== undefined && (
           <div className="relative flex-1 max-w-md">
@@ -46,13 +81,13 @@ export function FilterBar<T extends string = string>({
               value={searchQuery || ''}
               onChange={(e) => onSearchChange(e.target.value)}
               placeholder={searchPlaceholder}
-              className="pl-9 pr-8 h-10 text-sm bg-card rounded-xl border-border"
+              className="pl-9 pr-8 h-9 text-xs bg-surface rounded-[8px] border-border shadow-none"
             />
             {searchQuery && (
               <button
                 type="button"
                 onClick={() => onSearchChange('')}
-                className="absolute right-2.5 top-1/2 -translate-y-1/2 size-5 flex items-center justify-center text-muted-foreground hover:text-foreground"
+                className="absolute right-2.5 top-1/2 -translate-y-1/2 size-4 flex items-center justify-center text-muted-foreground hover:text-foreground"
               >
                 <X className="size-3.5" />
               </button>
@@ -69,7 +104,7 @@ export function FilterBar<T extends string = string>({
               variant="ghost"
               size="sm"
               onClick={onClearAll}
-              className="h-9 text-xs text-muted-foreground hover:text-foreground"
+              className="h-8 text-xs text-muted-foreground hover:text-foreground"
             >
               Clear filters
             </Button>
@@ -77,8 +112,8 @@ export function FilterBar<T extends string = string>({
         </div>
       </div>
 
-      {/* Status pills */}
-      {statusPills && statusPills.length > 0 && (
+      {/* Fallback Status pills (when useCards is false) */}
+      {statusPills && statusPills.length > 0 && !useCards && (
         <div className="flex items-center gap-1.5 overflow-x-auto pb-1 no-scrollbar">
           {statusPills.map((pill) => {
             const isActive = activeStatus === pill.id
@@ -88,10 +123,10 @@ export function FilterBar<T extends string = string>({
                 type="button"
                 onClick={() => onStatusChange?.(pill.id)}
                 className={cn(
-                  'h-8 px-3.5 rounded-full text-xs font-medium transition-all duration-150 inline-flex items-center gap-1.5 whitespace-nowrap border',
+                  'h-7 px-3 rounded-[6px] text-xs font-medium transition-colors inline-flex items-center gap-1.5 whitespace-nowrap border',
                   isActive
-                    ? 'bg-foreground text-background border-foreground shadow-xs font-semibold'
-                    : 'bg-card text-muted-foreground border-border hover:border-border/80 hover:text-foreground'
+                    ? 'bg-foreground text-background border-foreground font-semibold'
+                    : 'bg-surface text-muted-foreground border-border hover:border-border/80 hover:text-foreground'
                 )}
               >
                 <span>{pill.label}</span>

@@ -69,20 +69,16 @@ export function ProductImage({
     return (
       <div
         className={cn(
-          'relative w-full flex items-center justify-center overflow-hidden bg-gradient-to-br from-brand/8 via-muted/40 to-brand/12 border-b border-border/60 select-none',
+          'relative w-full flex items-center justify-center overflow-hidden bg-muted/40 border-b border-border/60 select-none',
           aspectClass,
           className,
         )}
         role="img"
         aria-label={alt}
       >
-        <div
-          className="absolute inset-0 opacity-[0.06] bg-[radial-gradient(#762B36_1px,transparent_1px)] [background-size:16px_16px]"
-          aria-hidden="true"
-        />
-        <div className="flex flex-col items-center justify-center text-brand/40">
-          <IconComponent className="size-16 sm:size-20 transition-transform duration-300 group-hover:scale-105" />
-          <span className="text-[11px] font-medium tracking-wide uppercase mt-2 text-muted-foreground/80">
+        <div className="flex flex-col items-center justify-center text-muted-foreground/60">
+          <IconComponent className="size-14 sm:size-16 transition-transform duration-200 group-hover:scale-105" />
+          <span className="text-xs font-medium mt-2 text-muted-foreground">
             {category || 'Rent4Fraction'}
           </span>
         </div>

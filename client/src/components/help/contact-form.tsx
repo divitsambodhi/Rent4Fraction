@@ -122,7 +122,7 @@ export function ContactForm({ onSubmitMessage }: ContactFormProps) {
             id="contact-email"
             type="email"
             {...register('email')}
-            placeholder="you@example.com"
+            placeholder="organizer@eventpro.in"
             className="w-full text-xs sm:text-sm p-3 rounded-lg border border-border bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-brand"
           />
           {errors.email && (

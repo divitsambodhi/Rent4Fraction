@@ -48,7 +48,7 @@ export function PayoutDetailSheet({
       <SheetContent side="right" className="w-full sm:max-w-md p-0 flex flex-col">
         <SheetHeader className="p-6 border-b border-border">
           <div className="flex items-center justify-between gap-2">
-            <span className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
+            <span className="text-xs font-medium text-muted-foreground">
               Payout Details
             </span>
             <StatusBadge
@@ -73,7 +73,7 @@ export function PayoutDetailSheet({
         <div className="flex-1 overflow-y-auto p-6 space-y-6">
           {/* Payout Timeline: Pending -> Processing -> Paid */}
           <div className="space-y-3">
-            <h4 className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
+            <h4 className="text-xs font-semibold text-muted-foreground">
               Settlement Timeline
             </h4>
             <div className="space-y-3 relative pl-6 before:absolute before:left-2.5 before:top-2 before:bottom-2 before:w-[2px] before:bg-border">
@@ -112,7 +112,7 @@ export function PayoutDetailSheet({
 
           {/* Line Items Breakdown */}
           <div className="space-y-3">
-            <h4 className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
+            <h4 className="text-xs font-semibold text-muted-foreground">
               Equipment Rented
             </h4>
             <div className="rounded-xl border border-border divide-y divide-border/60 overflow-hidden text-xs">

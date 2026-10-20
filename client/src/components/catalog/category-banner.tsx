@@ -45,26 +45,20 @@ export function CategoryBanner({
   return (
     <div
       className={cn(
-        'relative rounded-[20px] border border-border bg-surface p-6 sm:p-8 shadow-xs overflow-hidden mb-6',
+        'relative rounded-[16px] border border-border bg-surface p-6 sm:p-8 shadow-none overflow-hidden mb-6',
         className,
       )}
     >
-      {/* Decorative subtle radial dot pattern */}
-      <div
-        className="absolute inset-0 opacity-[0.04] bg-[radial-gradient(#762B36_1.5px,transparent_1.5px)] [background-size:18px_18px] pointer-events-none"
-        aria-hidden="true"
-      />
-
       <div className="relative z-10 flex flex-col md:flex-row md:items-center gap-6">
         {/* Category Icon Tile */}
-        <div className="size-20 sm:size-24 rounded-[16px] bg-brand text-white flex items-center justify-center shadow-md shrink-0">
-          <Icon className="size-10 sm:size-12" />
+        <div className="size-16 sm:size-20 rounded-[14px] bg-brand text-white flex items-center justify-center shrink-0">
+          <Icon className="size-8 sm:size-10" />
         </div>
 
         {/* Text Details */}
         <div className="flex-1 space-y-2">
           <div className="flex items-center gap-2">
-            <span className="text-[11px] font-bold uppercase tracking-widest text-brand">
+            <span className="text-xs font-semibold text-brand">
               Event Category • {category.groupName}
             </span>
           </div>

@@ -85,7 +85,7 @@ export function AccountSidebar({ activeTab, badges }: AccountSidebarProps) {
   }
 
   return (
-    <aside className="w-[260px] shrink-0 sticky top-[88px] self-start space-y-4 rounded-[16px] bg-surface p-4 border border-border shadow-xs">
+    <aside className="w-[228px] shrink-0 sticky top-[80px] self-start space-y-4 rounded-[16px] bg-surface p-4 border border-border shadow-none">
       <UserSummaryCard />
 
       <nav className="space-y-1" aria-label="Account navigation">
@@ -102,36 +102,36 @@ export function AccountSidebar({ activeTab, badges }: AccountSidebarProps) {
               type="button"
               onClick={() => handleTabClick(item.key)}
               className={cn(
-                'group relative flex items-center justify-between w-full h-[44px] px-3.5 rounded-[10px] text-xs font-semibold transition-all cursor-pointer select-none text-left',
+                'group relative flex items-center justify-between w-full h-[40px] px-3 rounded-[8px] text-xs font-medium transition-colors cursor-pointer select-none text-left',
                 isActive
-                  ? 'bg-brand/10 text-brand'
-                  : 'text-muted-foreground hover:bg-muted/50 hover:text-foreground'
+                  ? 'text-foreground font-semibold bg-surface/80'
+                  : 'text-muted-foreground hover:bg-muted/40 hover:text-foreground'
               )}
             >
-              {/* Left active 3px brand indicator bar */}
-              {isActive && (
-                <span
-                  className="absolute left-0 top-2 bottom-2 w-[3px] rounded-r-full bg-brand"
-                  aria-hidden="true"
-                />
-              )}
-
-              <div className="flex items-center gap-3 min-w-0">
+              <div className="flex items-center gap-2.5 min-w-0 relative">
                 <Icon
                   className={cn(
-                    'size-4.5 stroke-[1.75] shrink-0 transition-colors',
+                    'size-4 stroke-[1.75] shrink-0 transition-colors',
                     isActive ? 'text-brand' : 'text-muted-foreground group-hover:text-foreground'
                   )}
                 />
-                <span className="truncate">{item.label}</span>
+                <span className="truncate relative">
+                  {item.label}
+                  {isActive && (
+                    <span
+                      className="absolute -bottom-1 left-0 right-0 h-[2px] bg-brand rounded-full"
+                      aria-hidden="true"
+                    />
+                  )}
+                </span>
               </div>
 
               {count !== null && (
                 <span
                   className={cn(
-                    'inline-flex items-center justify-center px-2 h-5 min-w-[20px] rounded-full text-[11px] font-bold tabular-nums',
+                    'inline-flex items-center justify-center px-1.5 h-4.5 min-w-[18px] rounded-full text-[10px] font-semibold tabular-nums',
                     isActive
-                      ? 'bg-brand text-white'
+                      ? 'bg-brand/15 text-brand'
                       : 'bg-muted text-muted-foreground group-hover:bg-muted-foreground/20'
                   )}
                 >
@@ -143,14 +143,14 @@ export function AccountSidebar({ activeTab, badges }: AccountSidebarProps) {
         })}
       </nav>
 
-      <div className="h-px bg-border my-2" />
+      <div className="h-px bg-border/60 my-2" />
 
       <button
         type="button"
         onClick={handleLogout}
-        className="flex items-center gap-3 w-full h-[44px] px-3.5 rounded-[10px] text-xs font-semibold text-muted-foreground hover:bg-danger/10 hover:text-danger transition-colors cursor-pointer text-left"
+        className="flex items-center gap-2.5 w-full h-[36px] px-3 rounded-[8px] text-xs font-medium text-danger/90 hover:bg-danger/10 transition-colors cursor-pointer text-left"
       >
-        <LogOut className="size-4.5 stroke-[1.75] shrink-0" />
+        <LogOut className="size-4 stroke-[1.75] shrink-0" />
         <span>Log out</span>
       </button>
     </aside>

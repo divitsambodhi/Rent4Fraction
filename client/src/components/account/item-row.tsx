@@ -123,12 +123,12 @@ export function ItemRow({
 
             {/* Vendor Reply */}
             {item.review.vendor_reply && (
-              <div className="mt-2 pl-3 border-l-2 border-brand/40 bg-surface/80 p-2 rounded-r-md space-y-0.5">
-                <div className="text-[10px] font-bold text-brand flex items-center gap-1">
-                  <MessageSquare className="size-3" />
+              <div className="mt-2 p-2.5 rounded-lg border border-border bg-surface/80 space-y-0.5">
+                <div className="text-xs font-semibold text-brand flex items-center gap-1.5">
+                  <MessageSquare className="size-3 text-brand" />
                   <span>Vendor Reply:</span>
                 </div>
-                <p className="text-[11px] text-muted-foreground leading-relaxed italic">
+                <p className="text-xs text-muted-foreground leading-relaxed italic">
                   &ldquo;{item.review.vendor_reply}&rdquo;
                 </p>
               </div>

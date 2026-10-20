@@ -158,7 +158,7 @@ export function CouponFormSheet({
               setError(null)
             }}
             placeholder="e.g. FESTIVAL15"
-            className="h-9 text-xs font-mono tracking-wider uppercase font-semibold"
+            className="h-9 text-sm font-mono uppercase font-semibold tracking-wide"
             maxLength={20}
             required
           />
@@ -170,7 +170,7 @@ export function CouponFormSheet({
             <label className="text-xs font-semibold text-foreground">Discount Type</label>
             <select
               value={type}
-              onChange={(e) => setType(e.target.value as any)}
+              onChange={(e) => setType(e.target.value as 'percent' | 'flat')}
               className="w-full h-9 px-3 rounded-xl border border-border bg-card text-xs text-foreground font-medium"
             >
               <option value="percent">Percentage (%)</option>

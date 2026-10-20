@@ -63,8 +63,8 @@ export function ReviewCard({ review, vendorName, className }: ReviewCardProps) {
 
       {/* Optional Nested Vendor Reply */}
       {review.vendor_reply && (
-        <div className="ml-10 sm:ml-12 mt-2 p-3 sm:p-3.5 rounded-[10px] bg-muted/40 border-l-2 border-brand/70 text-xs text-foreground/80 space-y-1">
-          <div className="flex items-center gap-1.5 font-semibold text-foreground text-[11px]">
+        <div className="ml-10 sm:ml-12 mt-2.5 p-3 sm:p-3.5 rounded-[10px] bg-muted/30 border border-border text-xs text-foreground/80 space-y-1">
+          <div className="flex items-center gap-1.5 font-semibold text-brand text-xs">
             <CornerDownRight className="size-3 text-brand" />
             <MessageSquareQuote className="size-3.5 text-brand" />
             <span>Response from {vendorName || 'the vendor'}</span>

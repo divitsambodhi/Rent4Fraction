@@ -1,4 +1,5 @@
 import React from 'react'
+import { useLocation } from 'react-router-dom'
 import { Navbar } from './navbar'
 import { Footer } from './footer'
 import { DevRoleSwitcher } from '@/components/shared/dev-role-switcher'
@@ -8,6 +9,21 @@ interface PublicLayoutProps {
 }
 
 export function PublicLayout({ children }: PublicLayoutProps) {
+  const location = useLocation()
+  const isDashboardRoute =
+    location.pathname.startsWith('/vendor') ||
+    location.pathname.startsWith('/admin') ||
+    location.pathname.startsWith('/preview')
+
+  if (isDashboardRoute) {
+    return (
+      <div className="min-h-screen bg-background text-foreground antialiased selection:bg-brand selection:text-white relative">
+        {children}
+        <DevRoleSwitcher />
+      </div>
+    )
+  }
+
   return (
     <div className="min-h-screen flex flex-col bg-background text-foreground antialiased selection:bg-brand selection:text-white relative">
       {/* Skip to Main Content Link for Keyboard Accessibility */}

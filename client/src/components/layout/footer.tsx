@@ -134,6 +134,11 @@ export function Footer() {
                 </AppLink>
               </li>
               <li>
+                <AppLink to="/help?tab=how-it-works" className="hover:text-brand transition-colors">
+                  How Rentals Work
+                </AppLink>
+              </li>
+              <li>
                 <AppLink to="/help?tab=refunds" className="hover:text-brand transition-colors">
                   Refundable Security Deposits
                 </AppLink>
@@ -151,11 +156,6 @@ export function Footer() {
               <li>
                 <AppLink to="/help?tab=privacy" className="hover:text-brand transition-colors">
                   Privacy Policy & Escrow
-                </AppLink>
-              </li>
-              <li>
-                <AppLink to="/vendor" className="hover:text-brand transition-colors">
-                  Vendor Onboarding Guide
                 </AppLink>
               </li>
             </ul>

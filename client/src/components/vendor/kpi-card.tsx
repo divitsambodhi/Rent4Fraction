@@ -41,30 +41,28 @@ export function KpiCard({
   return (
     <div
       className={cn(
-        'rounded-2xl border border-border bg-surface p-5 min-h-[112px] flex flex-col justify-between shadow-xs transition-shadow hover:shadow-sm',
+        'rounded-[12px] border border-border bg-surface p-4 min-h-[104px] flex flex-col justify-between shadow-none transition-colors',
         className,
       )}
     >
       <div className="flex items-center justify-between gap-2">
-        <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider truncate">
+        <span className="text-xs font-medium text-muted-foreground truncate">
           {label}
         </span>
         {Icon && (
-          <div className="size-8 rounded-lg bg-muted/60 text-muted-foreground flex items-center justify-center shrink-0">
-            <Icon className="size-4" />
-          </div>
+          <Icon className="size-4 stroke-[1.75] text-muted-foreground/70 shrink-0" />
         )}
       </div>
 
       <div className="mt-2 flex items-baseline justify-between gap-2">
-        <span className="text-2xl sm:text-[28px] font-bold tracking-tight text-foreground tabular-nums">
+        <span className="text-xl sm:text-2xl font-semibold tracking-tight text-foreground tabular-nums">
           {value}
         </span>
 
         {delta && (
           <span
             className={cn(
-              'inline-flex items-center gap-0.5 text-xs font-semibold px-2 py-0.5 rounded-full border',
+              'inline-flex items-center gap-0.5 text-xs font-medium px-1.5 py-0.5 rounded-md border',
               getToneClasses(delta.tone, delta.isPositive),
             )}
           >

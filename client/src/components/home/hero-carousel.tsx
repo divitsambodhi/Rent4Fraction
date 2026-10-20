@@ -50,7 +50,7 @@ const HERO_SLIDES: HeroSlide[] = [
       'Rent high-output line arrays, club-standard DJ consoles, and wireless mic sets. Complete with soundcheck engineers and on-time venue staging.',
     bgImage: '/images/hero/concert-sound.svg',
     primaryCtaText: 'Rent Sound Gear',
-    primaryCtaHref: '/equipment?category=speakers',
+    primaryCtaHref: '/equipment?category=1',
     secondaryCtaText: 'How It Works',
     secondaryCtaHref: '/#how-it-works',
     startingPrice: 1500,
@@ -70,9 +70,9 @@ const HERO_SLIDES: HeroSlide[] = [
       'Architectural RGBWA wash pars, automated moving heads, and warm fairy light curtains. Tested for electrical safety and synchronized DMX control.',
     bgImage: '/images/hero/stage-lighting.svg',
     primaryCtaText: 'Browse Lighting',
-    primaryCtaHref: '/equipment?category=stage-lights',
+    primaryCtaHref: '/equipment?category=4',
     secondaryCtaText: 'View Fairy Lights',
-    secondaryCtaHref: '/equipment?category=fairy-lights',
+    secondaryCtaHref: '/equipment?category=5',
     startingPrice: 600,
   },
   {
@@ -90,9 +90,9 @@ const HERO_SLIDES: HeroSlide[] = [
       'Champagne velvet banquet chairs, high-top standing cocktail tables, and heavy-duty pagoda canopy tents designed for seamless wedding productions.',
     bgImage: '/images/hero/wedding-marquee.svg',
     primaryCtaText: 'Explore Furniture',
-    primaryCtaHref: '/equipment?category=chairs',
+    primaryCtaHref: '/equipment?category=6',
     secondaryCtaText: 'View Canopies',
-    secondaryCtaHref: '/equipment?category=tents-decor',
+    secondaryCtaHref: '/equipment?category=8',
     startingPrice: 800,
   },
 ]
@@ -207,13 +207,9 @@ export function HeroCarousel() {
             alt={slide.categoryBadge}
             className="w-full h-full object-cover object-center transition-all duration-700 ease-out"
           />
-          {/* Deep Cinematic Gradients for razor-sharp text legibility */}
+          {/* Neutral dark scrim over photo for crisp text legibility */}
           <div
-            className="absolute inset-0 bg-gradient-to-t from-black/95 via-black/55 to-black/25 pointer-events-none"
-            aria-hidden="true"
-          />
-          <div
-            className="absolute inset-0 bg-gradient-to-r from-black/90 via-black/45 to-transparent pointer-events-none"
+            className="absolute inset-0 bg-black/65 pointer-events-none"
             aria-hidden="true"
           />
         </div>
@@ -286,10 +282,10 @@ export function HeroCarousel() {
             </span>
           </div>
 
-          {/* Glowing Golden / Brand Headline */}
-          <h1 className="font-serif text-3xl sm:text-5xl lg:text-[52px] font-bold tracking-tight text-amber-200 dark:text-amber-100 leading-[1.08] mb-3 drop-shadow-md">
+          {/* Editorial Headline */}
+          <h1 className="font-sans text-3xl sm:text-5xl lg:text-5xl font-bold tracking-tight text-white leading-[1.08] mb-3">
             {slide.titlePrefix}
-            <em className="font-serif italic font-normal text-white drop-shadow-sm">
+            <em className="italic font-normal text-amber-200">
               {slide.accentWord}
             </em>
             {slide.titleSuffix}
@@ -300,14 +296,13 @@ export function HeroCarousel() {
             {slide.subtitle}
           </p>
 
-          {/* Action Buttons: Pill Shapes with High Contrast */}
+          {/* Action Buttons: Tactile 10px Radius with High Contrast */}
           <div className="flex flex-wrap items-center gap-3">
             <AppLink to={slide.primaryCtaHref}>
               <Button
                 size="lg"
-                className="h-11 sm:h-12 px-6 rounded-full bg-white text-neutral-950 hover:bg-neutral-100 font-bold gap-2 shadow-xl border-0 transition-transform active:scale-95"
+                className="h-11 sm:h-12 px-6 rounded-[10px] bg-brand text-white hover:bg-brand-hover font-semibold gap-2 shadow-sm border-0 transition-all active:scale-[0.98]"
               >
-                <Play className="size-4 fill-neutral-950" />
                 <span>{slide.primaryCtaText}</span>
               </Button>
             </AppLink>
@@ -316,7 +311,7 @@ export function HeroCarousel() {
               <Button
                 variant="outline"
                 size="lg"
-                className="h-11 sm:h-12 px-5 rounded-full bg-black/40 hover:bg-black/60 text-white border-white/25 backdrop-blur-md font-semibold gap-2 transition-transform active:scale-95"
+                className="h-11 sm:h-12 px-5 rounded-[10px] bg-white/10 hover:bg-white/20 text-white border-white/20 font-semibold gap-2 transition-all active:scale-[0.98]"
               >
                 <Info className="size-4" />
                 <span>{slide.secondaryCtaText}</span>

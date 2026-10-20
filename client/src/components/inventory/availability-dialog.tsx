@@ -127,7 +127,7 @@ export function AvailabilityDialog({
           <DialogHeader className="p-6 border-b border-border bg-surface shrink-0">
             <div className="flex items-center justify-between">
               <div>
-                <span className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground">
+                <span className="text-xs font-semibold text-muted-foreground">
                   Availability & Stock Allocation
                 </span>
                 <DialogTitle className="font-serif text-xl sm:text-2xl mt-0.5">
@@ -144,7 +144,7 @@ export function AvailabilityDialog({
           <div className="flex-1 overflow-y-auto p-6 space-y-6">
             {/* Availability Calendar visualization */}
             <div className="p-4 rounded-xl border border-border bg-background space-y-3">
-              <h4 className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
+              <h4 className="text-xs font-semibold text-muted-foreground">
                 Calendar View (Next 90 Days)
               </h4>
               <AvailabilityCalendar
@@ -166,7 +166,7 @@ export function AvailabilityDialog({
             {/* Existing Allocation Blocks List */}
             <div className="space-y-3">
               <div className="flex items-center justify-between">
-                <h4 className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
+                <h4 className="text-xs font-semibold text-muted-foreground">
                   Active Allocations & Blocks ({blocks.length})
                 </h4>
               </div>

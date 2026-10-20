@@ -74,7 +74,7 @@ export function ApplicationSubmittedPanel({
 
       {/* 3-Step Timeline */}
       <div className="rounded-xl border border-border/80 bg-muted/20 p-4 sm:p-5 space-y-4">
-        <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+        <p className="text-xs font-semibold text-muted-foreground">
           Application Progress
         </p>
 

@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { ChevronUp, Shield, User, UserCheck, Wrench } from 'lucide-react'
+import { ChevronUp, Shield, User, UserCheck, Wrench, X } from 'lucide-react'
 import { useAuth } from '@/providers/auth-provider'
 import type { UserRole } from '@/types'
 import { cn } from '@/lib/utils'
@@ -26,18 +26,18 @@ export function DevRoleSwitcher() {
       className="fixed bottom-4 left-4 z-40 text-xs font-sans"
     >
       {expanded ? (
-        <div className="bg-surface/95 backdrop-blur-md border border-border rounded-[12px] p-3 shadow-xl max-w-xs animate-in fade-in-0 zoom-in-95 duration-150">
+        <div className="bg-surface border border-border rounded-[12px] p-3 shadow-lg max-w-xs animate-in fade-in-0 duration-150">
           <div className="flex items-center justify-between gap-3 pb-2 border-b border-border mb-2">
-            <span className="font-semibold text-foreground text-[11px] uppercase tracking-wider text-brand">
+            <span className="font-semibold text-foreground text-[11px] text-brand">
               // DEV ONLY: Preview as
             </span>
             <button
               type="button"
               onClick={() => setExpanded(false)}
-              className="text-muted-foreground hover:text-foreground text-[11px] px-1 rounded"
+              className="text-muted-foreground hover:text-foreground size-5 flex items-center justify-center rounded-[4px]"
               aria-label="Collapse role switcher"
             >
-              ✕
+              <X className="size-3" />
             </button>
           </div>
           <div className="space-y-1">

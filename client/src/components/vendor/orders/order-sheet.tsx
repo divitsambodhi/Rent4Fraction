@@ -28,7 +28,7 @@ interface OrderSheetProps {
   booking: BookingDetail | null
   commissionRate?: number
   equipmentDeposits?: Record<string, number>
-  onAction: (action: LifecycleAction, payload?: any) => Promise<void>
+  onAction: (action: LifecycleAction, payload?: unknown) => Promise<void>
 }
 
 export function OrderSheet({
@@ -86,9 +86,9 @@ export function OrderSheet({
     >
       <div className="space-y-6">
         {/* 1. CUSTOMER & EVENT DETAILS */}
-        <section className="p-5 rounded-2xl border border-border bg-card shadow-xs space-y-4">
+        <section className="p-4 sm:p-5 rounded-[14px] border border-border bg-surface shadow-none space-y-4">
           <div className="flex items-center justify-between">
-            <span className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-1.5">
+            <span className="text-xs font-medium text-muted-foreground flex items-center gap-1.5">
               <User className="size-3.5" />
               <span>Customer & Event Details</span>
             </span>
@@ -119,7 +119,7 @@ export function OrderSheet({
           </div>
 
           {/* Delivery Address Snapshot */}
-          <div className="p-3.5 rounded-xl bg-muted/20 border border-border space-y-2 text-xs">
+          <div className="p-3 rounded-[10px] bg-muted/20 border border-border space-y-2 text-xs">
             <div className="flex items-center justify-between">
               <span className="font-semibold text-foreground flex items-center gap-1.5">
                 <MapPin className="size-3.5 text-brand" />
@@ -149,9 +149,9 @@ export function OrderSheet({
         </section>
 
         {/* 2. ORDER ITEMS & AVAILABILITY CHECK */}
-        <section className="p-5 rounded-2xl border border-border bg-card shadow-xs space-y-4">
+        <section className="p-4 sm:p-5 rounded-[14px] border border-border bg-surface shadow-none space-y-4">
           <div className="flex items-center justify-between">
-            <span className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-1.5">
+            <span className="text-xs font-medium text-muted-foreground flex items-center gap-1.5">
               <Package className="size-3.5" />
               <span>Rental Equipment ({orderItems.length})</span>
             </span>
@@ -208,7 +208,7 @@ export function OrderSheet({
           {/* Damage reports if filed */}
           {orderItems.some((it) => it.damage_report) && (
             <div className="space-y-3">
-              <h4 className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
+              <h4 className="text-xs font-semibold text-muted-foreground">
                 Damage Assessment Reports
               </h4>
               {orderItems
@@ -225,8 +225,8 @@ export function OrderSheet({
         </section>
 
         {/* 5. FINANCIAL BREAKDOWN */}
-        <section className="p-5 rounded-2xl border border-border bg-card shadow-xs space-y-4">
-          <span className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground">
+        <section className="p-4 sm:p-5 rounded-[14px] border border-border bg-surface shadow-none space-y-4">
+          <span className="text-xs font-medium text-muted-foreground">
             Payout & Security Deposit Breakdown
           </span>
 
@@ -248,7 +248,7 @@ export function OrderSheet({
               </span>
             </div>
 
-            <div className="p-3 rounded-xl bg-muted/20 border border-border flex items-center justify-between">
+            <div className="p-3 rounded-[10px] bg-muted/20 border border-border flex items-center justify-between">
               <div>
                 <p className="font-semibold text-foreground text-xs">Deposit Share Held</p>
                 <p className="text-[11px] text-muted-foreground">Secures physical items for this order</p>
@@ -266,7 +266,7 @@ export function OrderSheet({
 
         {/* 6. ACTIVITY TIMELINE */}
         <section className="space-y-3">
-          <h4 className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
+          <h4 className="text-xs font-semibold text-muted-foreground">
             Order Activity History
           </h4>
           <ActivityTimeline activity={booking.activity} />

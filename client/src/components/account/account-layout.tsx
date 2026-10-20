@@ -53,13 +53,16 @@ export function AccountLayout({
         <AccountTabsMobile activeTab={activeTab} badges={badges} />
 
         {/* Desktop Layout (>=1024px) */}
-        <div className="flex flex-col lg:flex-row gap-8 items-start">
+        <div className="flex flex-col lg:flex-row gap-6 items-start">
           <div className="hidden lg:block shrink-0">
             <AccountSidebar activeTab={activeTab} badges={badges} />
           </div>
 
-          {/* Main Account Content Panel */}
-          <main className="flex-1 w-full min-w-0" id="account-main-content">
+          {/* Main Account Content Panel inside Framed Sheet */}
+          <main
+            className="flex-1 w-full min-w-0 bg-surface rounded-[16px] border border-border p-4 sm:p-6 shadow-none"
+            id="account-main-content"
+          >
             {children}
           </main>
         </div>

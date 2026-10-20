@@ -108,7 +108,7 @@ export function BookingDetailSheet({
       <Sheet open={isOpen} onOpenChange={(open) => !open && onClose()}>
         <SheetContent
           side="right"
-          className="w-full sm:max-w-[600px] h-[95vh] sm:h-full bottom-0 sm:bottom-auto sm:right-0 inset-x-0 sm:inset-x-auto rounded-t-[20px] sm:rounded-none p-0 flex flex-col bg-surface border-t sm:border-t-0 sm:border-l border-border shadow-2xl focus:outline-none"
+          className="w-full sm:max-w-[600px] h-[95vh] sm:h-full bottom-0 sm:bottom-auto sm:right-0 inset-x-0 sm:inset-x-auto rounded-t-[20px] sm:rounded-none p-0 flex flex-col bg-surface border-t sm:border-t-0 sm:border-l border-border shadow-none focus:outline-none"
         >
           {/* Mobile drag handle */}
           <div className="sm:hidden flex justify-center pt-2.5 pb-1">
@@ -116,10 +116,10 @@ export function BookingDetailSheet({
           </div>
 
           {/* Sticky Header */}
-          <header className="px-5 py-4 border-b border-border bg-surface/95 backdrop-blur-md flex items-center justify-between gap-3 shrink-0">
+          <header className="px-5 py-4 border-b border-border bg-surface flex items-center justify-between gap-3 shrink-0">
             <div className="min-w-0 space-y-1">
               <div className="flex items-center gap-2">
-                <span className="font-mono text-xs font-bold text-foreground bg-muted/60 px-2 py-0.5 rounded border border-border/60">
+                <span className="text-xs font-semibold text-foreground bg-muted/60 px-2 py-0.5 rounded border border-border/60 tabular-nums">
                   {booking?.booking_id || bookingId}
                 </span>
                 {booking && <StatusBadge status={booking.status} size="sm" />}
@@ -133,7 +133,7 @@ export function BookingDetailSheet({
             <button
               type="button"
               onClick={onClose}
-              className="size-8 rounded-full flex items-center justify-center text-muted-foreground hover:bg-muted hover:text-foreground transition-colors shrink-0"
+              className="size-8 rounded-full flex items-center justify-center text-muted-foreground hover:bg-muted hover:text-foreground transition-colors shrink-0 cursor-pointer"
               aria-label="Close booking details"
             >
               <X className="size-4.5 stroke-[2]" />
@@ -150,7 +150,7 @@ export function BookingDetailSheet({
               <>
                 {/* 1. OVERVIEW SECTION */}
                 <section className="space-y-3">
-                  <h3 className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
+                  <h3 className="text-xs font-semibold text-muted-foreground">
                     Booking Overview
                   </h3>
                   <div className="p-4 rounded-[14px] bg-muted/30 border border-border grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
@@ -199,7 +199,7 @@ export function BookingDetailSheet({
                 {/* 2. VENDOR ORDERS SECTION */}
                 <section className="space-y-3">
                   <div className="flex items-center justify-between">
-                    <h3 className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
+                    <h3 className="text-xs font-semibold text-muted-foreground">
                       Vendor Orders ({booking.vendor_orders.length})
                     </h3>
                   </div>
@@ -220,7 +220,7 @@ export function BookingDetailSheet({
 
                 {/* 3. PAYMENTS & DEPOSITS SECTION */}
                 <section className="space-y-3">
-                  <h3 className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
+                  <h3 className="text-xs font-semibold text-muted-foreground">
                     Payments & Deposit Breakdown
                   </h3>
 

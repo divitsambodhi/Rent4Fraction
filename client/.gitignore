@@ -41,6 +41,12 @@ __v0_*
 docs/
 MOVE_TO_CLIENT.md
 PLAN_*.md
+README_*.md
+AUDIT_*.md
+CHANGELOG_*.md
+DESIGN.md
+PRODUCT.md
+*.md.bak
 *.png
 *.jpg
 *.jpeg
@@ -53,3 +59,18 @@ scratch/
 *.tmp
 *.temp
 coverage/
+
+# AI skills, agents, and tooling
+.agents/
+.taste-skill/
+.impeccable/
+.codex/
+skills-lock.json
+
+# Sensitive keys and credentials
+*.pem
+*.key
+*.cert
+*.crt
+credentials.json
+client_secrets*.json

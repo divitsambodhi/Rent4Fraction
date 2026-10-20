@@ -245,7 +245,7 @@ export function InventoryPage() {
         {/* Header with "Add equipment" CTA */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div>
-            <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
+            <p className="text-xs font-medium text-muted-foreground">
               Equipment Catalogue
             </p>
             <h2 className="font-serif text-xl sm:text-2xl font-bold text-foreground">

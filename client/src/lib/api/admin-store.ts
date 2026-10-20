@@ -312,7 +312,7 @@ export function getAdminDisputes(): AdminDispute[] {
           booking_id: booking.booking_id,
           vendor_order_id: vo?.vendor_order_id || `VO-${booking.booking_id.slice(-4)}`,
           customer_name: booking.delivery_address.name,
-          customer_email: 'aarav@example.com',
+          customer_email: 'aarav@eventpro.in',
           vendor_name: profile.business_name,
           vendor_id: item.vendor_id,
           equipment_name: item.name,
@@ -497,7 +497,7 @@ export function getAdminOverviewKPIs(): AdminOverviewKPIs {
 
   let grossBookingValue = 0
   let platformCommissionEarned = 0
-  let bookingsCount = accountState.bookings.length
+  const bookingsCount = accountState.bookings.length
 
   accountState.bookings.forEach((b) => {
     grossBookingValue += b.total_amount

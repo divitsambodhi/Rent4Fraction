@@ -33,7 +33,7 @@ export function EarningsChart({
   const isPositiveDelta = deltaPercent >= 0
 
   return (
-    <div className={cn('rounded-2xl border border-border bg-surface p-5 sm:p-6 shadow-xs flex flex-col', className)}>
+    <div className={cn('rounded-[14px] border border-border bg-surface p-5 sm:p-6 shadow-none flex flex-col', className)}>
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 pb-4 border-b border-border/60">
         <div>
@@ -145,9 +145,9 @@ export function EarningsChart({
                   >
                     <div
                       className={cn(
-                        'w-full max-w-[32px] rounded-t-sm transition-all duration-200',
+                        'w-full max-w-[32px] rounded-t-sm transition-colors duration-150',
                         isHovered
-                          ? 'bg-brand shadow-sm scale-y-[1.02]'
+                          ? 'bg-brand'
                           : point.amount > 0
                           ? 'bg-brand/80 hover:bg-brand'
                           : 'bg-muted-foreground/20 hover:bg-muted-foreground/40',

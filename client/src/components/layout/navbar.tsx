@@ -180,7 +180,7 @@ export function Navbar() {
                 align="start"
                 className="w-[480px] p-4 bg-surface border-border shadow-xl rounded-[16px]"
               >
-                <div className="text-xs uppercase tracking-wider font-bold text-brand mb-3 px-2">
+                <div className="text-xs font-semibold text-brand mb-3 px-2">
                   Event Equipment Categories
                 </div>
                 <div className="grid grid-cols-2 gap-2">
@@ -582,7 +582,7 @@ export function Navbar() {
               <div className="flex-1 overflow-y-auto p-4 space-y-6">
                 {/* Primary Nav */}
                 <div className="space-y-1">
-                  <div className="text-[11px] font-bold text-brand uppercase tracking-wider px-3 mb-1">
+                  <div className="text-xs font-semibold text-brand px-3 mb-1">
                     Navigation
                   </div>
                   <AppLink
@@ -609,7 +609,7 @@ export function Navbar() {
 
                 {/* Categories */}
                 <div className="space-y-1">
-                  <div className="text-[11px] font-bold text-brand uppercase tracking-wider px-3 mb-1">
+                  <div className="text-xs font-semibold text-brand px-3 mb-1">
                     Categories
                   </div>
                   <div className="grid grid-cols-2 gap-1">
@@ -627,7 +627,7 @@ export function Navbar() {
 
                 {/* Role-Specific Actions */}
                 <div className="space-y-1 pt-2 border-t border-border">
-                  <div className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider px-3 mb-1">
+                  <div className="text-xs font-semibold text-muted-foreground px-3 mb-1">
                     Account ({role})
                   </div>
                   {role === 'visitor' ? (

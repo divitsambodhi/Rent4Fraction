@@ -64,7 +64,7 @@ export function ReviewDialog({
         <DialogHeader className="space-y-1">
           <div className="flex items-center gap-2 text-brand">
             <Star className="size-5 fill-brand" />
-            <span className="text-xs font-bold uppercase tracking-wider">
+            <span className="text-xs font-semibold text-brand">
               Item Review
             </span>
           </div>

@@ -58,7 +58,7 @@ export function AuthBrandPanel({ mode, className }: AuthBrandPanelProps) {
   return (
     <div
       className={cn(
-        'relative rounded-[24px] bg-gradient-to-br from-brand via-brand/95 to-brand-hover text-white p-6 sm:p-8 lg:p-10 flex flex-col justify-between overflow-hidden shadow-xl select-none',
+        'relative rounded-[16px] bg-brand text-white p-6 sm:p-8 lg:p-10 flex flex-col justify-between overflow-hidden shadow-none select-none',
         className,
       )}
     >
@@ -70,9 +70,9 @@ export function AuthBrandPanel({ mode, className }: AuthBrandPanelProps) {
         <Package className="size-96" />
       </div>
 
-      {/* Top Header & Copy with 200ms transition */}
+      {/* Top Header & Copy */}
       <div className="relative z-10 space-y-5 transition-opacity duration-200">
-        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/10 text-white/90 text-[11px] font-bold tracking-wider uppercase backdrop-blur-xs">
+        <div className="inline-flex items-center gap-2 px-2.5 py-0.5 rounded-full bg-white/15 text-white/95 text-xs font-medium">
           <span>{current.eyebrow}</span>
         </div>
 

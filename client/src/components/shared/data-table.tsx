@@ -76,7 +76,7 @@ export function DataTable<T>({
     }
   }
 
-  const handleToggleRow = (id: string, e: React.MouseEvent) => {
+  const handleToggleRow = (id: string, e: React.SyntheticEvent) => {
     e.stopPropagation()
     if (!onSelectIds) return
     if (selectedIds.includes(id)) {
@@ -101,10 +101,10 @@ export function DataTable<T>({
       )}
 
       {/* Desktop Table View */}
-      <div className="hidden md:block rounded-2xl border border-border bg-card overflow-hidden shadow-xs">
+      <div className="hidden md:block rounded-[12px] border border-border bg-surface overflow-hidden shadow-none">
         <div className="overflow-x-auto">
           <table className="w-full text-left text-sm border-collapse">
-            <thead className="bg-muted/40 border-b border-border text-xs uppercase tracking-wider text-muted-foreground font-semibold sticky top-0 z-10 backdrop-blur-md">
+            <thead className="bg-muted/30 border-b border-border text-xs text-muted-foreground font-semibold sticky top-0 z-10">
               <tr>
                 {selectable && (
                   <th className="w-12 px-4 py-3.5 text-center">
@@ -147,7 +147,7 @@ export function DataTable<T>({
             <tbody className="divide-y divide-border">
               {loading ? (
                 Array.from({ length: 5 }).map((_, i) => (
-                  <tr key={i} className="animate-pulse">
+                  <tr key={i} className="opacity-70">
                     {selectable && <td className="w-12 px-4 py-4 text-center"><div className="size-4 bg-muted rounded mx-auto" /></td>}
                     {columns.map((c) => (
                       <td key={c.id} className="px-4 py-4">
@@ -187,14 +187,14 @@ export function DataTable<T>({
                           <input
                             type="checkbox"
                             checked={isSelected}
-                            onChange={(e) => handleToggleRow(id, e as any)}
+                            onChange={(e) => handleToggleRow(id, e)}
                             className="size-4 rounded border-border text-brand focus:ring-brand/30"
                           />
                         </td>
                       )}
                       {columns.map((col) => (
                         <td key={col.id} className={cn('px-4 py-3.5 text-foreground align-middle', col.className)}>
-                          {col.accessor ? col.accessor(row) : (row as any)[col.id]}
+                          {col.accessor ? col.accessor(row) : String((row as Record<string, unknown>)[col.id] ?? '')}
                         </td>
                       ))}
                     </tr>
@@ -210,7 +210,7 @@ export function DataTable<T>({
       <div className="md:hidden space-y-3">
         {loading ? (
           Array.from({ length: 3 }).map((_, i) => (
-            <div key={i} className="p-4 rounded-xl border border-border bg-card animate-pulse space-y-3">
+            <div key={i} className="p-4 rounded-[10px] border border-border bg-surface opacity-70 space-y-3">
               <div className="h-4 bg-muted rounded w-1/2" />
               <div className="h-3 bg-muted rounded w-3/4" />
               <div className="h-3 bg-muted rounded w-1/3" />
@@ -241,7 +241,7 @@ export function DataTable<T>({
                       <div key={col.id} className="flex justify-between text-xs py-1">
                         <span className="text-muted-foreground font-medium">{col.header}:</span>
                         <span className="text-foreground text-right">
-                          {col.accessor ? col.accessor(row) : (row as any)[col.id]}
+                          {col.accessor ? col.accessor(row) : String((row as Record<string, unknown>)[col.id] ?? '')}
                         </span>
                       </div>
                     ))}

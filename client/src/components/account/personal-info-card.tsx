@@ -66,13 +66,13 @@ export function PersonalInfoCard() {
   }
 
   const displayName = user?.name || 'Aarav Mehta'
-  const displayEmail = user?.email || 'aarav@example.com'
+  const displayEmail = user?.email || 'aarav@eventpro.in'
   const displayPhone = user?.phone || '9876543210'
   const initials = user?.avatarInitials || 'AM'
   const isVerified = user?.email_verified ?? true
 
   return (
-    <article className="p-5 sm:p-6 rounded-[16px] bg-surface border border-border shadow-xs space-y-5">
+    <article className="p-5 sm:p-6 rounded-[16px] bg-surface border border-border shadow-none space-y-5">
       <div className="flex items-center justify-between gap-4 pb-4 border-b border-border">
         <div className="flex items-center gap-3.5">
           {/* Avatar (48px) */}

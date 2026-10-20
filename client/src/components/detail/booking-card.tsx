@@ -134,7 +134,7 @@ export function BookingCard({
   return (
     <aside
       className={cn(
-        'w-full max-w-[380px] rounded-[16px] border border-border bg-surface p-5 sm:p-6 shadow-sm space-y-5 text-foreground max-h-[calc(100vh-100px)] overflow-y-auto scrollbar-none',
+        'w-full max-w-[380px] rounded-[16px] border border-border bg-surface p-5 sm:p-6 shadow-none space-y-5 text-foreground max-h-[calc(100vh-100px)] overflow-y-auto scrollbar-none',
         className,
       )}
       aria-label="Booking and reservation card"

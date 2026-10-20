@@ -72,7 +72,7 @@ export function AccountTabsMobile({ activeTab, badges }: AccountTabsMobileProps)
   }
 
   return (
-    <div className="lg:hidden sticky top-16 z-30 -mx-4 px-4 py-2.5 bg-surface/95 backdrop-blur-md border-b border-border shadow-xs">
+    <div className="lg:hidden sticky top-12 z-30 -mx-4 px-4 py-2 bg-surface border-b border-border shadow-none">
       <div
         role="tablist"
         aria-label="Account sections"
@@ -90,10 +90,10 @@ export function AccountTabsMobile({ activeTab, badges }: AccountTabsMobileProps)
               aria-selected={isActive}
               onClick={() => handleTabClick(tab.key)}
               className={cn(
-                'snap-start shrink-0 inline-flex items-center gap-1.5 h-9 px-3.5 rounded-full text-xs font-semibold transition-all cursor-pointer select-none',
+                'snap-start shrink-0 inline-flex items-center gap-1.5 h-8 px-3 rounded-full text-xs font-medium transition-colors cursor-pointer select-none',
                 isActive
-                  ? 'bg-brand text-white shadow-xs'
-                  : 'bg-muted/60 text-muted-foreground hover:bg-muted hover:text-foreground'
+                  ? 'bg-brand text-white'
+                  : 'bg-muted/50 text-muted-foreground hover:bg-muted hover:text-foreground'
               )}
             >
               <Icon className="size-3.5 stroke-[1.75]" />

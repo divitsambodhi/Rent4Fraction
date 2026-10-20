@@ -107,7 +107,7 @@ export function ComingSoonPage({
       {/* Query String Echoing for /equipment and search wiring verification */}
       {hasSearchParams && (
         <div className="mt-8 p-5 rounded-[16px] border border-brand/20 bg-brand/5 max-w-lg mx-auto">
-          <div className="flex items-center gap-2 text-xs font-bold text-brand uppercase tracking-wider mb-3">
+          <div className="flex items-center gap-2 text-xs font-semibold text-brand mb-3">
             <Filter className="size-3.5" />
             <span>Active Search Parameters Detected:</span>
           </div>

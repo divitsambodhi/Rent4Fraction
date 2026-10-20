@@ -214,7 +214,7 @@ export function VendorOrdersPage() {
   }, [allVendorOrders])
 
   // Action execution
-  const handleLifecycleAction = async (action: LifecycleAction, payload?: any) => {
+  const handleLifecycleAction = async (action: LifecycleAction, payload?: unknown) => {
     if (!selectedOrderRow && !inspectingOrder) return
 
     const currentOrder = selectedOrderRow?.order || inspectingOrder!
@@ -312,23 +312,26 @@ export function VendorOrdersPage() {
       subtitle="Fulfill customer orders, schedule logistics, and verify equipment condition"
     >
       <div className="space-y-6">
-        {/* Top-level Tabs (Orders vs Returns) */}
-        <div className="flex items-center gap-2 border-b border-border pb-3">
+        {/* Top-level Tabs (Orders vs Returns) - Underline tab on 1px rule */}
+        <div className="flex items-center gap-6 border-b border-border">
           <button
             type="button"
             onClick={() => handleTabChange('orders')}
             className={cn(
-              'px-4 py-2 rounded-xl text-sm font-semibold transition-all inline-flex items-center gap-2',
+              'pb-2.5 text-xs sm:text-sm font-semibold transition-colors inline-flex items-center gap-2 relative cursor-pointer',
               tabParam === 'orders'
-                ? 'bg-foreground text-background shadow-xs'
-                : 'text-muted-foreground hover:text-foreground hover:bg-muted/40'
+                ? 'text-foreground'
+                : 'text-muted-foreground hover:text-foreground'
             )}
           >
             <span>Orders</span>
             {orderCounts.pending > 0 && (
-              <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-brand text-brand-foreground">
+              <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded-full bg-brand/10 text-brand tabular-nums">
                 {orderCounts.pending} pending
               </span>
+            )}
+            {tabParam === 'orders' && (
+              <span className="absolute bottom-0 left-0 right-0 h-[2px] bg-brand rounded-full" aria-hidden="true" />
             )}
           </button>
 
@@ -336,17 +339,20 @@ export function VendorOrdersPage() {
             type="button"
             onClick={() => handleTabChange('returns')}
             className={cn(
-              'px-4 py-2 rounded-xl text-sm font-semibold transition-all inline-flex items-center gap-2',
+              'pb-2.5 text-xs sm:text-sm font-semibold transition-colors inline-flex items-center gap-2 relative cursor-pointer',
               tabParam === 'returns'
-                ? 'bg-foreground text-background shadow-xs'
-                : 'text-muted-foreground hover:text-foreground hover:bg-muted/40'
+                ? 'text-foreground'
+                : 'text-muted-foreground hover:text-foreground'
             )}
           >
             <span>Returns & Inspection</span>
             {returnCounts.to_inspect > 0 && (
-              <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-500 text-white">
+              <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded-full bg-amber-500/15 text-amber-700 dark:text-amber-400 tabular-nums">
                 {returnCounts.to_inspect} to inspect
               </span>
+            )}
+            {tabParam === 'returns' && (
+              <span className="absolute bottom-0 left-0 right-0 h-[2px] bg-brand rounded-full" aria-hidden="true" />
             )}
           </button>
         </div>

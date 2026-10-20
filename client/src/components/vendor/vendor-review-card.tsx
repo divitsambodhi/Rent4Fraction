@@ -99,9 +99,9 @@ export function VendorReviewCard({
 
       {/* Existing Reply Display */}
       {review.vendor_reply && !isReplying && (
-        <div className="p-3.5 rounded-xl bg-muted/40 border-l-2 border-brand text-xs space-y-1.5">
+        <div className="p-3.5 rounded-xl bg-muted/30 border border-border text-xs space-y-1.5">
           <div className="flex items-center justify-between">
-            <span className="font-semibold text-foreground flex items-center gap-1.5 text-[11px]">
+            <span className="font-semibold text-foreground flex items-center gap-1.5 text-xs">
               <CornerDownRight className="size-3 text-brand" />
               Your response
               {review.replied_at && (

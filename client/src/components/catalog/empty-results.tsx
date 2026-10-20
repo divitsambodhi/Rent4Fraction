@@ -55,7 +55,7 @@ export function EmptyResults({
 
       {/* 4 Popular Category Suggestion Chips */}
       <div className="w-full pt-6 border-t border-border/80 max-w-lg">
-        <p className="text-xs uppercase tracking-wider font-semibold text-muted-foreground mb-3">
+        <p className="text-xs font-semibold text-muted-foreground mb-3">
           Or explore popular event categories:
         </p>
 

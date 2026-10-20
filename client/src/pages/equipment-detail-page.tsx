@@ -265,7 +265,7 @@ export function EquipmentDetailPage() {
           {/* 5. Section: Specifications (#specifications) */}
           <section
             id="specifications"
-            className="rounded-[16px] border border-border bg-surface p-5 sm:p-7 shadow-xs space-y-5 scroll-mt-28"
+            className="rounded-[16px] border border-border bg-surface p-5 sm:p-7 shadow-none space-y-5 scroll-mt-28"
             aria-labelledby="specs-heading"
           >
             <div className="space-y-1">

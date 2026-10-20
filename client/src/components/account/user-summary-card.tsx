@@ -35,14 +35,14 @@ export function UserSummaryCard() {
   }
 
   const displayName = user?.name || 'Aarav Mehta'
-  const displayEmail = user?.email || 'aarav@example.com'
+  const displayEmail = user?.email || 'aarav@eventpro.in'
   const displayInitials = user?.avatarInitials || 'AM'
   const isVerified = user?.email_verified ?? true
 
   return (
-    <div className="p-4 rounded-[14px] bg-muted/40 border border-border/80 flex items-center gap-3">
-      {/* 44px Initials Avatar */}
-      <div className="size-11 rounded-full bg-brand/10 border border-brand/20 text-brand font-bold text-sm flex items-center justify-center shrink-0 shadow-xs">
+    <div className="p-3.5 rounded-[12px] bg-muted/30 border border-border/70 flex items-center gap-3">
+      {/* 40px Initials Avatar */}
+      <div className="size-10 rounded-full bg-brand/10 border border-brand/20 text-brand font-bold text-xs flex items-center justify-center shrink-0 shadow-none">
         {displayInitials}
       </div>
 

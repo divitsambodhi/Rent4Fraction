@@ -114,7 +114,7 @@ export function ForgotPasswordDialog({
                     id={id}
                     type="email"
                     autoComplete="email"
-                    placeholder="name@example.com"
+                    placeholder="name@eventpro.in"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     required

@@ -40,14 +40,14 @@ export function VendorReviewSheet({
   onReinstate,
   onUpdateCommission,
 }: VendorReviewSheetProps) {
-  if (!vendor) return null
-
-  const [rateInput, setRateInput] = useState(String(vendor.commission_rate ?? 10))
+  const [rateInput, setRateInput] = useState(vendor ? String(vendor.commission_rate ?? 10) : '10')
   const [reasonInput, setReasonInput] = useState('')
   const [showReasonDialog, setShowReasonDialog] = useState<'reject' | 'suspend' | null>(null)
   const [showCommissionConfirm, setShowCommissionConfirm] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
+
+  if (!vendor) return null
 
   // GST validation
   const gstRegex = /^\d{2}[A-Z]{5}\d{4}[A-Z][A-Z\d]Z[A-Z\d]$/

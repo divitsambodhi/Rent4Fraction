@@ -12,7 +12,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
 import { ConfirmDialog } from '@/components/account/confirm-dialog'
-import { evaluateDisputeResolution } from '@/lib/lifecycle'
+import { evaluateDisputeResolution, type DisputeResolutionResult } from '@/lib/lifecycle'
 import { cn } from '@/lib/utils'
 import type { AdminDispute } from '@/types/admin'
 
@@ -29,13 +29,9 @@ export function DisputeSheet({
   dispute,
   onResolve,
 }: DisputeSheetProps) {
-  if (!dispute) return null
-
-  const isResolved = dispute.status === 'resolved'
-
   const [outcome, setOutcome] = useState<'full' | 'partial' | 'reject'>('partial')
   const [partialAmount, setPartialAmount] = useState(
-    String(Math.round(dispute.claimed_amount / 2))
+    dispute ? String(Math.round(dispute.claimed_amount / 2)) : '0'
   )
   const [resolutionNote, setResolutionNote] = useState('')
   const [showConfirm, setShowConfirm] = useState(false)
@@ -43,7 +39,8 @@ export function DisputeSheet({
   const [error, setError] = useState<string | null>(null)
 
   // Evaluation
-  const evalResult = useMemo(() => {
+  const evalResult: DisputeResolutionResult = useMemo(() => {
+    if (!dispute) return { isValid: false, finalAmount: 0, deductedFromDeposit: 0 }
     return evaluateDisputeResolution(
       dispute.claimed_amount,
       dispute.deposit_held,
@@ -52,6 +49,9 @@ export function DisputeSheet({
     )
   }, [dispute, outcome, partialAmount])
 
+  if (!dispute) return null
+
+  const isResolved = dispute.status === 'resolved'
   // Deduction vs Refund calculation preview
   const estimatedRefund = Math.max(0, dispute.deposit_held - evalResult.deductedFromDeposit)
 
@@ -183,7 +183,7 @@ export function DisputeSheet({
                     key={opt.id}
                     type="button"
                     onClick={() => {
-                      setOutcome(opt.id as any)
+                      setOutcome(opt.id as 'full' | 'partial' | 'reject')
                       setError(null)
                     }}
                     className={cn(

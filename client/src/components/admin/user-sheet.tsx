@@ -122,7 +122,7 @@ export function UserSheet({
 
             {/* Details list */}
             <div className="space-y-3">
-              <h4 className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
+              <h4 className="text-xs font-semibold text-muted-foreground">
                 User Information
               </h4>
               <div className="p-4 rounded-[14px] bg-muted/20 border border-border divide-y divide-border/60 text-xs">

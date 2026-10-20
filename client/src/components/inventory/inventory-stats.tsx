@@ -14,61 +14,53 @@ export function InventoryStats({
   outOfStock,
 }: InventoryStatsProps) {
   return (
-    <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4">
-      <div className="p-4 rounded-xl border border-border bg-surface shadow-xs flex items-center justify-between">
+    <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
+      <div className="p-3.5 rounded-[10px] border border-border bg-surface shadow-none flex items-center justify-between">
         <div>
-          <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider block">
+          <span className="text-xs font-medium text-muted-foreground block">
             Total items
           </span>
-          <span className="text-xl sm:text-2xl font-bold text-foreground tabular-nums mt-0.5 block">
+          <span className="text-lg sm:text-xl font-semibold text-foreground tabular-nums mt-0.5 block">
             {total}
           </span>
         </div>
-        <div className="size-8 rounded-lg bg-muted text-muted-foreground flex items-center justify-center">
-          <Package className="size-4" />
-        </div>
+        <Package className="size-4 text-muted-foreground/70" />
       </div>
 
-      <div className="p-4 rounded-xl border border-border bg-surface shadow-xs flex items-center justify-between">
+      <div className="p-3.5 rounded-[10px] border border-border bg-surface shadow-none flex items-center justify-between">
         <div>
-          <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider block">
+          <span className="text-xs font-medium text-muted-foreground block">
             Active
           </span>
-          <span className="text-xl sm:text-2xl font-bold text-success tabular-nums mt-0.5 block">
+          <span className="text-lg sm:text-xl font-semibold text-emerald-700 dark:text-emerald-400 tabular-nums mt-0.5 block">
             {active}
           </span>
         </div>
-        <div className="size-8 rounded-lg bg-success/10 text-success flex items-center justify-center">
-          <CheckCircle2 className="size-4" />
-        </div>
+        <CheckCircle2 className="size-4 text-emerald-600/80" />
       </div>
 
-      <div className="p-4 rounded-xl border border-border bg-surface shadow-xs flex items-center justify-between">
+      <div className="p-3.5 rounded-[10px] border border-border bg-surface shadow-none flex items-center justify-between">
         <div>
-          <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider block">
+          <span className="text-xs font-medium text-muted-foreground block">
             Low stock (≤2)
           </span>
-          <span className="text-xl sm:text-2xl font-bold text-warning tabular-nums mt-0.5 block">
+          <span className="text-lg sm:text-xl font-semibold text-amber-700 dark:text-amber-400 tabular-nums mt-0.5 block">
             {lowStock}
           </span>
         </div>
-        <div className="size-8 rounded-lg bg-warning/10 text-warning flex items-center justify-center">
-          <AlertTriangle className="size-4" />
-        </div>
+        <AlertTriangle className="size-4 text-amber-600/80" />
       </div>
 
-      <div className="p-4 rounded-xl border border-border bg-surface shadow-xs flex items-center justify-between">
+      <div className="p-3.5 rounded-[10px] border border-border bg-surface shadow-none flex items-center justify-between">
         <div>
-          <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider block">
+          <span className="text-xs font-medium text-muted-foreground block">
             Out of stock
           </span>
-          <span className="text-xl sm:text-2xl font-bold text-danger tabular-nums mt-0.5 block">
+          <span className="text-lg sm:text-xl font-semibold text-rose-700 dark:text-rose-400 tabular-nums mt-0.5 block">
             {outOfStock}
           </span>
         </div>
-        <div className="size-8 rounded-lg bg-danger/10 text-danger flex items-center justify-center">
-          <XCircle className="size-4" />
-        </div>
+        <XCircle className="size-4 text-rose-600/80" />
       </div>
     </div>
   )

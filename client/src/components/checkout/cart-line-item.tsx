@@ -46,7 +46,7 @@ export function CartLineItem({
       tabIndex={-1}
       className={cn(
         'p-4 sm:p-5 rounded-[14px] bg-surface border border-border transition-all space-y-4 focus:outline-none',
-        isBlocked && 'border-l-4 border-l-danger bg-danger/[0.03] border-danger/40',
+        isBlocked && 'border-danger/40 bg-danger/[0.02] ring-1 ring-danger/20',
         className,
       )}
     >

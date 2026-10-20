@@ -34,7 +34,7 @@ interface NextStepPanelProps {
   booking: BookingDetail
   items: BookingItemDetail[]
   equipmentDeposits?: Record<string, number>
-  onAction: (action: LifecycleAction, payload?: any) => Promise<void>
+  onAction: (action: LifecycleAction, payload?: unknown) => Promise<void>
   className?: string
 }
 
@@ -71,7 +71,7 @@ export function NextStepPanel({
     .map((it) => it.damage_report)
     .filter((dr) => dr && dr.status === 'resolved')
 
-  const handleExecute = async (action: LifecycleAction, payload?: any) => {
+  const handleExecute = async (action: LifecycleAction, payload?: unknown) => {
     setIsBusy(true)
     try {
       await onAction(action, payload)

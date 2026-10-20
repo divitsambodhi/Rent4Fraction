@@ -157,3 +157,44 @@ database/manual/00_create_database_and_user.sql
 database/er_schema.sql
 DATABASE_HARDENING_CHANGELOG.md
 database/DATABASE_HARDENING_CHANGELOG.md
+
+# AI agents, skills, and tools
+.agents/
+**/.agents/
+.taste-skill/
+**/.taste-skill/
+.impeccable/
+**/.impeccable/
+.codex/
+**/.codex/
+skills-lock.json
+**/skills-lock.json
+
+# Documentation and design artifacts
+DESIGN.md
+**/DESIGN.md
+PRODUCT.md
+**/PRODUCT.md
+AUDIT_*.md
+**/AUDIT_*.md
+PLAN_*.md
+**/PLAN_*.md
+README_*.md
+**/README_*.md
+CHANGELOG_*.md
+**/CHANGELOG_*.md
+docs/
+**/docs/
+MOVE_TO_CLIENT.md
+**/MOVE_TO_CLIENT.md
+
+# Environment and sensitive credential files
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.cert
+*.crt
+credentials.json
+client_secrets*.json

@@ -163,7 +163,7 @@ export function CustomerSignupForm({
               type="email"
               inputMode="email"
               autoComplete="email"
-              placeholder="name@example.com"
+              placeholder="name@eventpro.in"
               aria-invalid={!!errors.email}
               aria-describedby={errorId}
               className="h-12 text-sm"

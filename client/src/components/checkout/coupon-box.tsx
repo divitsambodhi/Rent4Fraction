@@ -102,7 +102,7 @@ export function CouponBox({
               }}
               placeholder="e.g. WELCOME100"
               disabled={disabled || loading}
-              className="h-10 text-xs font-mono uppercase tracking-wider"
+              className="h-10 text-sm font-mono uppercase tracking-wide"
               aria-label="Enter coupon code"
             />
             <Button

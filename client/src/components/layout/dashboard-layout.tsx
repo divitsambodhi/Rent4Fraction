@@ -157,21 +157,28 @@ export function DashboardLayout({
                 to={item.href}
                 onClick={onNavigate}
                 className={cn(
-                  'flex items-center gap-3 px-3 py-2.5 rounded-[10px] text-sm font-medium transition-colors relative group',
+                  'flex items-center gap-3 px-3 py-2 rounded-[8px] text-xs font-medium transition-colors relative group select-none',
                   active
-                    ? 'bg-brand/10 text-brand font-semibold'
-                    : 'text-muted-foreground hover:bg-muted hover:text-foreground',
+                    ? 'text-foreground font-semibold bg-surface/70'
+                    : 'text-muted-foreground hover:bg-surface/40 hover:text-foreground',
                   collapsed && 'justify-center px-0',
                 )}
                 title={collapsed ? item.title : undefined}
               >
-                {active && (
-                  <span className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-5 rounded-r bg-brand" />
+                <Icon className={cn('size-4 shrink-0', active ? 'text-brand' : 'text-muted-foreground')} />
+                {!collapsed && (
+                  <span className="truncate flex-1 relative">
+                    {item.title}
+                    {active && (
+                      <span
+                        className="absolute -bottom-1 left-0 right-0 h-[2px] bg-brand rounded-full"
+                        aria-hidden="true"
+                      />
+                    )}
+                  </span>
                 )}
-                <Icon className={cn('size-5 shrink-0', active ? 'text-brand' : '')} />
-                {!collapsed && <span className="truncate flex-1">{item.title}</span>}
                 {!collapsed && item.badge && (
-                  <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-brand/15 text-brand">
+                  <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded-full bg-brand/10 text-brand tabular-nums">
                     {item.badge}
                   </span>
                 )}
@@ -187,7 +194,7 @@ export function DashboardLayout({
         {vendorNavSections.map((section) => (
           <div key={section.title} className="space-y-1">
             {!collapsed && (
-              <div className="px-3 text-[11px] font-bold tracking-wider uppercase text-muted-foreground/70 mb-1">
+              <div className="px-3 text-[11px] font-semibold text-muted-foreground/80 mb-1">
                 {section.title}
               </div>
             )}
@@ -202,13 +209,13 @@ export function DashboardLayout({
                     key={item.href}
                     title="Available after approval"
                     className={cn(
-                      'flex items-center gap-3 px-3 py-2 rounded-[10px] text-sm font-medium text-muted-foreground/50 cursor-not-allowed select-none transition-colors relative',
+                      'flex items-center gap-3 px-3 py-2 rounded-[8px] text-xs font-medium text-muted-foreground/40 cursor-not-allowed select-none',
                       collapsed && 'justify-center px-0',
                     )}
                   >
                     <Icon className="size-4 shrink-0" />
                     {!collapsed && <span className="truncate flex-1">{item.title}</span>}
-                    <Lock className="size-3.5 text-muted-foreground/60 shrink-0" />
+                    <Lock className="size-3 text-muted-foreground/50 shrink-0" />
                   </div>
                 )
               }
@@ -219,21 +226,28 @@ export function DashboardLayout({
                   to={item.href}
                   onClick={onNavigate}
                   className={cn(
-                    'flex items-center gap-3 px-3 py-2 rounded-[10px] text-sm font-medium transition-colors relative group',
+                    'flex items-center gap-3 px-3 py-2 rounded-[8px] text-xs font-medium transition-colors relative group select-none',
                     active
-                      ? 'bg-brand/10 text-brand font-semibold'
-                      : 'text-muted-foreground hover:bg-muted hover:text-foreground',
+                      ? 'text-foreground font-semibold bg-surface/70'
+                      : 'text-muted-foreground hover:bg-surface/40 hover:text-foreground',
                     collapsed && 'justify-center px-0',
                   )}
                   title={collapsed ? item.title : undefined}
                 >
-                  {active && (
-                    <span className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-5 rounded-r bg-brand" />
+                  <Icon className={cn('size-4 shrink-0', active ? 'text-brand' : 'text-muted-foreground')} />
+                  {!collapsed && (
+                    <span className="truncate flex-1 relative">
+                      {item.title}
+                      {active && (
+                        <span
+                          className="absolute -bottom-1 left-0 right-0 h-[2px] bg-brand rounded-full"
+                          aria-hidden="true"
+                        />
+                      )}
+                    </span>
                   )}
-                  <Icon className={cn('size-4 shrink-0', active ? 'text-brand' : '')} />
-                  {!collapsed && <span className="truncate flex-1">{item.title}</span>}
                   {!collapsed && item.badge && (
-                    <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-brand/15 text-brand">
+                    <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded-full bg-brand/10 text-brand tabular-nums">
                       {item.badge}
                     </span>
                   )}
@@ -244,12 +258,12 @@ export function DashboardLayout({
         ))}
 
         {/* Contact Support link for vendors */}
-        <div className="pt-2 border-t border-border">
+        <div className="pt-2 border-t border-border/40">
           <AppLink
             to="/help?tab=contact"
             onClick={onNavigate}
             className={cn(
-              'flex items-center gap-3 px-3 py-2 rounded-[10px] text-xs font-medium text-muted-foreground hover:text-foreground hover:bg-muted transition-colors',
+              'flex items-center gap-3 px-3 py-2 rounded-[8px] text-xs font-medium text-muted-foreground hover:text-foreground hover:bg-surface/40 transition-colors',
               collapsed && 'justify-center px-0',
             )}
             title={collapsed ? 'Contact support' : undefined}
@@ -263,129 +277,122 @@ export function DashboardLayout({
   }
 
   return (
-    <div className="min-h-screen flex bg-background text-foreground">
-      {/* Desktop Sidebar (Collapsible 240px / 72px) */}
-      <aside
-        className={cn(
-          'hidden lg:flex flex-col border-r border-border bg-surface transition-all duration-300 relative z-30 shrink-0',
-          collapsed ? 'w-[72px]' : 'w-60',
-        )}
-      >
-        {/* Header */}
-        <div className="h-16 flex items-center justify-between px-4 border-b border-border">
-          <AppLink to="/" className="flex items-center gap-2.5 overflow-hidden">
-            <div className="size-8 rounded-[8px] bg-brand text-white flex items-center justify-center shrink-0">
-              <Package className="size-4" />
+    <div className="h-screen flex flex-col bg-background text-foreground overflow-hidden font-sans">
+      {/* 48px Top Navigation Bar - Chrome ground with no divider to sidebar */}
+      <header className="h-12 shrink-0 px-3 sm:px-4 flex items-center justify-between z-20 bg-background border-b-0">
+        <div className="flex items-center gap-2.5">
+          {/* Mobile Sheet Trigger */}
+          <Sheet open={mobileOpen} onOpenChange={setMobileOpen}>
+            <SheetTrigger asChild>
+              <Button variant="ghost" size="icon-sm" className="lg:hidden text-foreground">
+                <Menu className="size-4" />
+              </Button>
+            </SheetTrigger>
+            <SheetContent side="left" className="w-[228px] p-0 bg-background border-r border-border">
+              <SheetHeader className="p-4 border-b border-border">
+                <SheetTitle className="font-serif text-base">{title}</SheetTitle>
+              </SheetHeader>
+              <div className="p-3 overflow-y-auto">
+                {renderNavList(() => setMobileOpen(false))}
+              </div>
+            </SheetContent>
+          </Sheet>
+
+          {/* Desktop Logo & Title */}
+          <AppLink to="/" className="flex items-center gap-2 overflow-hidden group">
+            <div className="size-7 rounded-[6px] bg-brand text-white flex items-center justify-center shrink-0">
+              <Package className="size-3.5" />
             </div>
-            {!collapsed && (
-              <span className="font-serif font-bold text-lg tracking-tight truncate">
-                {title}
-              </span>
-            )}
+            <span className="font-serif font-bold text-sm tracking-tight text-foreground truncate">
+              {title}
+            </span>
+          </AppLink>
+
+          {subtitle && (
+            <span className="hidden md:inline-block text-xs text-muted-foreground border-l border-border/60 pl-2.5 ml-1">
+              {subtitle}
+            </span>
+          )}
+        </div>
+
+        {/* Right actions in 48px bar */}
+        <div className="flex items-center gap-1.5 sm:gap-2">
+          <AppLink to="/">
+            <Button variant="outline" size="sm" className="h-7 text-xs px-2.5 font-medium">
+              Storefront
+            </Button>
           </AppLink>
 
           <Button
             variant="ghost"
             size="icon-sm"
-            onClick={() => setCollapsed(!collapsed)}
-            aria-label={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
-            className="text-muted-foreground hover:text-foreground hidden lg:flex"
+            onClick={toggleTheme}
+            aria-label="Toggle theme"
+            className="text-muted-foreground hover:text-foreground size-7"
           >
-            {collapsed ? <ChevronRight className="size-4" /> : <ChevronLeft className="size-4" />}
+            {resolvedTheme === 'dark' ? (
+              <Sun className="size-3.5" />
+            ) : (
+              <Moon className="size-3.5" />
+            )}
           </Button>
-        </div>
 
-        {/* Navigation list */}
-        <nav className="flex-1 p-3 overflow-y-auto">
-          {renderNavList()}
-        </nav>
-
-        {/* Sidebar Footer */}
-        <div className="p-3 border-t border-border space-y-2">
-          <AppLink
-            to="/"
-            className={cn(
-              'flex items-center gap-2 text-xs text-muted-foreground hover:text-brand px-3 py-2 rounded-lg hover:bg-muted transition-colors',
-              collapsed && 'justify-center px-0',
-            )}
-          >
-            <ChevronLeft className="size-4" />
-            {!collapsed && <span>Back to Home</span>}
-          </AppLink>
-
-          <button
-            type="button"
-            onClick={logout}
-            className={cn(
-              'w-full flex items-center gap-2 text-xs text-danger hover:bg-danger/10 px-3 py-2 rounded-lg transition-colors cursor-pointer',
-              collapsed && 'justify-center px-0',
-            )}
-          >
-            <LogOut className="size-4" />
-            {!collapsed && <span>Log out ({user?.name || 'User'})</span>}
-          </button>
-        </div>
-      </aside>
-
-      {/* Main Content Area */}
-      <div className="flex-1 flex flex-col min-w-0">
-        {/* Top Header Bar */}
-        <header className="h-16 border-b border-border bg-surface/90 backdrop-blur-md px-4 sm:px-6 flex items-center justify-between sticky top-0 z-20">
-          <div className="flex items-center gap-3">
-            {/* Mobile Sheet Trigger */}
-            <Sheet open={mobileOpen} onOpenChange={setMobileOpen}>
-              <SheetTrigger asChild>
-                <Button variant="ghost" size="icon" className="lg:hidden text-foreground">
-                  <Menu className="size-5" />
-                </Button>
-              </SheetTrigger>
-              <SheetContent side="left" className="w-64 p-0">
-                <SheetHeader className="p-4 border-b border-border">
-                  <SheetTitle className="font-serif">{title}</SheetTitle>
-                </SheetHeader>
-                <div className="p-3 overflow-y-auto">
-                  {renderNavList(() => setMobileOpen(false))}
-                </div>
-              </SheetContent>
-            </Sheet>
-
-            <div>
-              <h1 className="font-serif text-lg font-bold text-foreground">
-                {title}
-              </h1>
-              {subtitle && (
-                <p className="text-xs text-muted-foreground hidden sm:block">
-                  {subtitle}
-                </p>
-              )}
+          <div className="hidden sm:flex items-center gap-2 pl-2 border-l border-border/60">
+            <div className="size-6 rounded-full bg-brand/10 text-brand flex items-center justify-center text-[11px] font-bold">
+              {user?.name ? user.name.charAt(0).toUpperCase() : 'U'}
             </div>
+            <span className="text-xs font-medium text-muted-foreground truncate max-w-[120px]">
+              {user?.name || 'Account'}
+            </span>
           </div>
+        </div>
+      </header>
 
-          <div className="flex items-center gap-2">
+      {/* Frame Body: Sidebar + Inset Sheet */}
+      <div className="flex-1 flex min-h-0 bg-background">
+        {/* Desktop Sidebar: 228px on chrome ground, no divider */}
+        <aside
+          className={cn(
+            'hidden lg:flex flex-col shrink-0 transition-all duration-200 z-10 bg-background select-none pb-2 pl-2 pr-1',
+            collapsed ? 'w-16' : 'w-[228px]',
+          )}
+        >
+          {/* Nav Links */}
+          <nav className="flex-1 overflow-y-auto py-1 pr-1 space-y-1">
+            {renderNavList()}
+          </nav>
+
+          {/* Sidebar Footer */}
+          <div className="pt-2 border-t border-border/40 space-y-1 pr-1">
             <Button
               variant="ghost"
-              size="icon"
-              onClick={toggleTheme}
-              aria-label="Toggle theme"
+              size="sm"
+              onClick={() => setCollapsed(!collapsed)}
+              className="w-full flex items-center justify-between text-xs text-muted-foreground hover:text-foreground h-8 px-2"
             >
-              {resolvedTheme === 'dark' ? (
-                <Sun className="size-5" />
-              ) : (
-                <Moon className="size-5" />
-              )}
+              {!collapsed && <span>Collapse sidebar</span>}
+              {collapsed ? <ChevronRight className="size-3.5 mx-auto" /> : <ChevronLeft className="size-3.5" />}
             </Button>
 
-            <AppLink to="/">
-              <Button variant="outline" size="sm">
-                Live Storefront
-              </Button>
-            </AppLink>
+            <button
+              type="button"
+              onClick={logout}
+              className={cn(
+                'w-full flex items-center gap-2 text-xs text-danger/90 hover:bg-danger/10 px-2 py-1.5 rounded-[8px] transition-colors cursor-pointer',
+                collapsed && 'justify-center px-0',
+              )}
+            >
+              <LogOut className="size-3.5" />
+              {!collapsed && <span className="truncate">Log out</span>}
+            </button>
           </div>
-        </header>
+        </aside>
 
-        {/* Dashboard Content Container */}
-        <main className="flex-1 p-4 sm:p-6 lg:p-8 max-w-7xl w-full mx-auto">
-          {children}
+        {/* Main Sheet: 8px inset right and bottom, 16px radius, 1px border, 0 shadow, 24px padding */}
+        <main className="flex-1 min-w-0 bg-surface shadow-none overflow-y-auto lg:mr-2 lg:mb-2 lg:rounded-[16px] lg:border border-border p-4 sm:p-6">
+          <div className="max-w-7xl mx-auto w-full">
+            {children}
+          </div>
         </main>
       </div>
 

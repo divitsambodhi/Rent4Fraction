@@ -132,10 +132,10 @@ export function MockAuthProvider({ children }: { children: React.ReactNode }) {
       // Pick preview account from mock
       const mockKey =
         newRole === 'customer'
-          ? 'aarav@example.com'
+          ? 'aarav@eventpro.in'
           : newRole === 'vendor'
-          ? 'sargam@example.com'
-          : 'admin@example.com'
+          ? 'sargam@eventpro.in'
+          : 'admin@eventpro.in'
       const acc = INITIAL_MOCK_ACCOUNTS[mockKey]
       if (acc) {
         login(acc.user)

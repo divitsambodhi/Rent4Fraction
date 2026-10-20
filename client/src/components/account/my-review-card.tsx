@@ -73,12 +73,12 @@ export function MyReviewCard({ review, onOpenBooking }: MyReviewCardProps) {
 
       {/* Nested Vendor Reply */}
       {review.vendor_reply && (
-        <div className="ml-4 pl-3 border-l-2 border-brand/50 bg-brand/5 p-3 rounded-r-lg space-y-1 text-xs">
-          <div className="font-bold text-brand flex items-center gap-1.5 text-[11px]">
+        <div className="ml-4 p-3 rounded-lg border border-border bg-muted/30 space-y-1 text-xs">
+          <div className="font-semibold text-brand flex items-center gap-1.5 text-xs">
             <MessageSquare className="size-3.5" />
             <span>Response from {review.vendor_name}</span>
           </div>
-          <p className="text-muted-foreground leading-relaxed italic text-[11px]">
+          <p className="text-muted-foreground leading-relaxed italic text-xs">
             &ldquo;{review.vendor_reply}&rdquo;
           </p>
         </div>

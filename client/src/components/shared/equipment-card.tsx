@@ -40,7 +40,7 @@ export function EquipmentCard({
   return (
     <article
       className={cn(
-        'group relative flex flex-col h-full rounded-[12px] border border-border bg-surface overflow-hidden shadow-xs transition-all duration-200 hover:-translate-y-0.5 hover:border-brand/40 hover:shadow-md',
+        'group relative flex flex-col h-full rounded-[14px] border border-border bg-surface overflow-hidden shadow-none transition-colors duration-150 hover:border-brand/50',
         isUnavailable && 'opacity-70 hover:opacity-90',
         className,
       )}
@@ -48,7 +48,7 @@ export function EquipmentCard({
       {/* Clickable Card Link Container */}
       <AppLink
         to={`/equipment/${equipment.equipment_id}`}
-        className="flex flex-col flex-1 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2 rounded-[12px]"
+        className="flex flex-col flex-1 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2 rounded-[14px]"
       >
         {/* Media Container: 4:3 ratio */}
         <div className="relative w-full aspect-4/3 overflow-hidden bg-muted/40">
@@ -66,7 +66,7 @@ export function EquipmentCard({
                 status="delivery_available"
                 label="Delivery available"
                 size="sm"
-                className="bg-surface/95 backdrop-blur-xs shadow-xs"
+                className="bg-surface border border-border text-foreground"
               />
             </div>
           )}
@@ -74,7 +74,7 @@ export function EquipmentCard({
           {/* Bottom-Left: Date Availability Badge */}
           {isUnavailable && (
             <div className="absolute bottom-3 left-3 z-10">
-              <span className="inline-flex items-center px-2.5 py-1 rounded-[6px] text-[11px] font-semibold bg-surface/95 text-muted-foreground border border-border shadow-xs backdrop-blur-xs">
+              <span className="inline-flex items-center px-2.5 py-1 rounded-[6px] text-[11px] font-semibold bg-surface text-muted-foreground border border-border">
                 Unavailable for your dates
               </span>
             </div>
@@ -82,7 +82,7 @@ export function EquipmentCard({
 
           {isLowStock && (
             <div className="absolute bottom-3 left-3 z-10">
-              <span className="inline-flex items-center px-2.5 py-1 rounded-[6px] text-[11px] font-semibold bg-warning/15 text-warning border border-warning/30 shadow-xs backdrop-blur-xs">
+              <span className="inline-flex items-center px-2.5 py-1 rounded-[6px] text-[11px] font-semibold bg-warning/15 text-warning border border-warning/30">
                 Only {availableQuantity} left
               </span>
             </div>
@@ -99,14 +99,14 @@ export function EquipmentCard({
             }
             aria-pressed={wishlisted}
             className={cn(
-              'absolute top-3 right-3 z-10 size-9 rounded-full flex items-center justify-center transition-all duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand',
+              'absolute top-3 right-3 z-10 size-8.5 rounded-full flex items-center justify-center transition-colors duration-150 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand border border-border/60',
               wishlisted
-                ? 'bg-brand text-white shadow-sm'
-                : 'bg-surface/90 text-muted-foreground hover:text-brand hover:bg-surface shadow-xs',
+                ? 'bg-brand text-white border-brand'
+                : 'bg-surface/90 text-muted-foreground hover:text-brand hover:bg-surface',
             )}
           >
             <Heart
-              size={18}
+              size={17}
               className={cn(
                 'transition-transform active:scale-125',
                 wishlisted ? 'fill-white stroke-white' : 'stroke-current fill-none',
@@ -118,7 +118,7 @@ export function EquipmentCard({
         {/* Content Body */}
         <div className="p-4 flex flex-col flex-1 gap-2">
           {/* Category Label */}
-          <div className="text-[12px] uppercase font-semibold tracking-wider text-brand">
+          <div className="text-xs font-semibold text-brand">
             {equipment.category_name}
           </div>
 

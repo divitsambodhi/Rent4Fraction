@@ -36,7 +36,7 @@ export function ActivityTimeline({ activity, className }: ActivityTimelineProps)
   return (
     <div className={cn('space-y-3', className)}>
       <div className="flex items-center justify-between">
-        <h4 className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
+        <h4 className="text-xs font-semibold text-muted-foreground">
           Activity History ({activity.length})
         </h4>
         {activity.length > 2 && (

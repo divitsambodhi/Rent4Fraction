@@ -8,26 +8,26 @@ export interface MockAccountRecord {
 
 // DEV ONLY: Default mock accounts for local development and verification
 export const INITIAL_MOCK_ACCOUNTS: Record<string, MockAccountRecord> = {
-  'aarav@example.com': {
+  'aarav@eventpro.in': {
     password: 'Customer@123',
     user: {
       user_id: 1,
       firebase_uid: 'demo-customer-aarav',
       name: 'Aarav Mehta',
-      email: 'aarav@example.com',
+      email: 'aarav@eventpro.in',
       phone: '9876543210',
       role: 'customer',
       avatarInitials: 'AM',
       email_verified: true,
     },
   },
-  'sargam@example.com': {
+  'sargam@eventpro.in': {
     password: 'Vendor@123',
     user: {
       user_id: 2,
       firebase_uid: 'demo-vendor-sargam',
       name: 'Sargam Sound Systems',
-      email: 'sargam@example.com',
+      email: 'sargam@eventpro.in',
       phone: '9845012345',
       role: 'vendor',
       avatarInitials: 'SS',
@@ -39,13 +39,13 @@ export const INITIAL_MOCK_ACCOUNTS: Record<string, MockAccountRecord> = {
       },
     },
   },
-  'newvendor@example.com': {
+  'newvendor@eventpro.in': {
     password: 'Vendor@123',
     user: {
       user_id: 3,
       firebase_uid: 'demo-vendor-pending',
       name: 'New Vendor Enterprises',
-      email: 'newvendor@example.com',
+      email: 'newvendor@eventpro.in',
       phone: '9123456789',
       role: 'vendor',
       avatarInitials: 'NV',
@@ -57,13 +57,13 @@ export const INITIAL_MOCK_ACCOUNTS: Record<string, MockAccountRecord> = {
       },
     },
   },
-  'admin@example.com': {
+  'admin@eventpro.in': {
     password: 'Admin@123',
     user: {
       user_id: 4,
       firebase_uid: 'demo-admin-super',
       name: 'Superadmin User',
-      email: 'admin@example.com',
+      email: 'admin@eventpro.in',
       phone: null,
       role: 'admin',
       avatarInitials: 'AD',

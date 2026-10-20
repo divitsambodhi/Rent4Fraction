@@ -81,9 +81,9 @@ export function AddressFormSheet({
         </div>
 
         {/* Sticky Header */}
-        <SheetHeader className="px-5 py-4 border-b border-border bg-surface/95 backdrop-blur-md flex flex-row items-center justify-between gap-3 shrink-0 text-left">
+        <SheetHeader className="px-5 py-4 border-b border-border bg-surface flex flex-row items-center justify-between gap-3 shrink-0 text-left">
           <div className="space-y-0.5">
-            <div className="flex items-center gap-1.5 text-brand text-xs font-bold uppercase tracking-wider">
+            <div className="flex items-center gap-1.5 text-brand text-xs font-semibold">
               <MapPin className="size-3.5" />
               <span>{isNew ? 'New Address' : 'Edit Address'}</span>
             </div>

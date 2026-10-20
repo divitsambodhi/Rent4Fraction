@@ -13,7 +13,7 @@ export function VendorCTA() {
 
   return (
     <section className="py-12 sm:py-16">
-      <div className="relative overflow-hidden rounded-[24px] sm:rounded-[32px] bg-brand text-white p-8 sm:p-12 lg:p-16 shadow-lg">
+      <div className="relative overflow-hidden rounded-[24px] sm:rounded-[32px] bg-brand text-white p-8 sm:p-12 lg:p-16 border border-brand/20">
         {/* Subtle decorative vector watermark */}
         <div
           className="absolute -right-8 -bottom-12 font-serif text-[180px] font-bold text-white/5 select-none pointer-events-none leading-none"
@@ -23,7 +23,7 @@ export function VendorCTA() {
         </div>
 
         <div className="relative z-10 max-w-2xl space-y-4">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/15 text-white text-xs font-semibold uppercase tracking-wider backdrop-blur-xs">
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/15 text-white text-xs font-medium">
             <Building className="size-3.5" />
             <span>For Event Rental Businesses & Suppliers</span>
           </div>

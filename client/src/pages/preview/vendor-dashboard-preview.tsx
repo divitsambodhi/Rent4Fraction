@@ -14,9 +14,9 @@ export function VendorDashboardPreview() {
     <DashboardLayout type="vendor">
       <div className="space-y-8">
         {/* Banner */}
-        <div className="p-6 rounded-[16px] bg-brand text-white flex flex-col sm:flex-row sm:items-center justify-between gap-4 shadow-sm">
+        <div className="p-6 rounded-[16px] bg-brand text-white flex flex-col sm:flex-row sm:items-center justify-between gap-4 border border-brand/20">
           <div>
-            <div className="text-xs uppercase tracking-wider font-semibold text-white/80">
+            <div className="text-xs font-semibold text-white/80">
               // DEV ONLY PREVIEW
             </div>
             <h2 className="font-serif text-2xl font-bold mt-1">
@@ -27,7 +27,7 @@ export function VendorDashboardPreview() {
             </p>
           </div>
           <div className="flex items-center gap-3">
-            <span className="px-3 py-1.5 rounded-full bg-white/20 text-xs font-semibold backdrop-blur-xs">
+            <span className="px-3 py-1.5 rounded-full bg-white/20 text-xs font-semibold">
               4.9 Rating (142 reviews)
             </span>
           </div>

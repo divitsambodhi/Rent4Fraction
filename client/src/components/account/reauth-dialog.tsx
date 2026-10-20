@@ -49,7 +49,7 @@ export function ReauthDialog({ open, onOpenChange, onSuccess }: ReauthDialogProp
         <DialogHeader className="space-y-1">
           <div className="flex items-center gap-2 text-brand">
             <Lock className="size-5" />
-            <span className="text-xs font-bold uppercase tracking-wider">
+            <span className="text-xs font-semibold text-brand">
               Security Verification
             </span>
           </div>

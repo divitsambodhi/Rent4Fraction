@@ -270,7 +270,7 @@ export function ThreadView({
         <button
           type="button"
           onClick={() => scrollToBottom(true)}
-          className="absolute bottom-20 right-6 z-10 px-3 py-1.5 rounded-full bg-brand text-white text-xs font-semibold shadow-lg hover:bg-brand-hover inline-flex items-center gap-1.5 transition-all animate-bounce"
+          className="absolute bottom-20 right-6 z-10 px-3 py-1.5 rounded-full bg-brand text-white text-xs font-semibold shadow-md hover:bg-brand-hover inline-flex items-center gap-1.5 transition-all duration-150 hover:-translate-y-0.5 active:scale-95"
         >
           <ArrowDown className="size-3.5" />
           <span>Latest messages</span>

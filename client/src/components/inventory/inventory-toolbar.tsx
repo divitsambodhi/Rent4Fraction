@@ -65,18 +65,18 @@ export function InventoryToolbar({
   ]
 
   return (
-    <div className="space-y-3 p-4 rounded-2xl border border-border bg-surface shadow-xs">
+    <div className="space-y-3 p-3.5 sm:p-4 rounded-[12px] border border-border bg-surface shadow-none">
       {/* Top Row: Search input + Category Select + Sort Select */}
-      <div className="flex flex-col md:flex-row items-stretch md:items-center gap-3">
+      <div className="flex flex-col md:flex-row items-stretch md:items-center gap-2.5">
         {/* Search */}
         <div className="relative flex-1">
-          <Search className="size-4 text-muted-foreground absolute left-3 top-1/2 -translate-y-1/2" />
+          <Search className="size-4 text-muted-foreground absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
           <input
             type="text"
             value={localQuery}
             onChange={(e) => setLocalQuery(e.target.value)}
             placeholder="Search equipment by name, category, or specs..."
-            className="w-full text-xs sm:text-sm bg-background border border-border rounded-lg pl-9 pr-8 py-2 text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-brand"
+            className="w-full text-xs sm:text-sm bg-background border border-border rounded-[8px] pl-9 pr-8 py-2 text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-brand shadow-none"
           />
           {localQuery && (
             <button
@@ -97,7 +97,7 @@ export function InventoryToolbar({
           <select
             value={categoryId}
             onChange={(e) => onCategoryChange(e.target.value)}
-            className="h-9 rounded-lg border border-border bg-background px-3 text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-brand cursor-pointer max-w-[180px] truncate"
+            className="h-9 rounded-[8px] border border-border bg-background px-3 text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-brand cursor-pointer max-w-[180px] truncate shadow-none"
           >
             <option value="all">All categories</option>
             {categories.map((c) => (
@@ -111,7 +111,7 @@ export function InventoryToolbar({
           <select
             value={sortBy}
             onChange={(e) => onSortChange(e.target.value)}
-            className="h-9 rounded-lg border border-border bg-background px-3 text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-brand cursor-pointer"
+            className="h-9 rounded-[8px] border border-border bg-background px-3 text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-brand cursor-pointer shadow-none"
           >
             <option value="updated">Recently updated</option>
             <option value="name">Name (A-Z)</option>
@@ -123,7 +123,7 @@ export function InventoryToolbar({
         </div>
       </div>
 
-      {/* Bottom Row: Status Pills + Low Stock Toggle Switch */}
+      {/* Bottom Row: Count Cards / Status Filter + Low Stock Toggle Switch */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pt-2 border-t border-border/50">
         {/* Status Pills */}
         <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar">
@@ -134,16 +134,16 @@ export function InventoryToolbar({
                 key={pill.id}
                 type="button"
                 onClick={() => onStatusChange(pill.id)}
-                className={`px-3 py-1.5 rounded-full text-xs font-semibold transition-colors cursor-pointer whitespace-nowrap flex items-center gap-1.5 ${
+                className={`px-3 py-1.5 rounded-[6px] text-xs font-medium transition-colors cursor-pointer whitespace-nowrap flex items-center gap-1.5 border ${
                   isSelected
-                    ? 'bg-brand text-white shadow-xs'
-                    : 'bg-background border border-border text-muted-foreground hover:text-foreground hover:bg-muted'
+                    ? 'border-brand bg-brand/10 text-brand font-semibold'
+                    : 'bg-background border-border text-muted-foreground hover:text-foreground hover:bg-muted/40'
                 }`}
               >
                 <span>{pill.label}</span>
                 <span
-                  className={`text-[10px] font-bold px-1.5 py-0.2 rounded-full tabular-nums ${
-                    isSelected ? 'bg-white/20 text-white' : 'bg-muted text-muted-foreground'
+                  className={`text-[10px] font-semibold px-1.5 py-0.2 rounded-full tabular-nums ${
+                    isSelected ? 'bg-brand/20 text-brand' : 'bg-muted text-muted-foreground'
                   }`}
                 >
                   {pill.count}

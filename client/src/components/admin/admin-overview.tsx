@@ -59,10 +59,10 @@ export function AdminOverview(props: AdminOverviewProps = {}) {
       {/* Heading & Range Filter */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <p className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground">
+          <p className="text-xs font-medium text-muted-foreground">
             Platform Operations
           </p>
-          <h1 className="text-2xl sm:text-3xl font-display font-semibold text-foreground tracking-tight">
+          <h1 className="text-xl sm:text-2xl font-serif font-bold text-foreground tracking-tight">
             Marketplace Overview
           </h1>
           <p className="text-xs text-muted-foreground mt-0.5">
@@ -70,16 +70,16 @@ export function AdminOverview(props: AdminOverviewProps = {}) {
           </p>
         </div>
 
-        <div className="flex items-center gap-1.5 p-1 rounded-xl bg-card border border-border">
+        <div className="flex items-center gap-1 p-0.5 rounded-[8px] bg-surface border border-border">
           {(['7d', '30d', '90d', 'ytd'] as const).map((r) => (
             <button
               key={r}
               type="button"
               onClick={() => setRange(r)}
               className={cn(
-                'px-3 py-1 rounded-lg text-xs font-semibold uppercase transition-all',
+                'px-2.5 py-1 rounded-[6px] text-xs font-medium transition-colors uppercase',
                 range === r
-                  ? 'bg-foreground text-background shadow-xs'
+                  ? 'bg-foreground text-background font-semibold'
                   : 'text-muted-foreground hover:text-foreground'
               )}
             >
@@ -139,7 +139,7 @@ export function AdminOverview(props: AdminOverviewProps = {}) {
       {/* CHARTS & ATTENTION GRID */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Bookings & Value Chart Card (2 cols) */}
-        <div className="lg:col-span-2 p-5 rounded-2xl border border-border bg-card shadow-xs space-y-4">
+        <div className="lg:col-span-2 p-5 rounded-[14px] border border-border bg-surface shadow-none space-y-4">
           <div className="flex items-center justify-between">
             <div>
               <h2 className="text-sm font-semibold text-foreground">Bookings & Booking Volume</h2>
@@ -150,25 +150,25 @@ export function AdminOverview(props: AdminOverviewProps = {}) {
               variant="outline"
               size="sm"
               onClick={() => setViewAsTable(!viewAsTable)}
-              className="h-8 text-xs px-3"
+              className="h-7 text-xs px-2.5"
             >
               {viewAsTable ? 'View as chart' : 'View as table'}
             </Button>
           </div>
 
           {!viewAsTable ? (
-            <div className="pt-4 space-y-4">
+            <div className="pt-2 space-y-4">
               <div className="h-44 flex items-end justify-between gap-4 px-2">
                 {chartSeries.map((item, idx) => {
                   const barHeight = Math.round((item.value / maxVal) * 100)
                   return (
                     <div key={idx} className="flex-1 flex flex-col items-center gap-2 group">
-                      <div className="text-[10px] text-muted-foreground font-mono opacity-0 group-hover:opacity-100 transition-opacity">
+                      <div className="text-[10px] text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity tabular-nums">
                         ₹{(item.value / 1000).toFixed(0)}k
                       </div>
-                      <div className="w-full max-w-[48px] bg-muted/40 rounded-t-lg h-36 flex items-end p-1 relative overflow-hidden">
+                      <div className="w-full max-w-[48px] bg-muted/40 rounded-t-[6px] h-36 flex items-end p-1 relative overflow-hidden">
                         <div
-                          className="w-full rounded-t-md transition-all duration-300"
+                          className="w-full rounded-t-[4px] transition-colors duration-150"
                           style={{
                             height: `${barHeight}%`,
                             backgroundColor: 'var(--chart-1, #762b36)',
@@ -215,17 +215,17 @@ export function AdminOverview(props: AdminOverviewProps = {}) {
         </div>
 
         {/* Attention List (1 col) */}
-        <div className="p-5 rounded-2xl border border-border bg-card shadow-xs space-y-4">
+        <div className="p-5 rounded-[14px] border border-border bg-surface shadow-none space-y-4">
           <div className="flex items-center justify-between">
             <h2 className="text-sm font-semibold text-foreground">Needs Attention</h2>
-            <span className="text-xs text-muted-foreground">Deep links</span>
+            <span className="text-xs text-muted-foreground">Direct actions</span>
           </div>
 
-          <div className="space-y-2.5">
+          <div className="space-y-2">
             <button
               type="button"
               onClick={() => onNavigateSection('vendors')}
-              className="w-full p-3 rounded-xl border border-border hover:border-brand/40 hover:bg-muted/20 transition-all flex items-center justify-between text-left group"
+              className="w-full p-2.5 rounded-[8px] border border-border hover:border-brand/40 hover:bg-muted/20 transition-colors flex items-center justify-between text-left group cursor-pointer"
             >
               <div className="space-y-0.5">
                 <p className="text-xs font-semibold text-foreground group-hover:text-brand transition-colors">
@@ -239,7 +239,7 @@ export function AdminOverview(props: AdminOverviewProps = {}) {
             <button
               type="button"
               onClick={() => onNavigateSection('disputes')}
-              className="w-full p-3 rounded-xl border border-border hover:border-brand/40 hover:bg-muted/20 transition-all flex items-center justify-between text-left group"
+              className="w-full p-2.5 rounded-[8px] border border-border hover:border-brand/40 hover:bg-muted/20 transition-colors flex items-center justify-between text-left group cursor-pointer"
             >
               <div className="space-y-0.5">
                 <p className="text-xs font-semibold text-foreground group-hover:text-brand transition-colors">
@@ -253,7 +253,7 @@ export function AdminOverview(props: AdminOverviewProps = {}) {
             <button
               type="button"
               onClick={() => onNavigateSection('payouts')}
-              className="w-full p-3 rounded-xl border border-border hover:border-brand/40 hover:bg-muted/20 transition-all flex items-center justify-between text-left group"
+              className="w-full p-2.5 rounded-[8px] border border-border hover:border-brand/40 hover:bg-muted/20 transition-colors flex items-center justify-between text-left group cursor-pointer"
             >
               <div className="space-y-0.5">
                 <p className="text-xs font-semibold text-foreground group-hover:text-brand transition-colors">
@@ -267,7 +267,7 @@ export function AdminOverview(props: AdminOverviewProps = {}) {
             <button
               type="button"
               onClick={() => onNavigateSection('coupons')}
-              className="w-full p-3 rounded-xl border border-border hover:border-brand/40 hover:bg-muted/20 transition-all flex items-center justify-between text-left group"
+              className="w-full p-2.5 rounded-[8px] border border-border hover:border-brand/40 hover:bg-muted/20 transition-colors flex items-center justify-between text-left group cursor-pointer"
             >
               <div className="space-y-0.5">
                 <p className="text-xs font-semibold text-foreground group-hover:text-brand transition-colors">
@@ -284,13 +284,13 @@ export function AdminOverview(props: AdminOverviewProps = {}) {
       {/* RECENT TABLES: BOOKINGS & APPLICATIONS */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Recent Bookings */}
-        <div className="p-5 rounded-2xl border border-border bg-card shadow-xs space-y-3">
+        <div className="p-5 rounded-[14px] border border-border bg-surface shadow-none space-y-3">
           <div className="flex items-center justify-between">
             <h3 className="text-sm font-semibold text-foreground">Recent Customer Bookings</h3>
             <button
               type="button"
               onClick={() => onNavigateSection('bookings')}
-              className="text-xs font-medium text-brand hover:underline inline-flex items-center gap-1"
+              className="text-xs font-medium text-brand hover:underline inline-flex items-center gap-1 cursor-pointer"
             >
               <span>View all bookings</span>
               <ChevronRight className="size-3.5" />
@@ -302,7 +302,7 @@ export function AdminOverview(props: AdminOverviewProps = {}) {
               <div key={b.booking_id} className="py-2.5 flex items-center justify-between">
                 <div>
                   <span className="font-semibold text-foreground">{b.event_name || 'Event Rental'}</span>
-                  <p className="text-[11px] text-muted-foreground font-mono">
+                  <p className="text-[11px] text-muted-foreground">
                     {b.booking_id} · {b.rental_days} days · {b.delivery_city}
                   </p>
                 </div>
@@ -320,13 +320,13 @@ export function AdminOverview(props: AdminOverviewProps = {}) {
         </div>
 
         {/* Recent Vendor Applications */}
-        <div className="p-5 rounded-2xl border border-border bg-card shadow-xs space-y-3">
+        <div className="p-5 rounded-[14px] border border-border bg-surface shadow-none space-y-3">
           <div className="flex items-center justify-between">
             <h3 className="text-sm font-semibold text-foreground">Recent Vendor Applications</h3>
             <button
               type="button"
               onClick={() => onNavigateSection('vendors')}
-              className="text-xs font-medium text-brand hover:underline inline-flex items-center gap-1"
+              className="text-xs font-medium text-brand hover:underline inline-flex items-center gap-1 cursor-pointer"
             >
               <span>View all vendors</span>
               <ChevronRight className="size-3.5" />

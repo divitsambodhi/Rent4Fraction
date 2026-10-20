@@ -181,7 +181,7 @@ export function LegalTab({ type }: LegalTabProps) {
       {/* Long-text Column (Max width 720px, 17px/28px typography) */}
       <article className="flex-1 max-w-[720px] space-y-6">
         <div>
-          <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
+          <p className="text-xs font-semibold text-muted-foreground">
             Platform Policies
           </p>
           <h2 className="font-serif text-2xl sm:text-3xl font-bold text-foreground mt-1">
