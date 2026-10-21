@@ -87,7 +87,7 @@ export function ImageGallery({
     >
       {/* Edge-to-edge on mobile, 4:3 Aspect Main Image Stage */}
       <div
-        className="relative group rounded-none sm:rounded-[16px] overflow-hidden border-y sm:border border-border bg-surface select-none aspect-4/3"
+        className="relative group rounded-none sm:rounded-[16px] overflow-hidden border-y sm:border border-border bg-surface select-none aspect-4/3 touch-pan-y"
         onTouchStart={handleTouchStart}
         onTouchMove={handleTouchMove}
         onTouchEnd={handleTouchEnd}

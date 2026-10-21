@@ -16,7 +16,7 @@ export function AuthLayout({ mode, children }: AuthLayoutProps) {
 
   return (
     <div className="min-h-dvh flex flex-col bg-background text-foreground">
-      <header className="w-full border-b border-border bg-surface sticky top-0 z-navbar h-14 sm:h-16 pt-[env(safe-area-inset-top)]">
+      <header className="w-full border-b border-border bg-surface sticky top-0 z-navbar z-50 min-h-14 sm:min-h-16 h-[calc(3.5rem+env(safe-area-inset-top,0px))] sm:h-[calc(4rem+env(safe-area-inset-top,0px))] pt-[env(safe-area-inset-top,0px)]">
         <div className="max-w-[1200px] mx-auto h-full px-4 sm:px-6 lg:px-8 flex items-center justify-between gap-4">
           <AppLink
             to="/"

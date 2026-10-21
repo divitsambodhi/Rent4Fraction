@@ -156,7 +156,10 @@ export function VendorInboxTab() {
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   placeholder="Search customer messages..."
-                  className="w-full text-xs bg-background border border-border rounded-lg pl-9 pr-8 py-2 text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-brand"
+                  className="w-full text-base md:text-sm bg-background border border-border rounded-lg pl-9 pr-8 py-2 text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-brand"
+                  enterKeyHint="search"
+                  autoCapitalize="none"
+                  autoCorrect="off"
                 />
                 {searchQuery && (
                   <button

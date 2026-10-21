@@ -108,7 +108,7 @@ export function ScheduleDialog({
                 <select
                   value={startTime}
                   onChange={(e) => setStartTime(e.target.value)}
-                  className="w-full h-9 px-3 rounded-xl border border-border bg-card text-xs text-foreground"
+                  className="w-full h-10 px-3 rounded-sm border border-border bg-card text-base md:text-sm text-foreground"
                 >
                   {['08:00 AM', '09:00 AM', '10:00 AM', '11:00 AM', '01:00 PM', '02:00 PM', '04:00 PM'].map((t) => (
                     <option key={t} value={t}>
@@ -123,7 +123,7 @@ export function ScheduleDialog({
                 <select
                   value={endTime}
                   onChange={(e) => setEndTime(e.target.value)}
-                  className="w-full h-9 px-3 rounded-xl border border-border bg-card text-xs text-foreground"
+                  className="w-full h-10 px-3 rounded-sm border border-border bg-card text-base md:text-sm text-foreground"
                 >
                   {['11:00 AM', '12:00 PM', '01:00 PM', '03:00 PM', '05:00 PM', '07:00 PM', '09:00 PM'].map((t) => (
                     <option key={t} value={t}>
@@ -142,7 +142,7 @@ export function ScheduleDialog({
                 value={deliveredBy}
                 onChange={(e) => setDeliveredBy(e.target.value)}
                 placeholder="e.g. Ramesh Kumar (+91 98765 01234)"
-                className="text-xs h-9"
+                className="text-base md:text-sm h-10"
                 required
               />
             </div>
@@ -156,7 +156,7 @@ export function ScheduleDialog({
                 onChange={(e) => setNotes(e.target.value)}
                 placeholder="e.g. Gate 3 service elevator access required. Driver vehicle KA-03-ME-9021."
                 rows={2}
-                className="text-xs resize-none"
+                className="text-base md:text-sm resize-none"
               />
             </div>
           </div>

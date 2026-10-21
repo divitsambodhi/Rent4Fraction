@@ -70,7 +70,7 @@ export function FailedDialog({
               <select
                 value={selectedReason}
                 onChange={(e) => setSelectedReason(e.target.value)}
-                className="w-full h-9 px-3 rounded-xl border border-border bg-card text-xs text-foreground"
+                className="w-full h-10 px-3 rounded-sm border border-border bg-card text-base md:text-sm text-foreground"
               >
                 {COMMON_FAILURE_REASONS.map((r) => (
                   <option key={r} value={r}>
@@ -89,7 +89,7 @@ export function FailedDialog({
                 onChange={(e) => setNotes(e.target.value)}
                 placeholder="e.g. Called customer 4 times between 11:15 AM and 11:45 AM, no response at gate."
                 rows={3}
-                className="text-xs resize-none"
+                className="text-base md:text-sm resize-none"
               />
             </div>
           </div>

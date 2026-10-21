@@ -33,7 +33,7 @@ export const MobileNumberInput = forwardRef<HTMLInputElement, MobileNumberInputP
           value={value}
           onChange={handleChange}
           className={cn(
-            'w-full h-12 pl-[74px] pr-4 rounded-[10px] border border-border bg-surface text-sm text-foreground placeholder:text-muted-foreground/60 tabular-nums focus:outline-none focus:ring-2 focus:ring-brand focus:border-transparent transition-all disabled:opacity-50',
+            'w-full h-12 pl-[74px] pr-4 rounded-sm border border-border bg-surface text-base sm:text-sm text-foreground placeholder:text-muted-foreground/60 tabular-nums focus:outline-none focus:ring-2 focus:ring-brand focus:border-transparent transition-all disabled:opacity-50',
             error && 'border-danger focus:ring-danger',
             className,
           )}

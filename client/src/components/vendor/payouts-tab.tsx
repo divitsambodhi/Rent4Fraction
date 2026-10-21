@@ -147,7 +147,7 @@ export function PayoutsTab({
             id="payout-range"
             value={rangeParam}
             onChange={(e) => handleRangeFilter(e.target.value)}
-            className="h-8 rounded-lg border border-border bg-surface px-2.5 text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-brand cursor-pointer"
+            className="h-8 rounded-lg border border-border bg-surface px-2.5 text-base sm:text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-brand cursor-pointer"
           >
             <option value="all">All time</option>
             <option value="7d">Last 7 days</option>

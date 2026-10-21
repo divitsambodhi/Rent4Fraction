@@ -66,7 +66,10 @@ export function CatalogSearchBar({
             onChange={(e) => setQuery(e.target.value)}
             placeholder="Search equipment, sound, lighting, vendors..."
             aria-label="Search equipment by keyword"
-            className="w-full h-11 pl-10 pr-9 rounded-[10px] border border-border bg-background text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-brand focus:border-brand transition-colors"
+            className="w-full h-11 pl-10 pr-9 rounded-[10px] border border-border bg-background text-base md:text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-brand focus:border-brand transition-colors"
+            enterKeyHint="search"
+            autoCapitalize="none"
+            autoCorrect="off"
           />
           {query && (
             <button

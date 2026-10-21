@@ -9,10 +9,23 @@ dist-ssr
 build
 .next
 
-# Environment variables
+# Environment variables & secrets
 .env
 .env.*
+.env*.local
 !.env.example
+*.pem
+*.key
+*.cert
+*.crt
+*.pfx
+*.p12
+*.token
+credentials.json
+client_secrets*.json
+id_rsa*
+id_ed25519*
+auth-tokens*.json
 
 # Logs
 logs
@@ -23,29 +36,54 @@ yarn-error.log*
 pnpm-debug.log*
 lerna-debug.log*
 
-# Editor / OS
+# Editor / IDE / OS
 .DS_Store
 Thumbs.db
 .vscode/*
 !.vscode/extensions.json
-.idea
+.idea/
+.history/
+.fleet/
+.zed/
+*.sublime-*
 
 # v0 / temporary
 __v0_*
+_v0/
+__v0/
 .vercel/
+scratch/
+*.tmp
+*.bak
+*.swp
+*.swo
 
-# TypeScript cache
+# TypeScript cache & Vite timestamps
 *.tsbuildinfo
+vite.config.*.timestamp-*
 
 # Personal / agent prompt documentation & screenshots
 docs/
+**/docs/
 MOVE_TO_CLIENT.md
+**/MOVE_TO_CLIENT.md
 PLAN_*.md
+**/PLAN_*.md
 README_*.md
 AUDIT_*.md
+**/AUDIT_*.md
 CHANGELOG_*.md
+**/CHANGELOG_*.md
 DESIGN.md
+**/DESIGN.md
 PRODUCT.md
+**/PRODUCT.md
+SPEC*.md
+**/SPEC*.md
+BRIEF*.md
+**/BRIEF*.md
+GUIDELINES*.md
+**/GUIDELINES*.md
 *.md.bak
 *.png
 *.jpg
@@ -53,33 +91,30 @@ PRODUCT.md
 *.webp
 *.webm
 !public/**/*
-_v0/
-__v0/
-scratch/
-*.tmp
+
+# Test results & browser run artifacts
 coverage/
 test-results/
 playwright-report/
 blob-report/
 .playwright/
+playwright/.cache/
 
 # Local notes & scratch files
 *.local.md
 NOTES*.md
 TODO*.md
 SCRATCH*.md
+DRAFT*.md
 
 # AI skills, agents, and tooling
 .agents/
+**/.agents/
 .taste-skill/
+**/.taste-skill/
 .impeccable/
+**/.impeccable/
 .codex/
+**/.codex/
 skills-lock.json
-
-# Sensitive keys and credentials
-*.pem
-*.key
-*.cert
-*.crt
-credentials.json
-client_secrets*.json
+**/skills-lock.json

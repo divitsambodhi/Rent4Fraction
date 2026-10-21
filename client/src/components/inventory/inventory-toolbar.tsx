@@ -76,7 +76,10 @@ export function InventoryToolbar({
             value={localQuery}
             onChange={(e) => setLocalQuery(e.target.value)}
             placeholder="Search equipment by name, category, or specs..."
-            className="w-full text-xs sm:text-sm bg-background border border-border rounded-[8px] pl-9 pr-8 py-2 text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-brand shadow-none"
+            className="w-full text-base sm:text-sm bg-background border border-border rounded-sm pl-9 pr-8 py-2 text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-brand shadow-none"
+            enterKeyHint="search"
+            autoCapitalize="none"
+            autoCorrect="off"
           />
           {localQuery && (
             <button
@@ -97,7 +100,7 @@ export function InventoryToolbar({
           <select
             value={categoryId}
             onChange={(e) => onCategoryChange(e.target.value)}
-            className="h-9 rounded-[8px] border border-border bg-background px-3 text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-brand cursor-pointer max-w-[180px] truncate shadow-none"
+            className="h-9 rounded-sm border border-border bg-background px-3 text-base sm:text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-brand cursor-pointer max-w-[180px] truncate shadow-none"
           >
             <option value="all">All categories</option>
             {categories.map((c) => (
@@ -111,7 +114,7 @@ export function InventoryToolbar({
           <select
             value={sortBy}
             onChange={(e) => onSortChange(e.target.value)}
-            className="h-9 rounded-[8px] border border-border bg-background px-3 text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-brand cursor-pointer shadow-none"
+            className="h-9 rounded-sm border border-border bg-background px-3 text-base sm:text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-brand cursor-pointer shadow-none"
           >
             <option value="updated">Recently updated</option>
             <option value="name">Name (A-Z)</option>

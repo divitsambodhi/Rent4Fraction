@@ -71,6 +71,9 @@ export function HomeHero({ dates, onDatesChange }: HomeHeroProps) {
             placeholder="Search sound, lights, furniture..."
             aria-label="Search sound, lights, furniture"
             className="w-full h-full bg-transparent text-base md:text-sm text-foreground placeholder:text-muted-foreground focus:outline-none"
+            enterKeyHint="search"
+            autoCapitalize="none"
+            autoCorrect="off"
           />
         </div>
 

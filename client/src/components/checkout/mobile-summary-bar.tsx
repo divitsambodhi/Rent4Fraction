@@ -53,7 +53,7 @@ export function MobileSummaryBar({
 
   return (
     <>
-      <div className="lg:hidden fixed bottom-0 left-0 right-0 z-sticky-bar bg-surface/95 backdrop-blur-md border-t border-border shadow-lg px-4 py-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))]">
+      <div className="lg:hidden fixed bottom-0 left-0 right-0 z-sticky-bar bg-surface/95 backdrop-blur-md border-t border-border shadow-lg px-4 py-3 pb-[calc(0.75rem+env(safe-area-inset-bottom,0px))]">
         <div className="max-w-2xl mx-auto flex items-center justify-between gap-4">
           {/* Total & Summary Sheet Trigger */}
           <button
@@ -90,7 +90,7 @@ export function MobileSummaryBar({
           side="bottom"
           className="p-0 rounded-t-[20px] max-h-[85dvh] overflow-y-auto overscroll-contain z-sheet"
         >
-          <div className="p-4 sm:p-6 space-y-4 pb-[max(1.5rem,env(safe-area-inset-bottom))]">
+          <div className="p-4 sm:p-6 space-y-4 pb-[max(1.5rem,env(safe-area-inset-bottom,0px))]">
             <SheetHeader className="text-left pb-2">
               <SheetTitle className="font-serif text-lg">Order Breakdown</SheetTitle>
             </SheetHeader>

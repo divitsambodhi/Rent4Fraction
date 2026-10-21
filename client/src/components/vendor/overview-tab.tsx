@@ -180,7 +180,7 @@ export function OverviewTab({
             id="overview-range"
             value={currentRange}
             onChange={(e) => onRangeChange(e.target.value as OverviewRange)}
-            className="h-9 rounded-lg border border-border bg-surface px-3 text-xs font-medium text-foreground focus:outline-none focus:ring-1 focus:ring-brand cursor-pointer"
+            className="h-9 rounded-lg border border-border bg-surface px-3 text-base sm:text-xs font-medium text-foreground focus:outline-none focus:ring-1 focus:ring-brand cursor-pointer"
           >
             <option value="7d">Last 7 days</option>
             <option value="30d">Last 30 days</option>

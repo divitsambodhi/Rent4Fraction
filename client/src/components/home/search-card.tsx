@@ -48,7 +48,10 @@ export function SearchCard() {
               onChange={(e) => setQuery(e.target.value)}
               placeholder="What equipment do you need?"
               aria-label="What equipment do you need?"
-              className="w-full h-12 pl-10 pr-3 rounded-[10px] border border-border bg-background text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-brand focus:border-brand transition-colors"
+              className="w-full h-12 pl-10 pr-3 rounded-[10px] border border-border bg-background text-base md:text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-brand focus:border-brand transition-colors"
+              enterKeyHint="search"
+              autoCapitalize="none"
+              autoCorrect="off"
             />
           </div>
 
@@ -57,7 +60,7 @@ export function SearchCard() {
             <Select value={category} onValueChange={setCategory}>
               <SelectTrigger
                 aria-label="Select equipment category"
-                className="h-12 rounded-[10px] border-border bg-background text-sm"
+                className="h-12 rounded-[10px] border-border bg-background text-base md:text-sm"
               >
                 <SelectValue placeholder="All 8 Categories" />
               </SelectTrigger>

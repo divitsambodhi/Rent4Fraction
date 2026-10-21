@@ -97,7 +97,7 @@ export function ResponsiveDialog({
               className,
             )}
           >
-            <div className="flex items-center justify-between px-4 py-3 border-b border-border bg-surface shrink-0 pt-[max(0.75rem,env(safe-area-inset-top))]">
+            <div className="flex items-center justify-between px-4 py-3 border-b border-border bg-surface shrink-0 pt-[max(0.75rem,env(safe-area-inset-top,0px))]">
               <div className="flex flex-col">
                 {title && (
                   <DialogPrimitive.Title className="text-headline-sm font-semibold text-foreground font-sans">
@@ -126,7 +126,7 @@ export function ResponsiveDialog({
             </div>
 
             {footer && (
-              <div className="p-4 border-t border-border bg-surface shrink-0 pb-[max(1rem,env(safe-area-inset-bottom))] flex flex-col gap-2 [&>button]:w-full [&>button]:h-11">
+              <div className="p-4 border-t border-border bg-surface shrink-0 pb-[max(1rem,env(safe-area-inset-bottom,0px))] flex flex-col gap-2 [&>button]:w-full [&>button]:h-11">
                 {footer}
               </div>
             )}
@@ -141,7 +141,7 @@ export function ResponsiveDialog({
             )}
           >
             {/* Drag Handle */}
-            <div className="mx-auto mt-2.5 mb-1 h-1.5 w-12 rounded-full bg-border shrink-0" aria-hidden="true" />
+            <div className="mx-auto mt-2.5 mb-1 h-1.5 w-12 rounded-full bg-border shrink-0 touch-pan-x select-none" aria-hidden="true" />
 
             <div className="flex items-start justify-between px-5 pt-2 pb-3 border-b border-border bg-surface shrink-0">
               <div className="flex flex-col pr-2">
@@ -172,7 +172,7 @@ export function ResponsiveDialog({
             </div>
 
             {footer && (
-              <div className="p-4 border-t border-border bg-surface shrink-0 pb-[max(1rem,env(safe-area-inset-bottom))] flex flex-col gap-2 [&>button]:w-full [&>button]:h-11">
+              <div className="p-4 border-t border-border bg-surface shrink-0 pb-[max(1rem,env(safe-area-inset-bottom,0px))] flex flex-col gap-2 [&>button]:w-full [&>button]:h-11">
                 {footer}
               </div>
             )}

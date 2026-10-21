@@ -138,7 +138,7 @@ export function MessageVendorDialog({
                 value={subject}
                 onChange={(e) => setSubject(e.target.value)}
                 required
-                className="w-full h-10 px-3 rounded-[8px] border border-border bg-surface text-xs text-foreground focus:outline-none focus:ring-2 focus:ring-brand"
+                className="w-full h-10 px-3 rounded-sm border border-border bg-surface text-base md:text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-brand"
               />
             </div>
 
@@ -159,7 +159,7 @@ export function MessageVendorDialog({
                 maxLength={charLimit}
                 rows={4}
                 required
-                className="w-full p-3 rounded-[8px] border border-border bg-surface text-xs text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-brand resize-none leading-relaxed"
+                className="w-full p-3 rounded-sm border border-border bg-surface text-base md:text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-brand resize-none leading-relaxed"
               />
             </div>
 

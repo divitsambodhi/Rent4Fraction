@@ -101,7 +101,7 @@ export function ReturnScheduleDialog({
                 <select
                   value={startTime}
                   onChange={(e) => setStartTime(e.target.value)}
-                  className="w-full h-9 px-3 rounded-xl border border-border bg-card text-xs text-foreground"
+                  className="w-full h-10 px-3 rounded-sm border border-border bg-card text-base md:text-sm text-foreground"
                 >
                   {['09:00 AM', '11:00 AM', '02:00 PM', '04:00 PM', '06:00 PM', '08:00 PM'].map((t) => (
                     <option key={t} value={t}>
@@ -116,7 +116,7 @@ export function ReturnScheduleDialog({
                 <select
                   value={endTime}
                   onChange={(e) => setEndTime(e.target.value)}
-                  className="w-full h-9 px-3 rounded-xl border border-border bg-card text-xs text-foreground"
+                  className="w-full h-10 px-3 rounded-sm border border-border bg-card text-base md:text-sm text-foreground"
                 >
                   {['12:00 PM', '02:00 PM', '05:00 PM', '07:00 PM', '09:00 PM', '11:00 PM'].map((t) => (
                     <option key={t} value={t}>
@@ -136,7 +136,7 @@ export function ReturnScheduleDialog({
                 onChange={(e) => setNotes(e.target.value)}
                 placeholder="e.g. Ensure cables are coiled into crate B2. Team will arrive in Tata Ace vehicle."
                 rows={2}
-                className="text-xs resize-none"
+                className="text-base md:text-sm resize-none"
               />
             </div>
           </div>

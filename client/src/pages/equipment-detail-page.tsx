@@ -227,7 +227,7 @@ export function EquipmentDetailPage() {
   const isUnavailable = equipment.status !== 'active'
 
   return (
-    <PageContainer className="py-5 sm:py-7 space-y-6 pb-[calc(5rem+env(safe-area-inset-bottom))] lg:pb-7">
+    <PageContainer className="py-5 sm:py-7 space-y-6 pb-[calc(5rem+env(safe-area-inset-bottom,0px))] lg:pb-7">
       {/* Top Breadcrumb Navigation */}
       <Breadcrumbs items={breadcrumbItems} />
 

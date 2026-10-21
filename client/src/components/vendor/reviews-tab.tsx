@@ -191,7 +191,7 @@ export function ReviewsTab({
             <select
               value={equipmentParam}
               onChange={(e) => handleEquipmentChange(e.target.value)}
-              className="h-8 rounded-lg border border-border bg-surface px-2.5 text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-brand max-w-[180px] truncate cursor-pointer"
+              className="h-8 rounded-lg border border-border bg-surface px-2.5 text-base sm:text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-brand max-w-[180px] truncate cursor-pointer"
             >
               <option value="all">All equipment</option>
               {equipmentOptions.map((opt) => (
@@ -206,7 +206,7 @@ export function ReviewsTab({
           <select
             value={sortParam}
             onChange={(e) => handleSortChange(e.target.value)}
-            className="h-8 rounded-lg border border-border bg-surface px-2.5 text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-brand cursor-pointer"
+            className="h-8 rounded-lg border border-border bg-surface px-2.5 text-base sm:text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-brand cursor-pointer"
           >
             <option value="newest">Newest first</option>
             <option value="highest">Highest rated</option>

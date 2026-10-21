@@ -111,7 +111,7 @@ export function Navbar() {
 
   return (
     <>
-      <header className="sticky top-0 z-navbar w-full h-14 sm:h-16 border-b border-border bg-surface transition-colors pt-[env(safe-area-inset-top)]">
+      <header className="sticky top-0 z-navbar z-50 w-full min-h-14 sm:min-h-16 h-[calc(3.5rem+env(safe-area-inset-top,0px))] sm:h-[calc(4rem+env(safe-area-inset-top,0px))] border-b border-border bg-surface transition-colors pt-[env(safe-area-inset-top,0px)]">
         <div className="max-w-7xl mx-auto h-full px-3 sm:px-6 lg:px-8 flex items-center justify-between gap-2 sm:gap-4">
           {/* Left: Brand Logo Mark */}
           <div className="flex items-center gap-4 lg:gap-8 shrink-0">
@@ -495,7 +495,7 @@ export function Navbar() {
               </SheetTrigger>
               <SheetContent side="left" className="w-full sm:w-[380px] p-0 flex flex-col h-dvh max-h-dvh">
                 {/* Account Header Block */}
-                <div className="p-5 border-b border-border bg-muted/20 shrink-0 pt-[max(1.25rem,env(safe-area-inset-top))]">
+                <div className="p-5 border-b border-border bg-muted/20 shrink-0 pt-[max(1.25rem,env(safe-area-inset-top,0px))]">
                   <div className="flex items-center justify-between mb-3">
                     <SheetTitle className="text-lg font-bold text-foreground">
                       rent<span className="text-brand">4</span>fraction
@@ -658,7 +658,7 @@ export function Navbar() {
                 </div>
 
                 {/* Bottom Auth / Logout Block with Safe Area */}
-                <div className="p-4 border-t border-border bg-surface shrink-0 pb-[max(1rem,env(safe-area-inset-bottom))]">
+                <div className="p-4 border-t border-border bg-surface shrink-0 pb-[max(1rem,env(safe-area-inset-bottom,0px))]">
                   {role === 'visitor' ? (
                     <div className="grid grid-cols-2 gap-2">
                       <AppLink to="/auth" className="w-full">
@@ -691,7 +691,7 @@ export function Navbar() {
 
       {/* Full-Screen Mobile Search Overlay */}
       {searchOverlayOpen && (
-        <div className="fixed inset-0 z-sheet bg-surface flex flex-col h-dvh max-h-dvh overflow-hidden overscroll-contain animate-in fade-in-0 duration-150 pt-[max(0.75rem,env(safe-area-inset-top))]">
+        <div className="fixed inset-0 z-sheet bg-surface flex flex-col h-dvh max-h-dvh overflow-hidden overscroll-contain animate-in fade-in-0 duration-150 pt-[max(0.75rem,env(safe-area-inset-top,0px))]">
           <div className="p-4 border-b border-border flex items-center gap-2">
             <form onSubmit={handleNavSearchSubmit} className="flex-1 relative flex items-center">
               <Icon name="search" size={18} className="absolute left-3 text-brand pointer-events-none" />

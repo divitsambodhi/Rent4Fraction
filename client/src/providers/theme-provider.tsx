@@ -45,10 +45,10 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
         root.removeAttribute('data-theme')
       }
 
-      // Sync theme-color meta tag
+      // Sync theme-color meta tag to match top header surface
       const meta = document.getElementById('theme-meta')
       if (meta) {
-        meta.setAttribute('content', isDark ? '#191A1D' : '#762B36')
+        meta.setAttribute('content', isDark ? '#232428' : '#FFFFFF')
       }
     }
 
