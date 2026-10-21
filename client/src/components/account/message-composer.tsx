@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import { ArrowUp, Loader2 } from 'lucide-react'
+import { Icon } from '@/components/ui/icon'
 import { cn } from '@/lib/utils'
 
 interface MessageComposerProps {
@@ -51,7 +51,6 @@ export function MessageComposer({
       await onSend(content)
     } finally {
       setSending(false)
-      // Refocus textarea after sending
       textareaRef.current?.focus()
     }
   }
@@ -60,7 +59,7 @@ export function MessageComposer({
   const showCounter = charLength >= COUNTER_THRESHOLD
 
   return (
-    <div className="p-3 bg-surface border-t border-border space-y-1.5 shrink-0">
+    <div className="p-3 bg-surface border-t border-border space-y-1.5 shrink-0 pb-[max(0.75rem,env(safe-area-inset-bottom))]">
       <div className="relative flex items-end gap-2 bg-muted/30 border border-border rounded-[14px] p-1.5 focus-within:ring-2 focus-within:ring-brand focus-within:border-brand transition-all">
         <textarea
           ref={textareaRef}
@@ -71,26 +70,26 @@ export function MessageComposer({
           placeholder={placeholder}
           rows={1}
           maxLength={MAX_CHARS}
-          className="flex-1 max-h-[120px] px-3 py-2 text-xs text-foreground placeholder:text-muted-foreground bg-transparent resize-none focus:outline-none leading-relaxed"
+          className="flex-1 max-h-[120px] px-3 py-2 text-base sm:text-xs text-foreground placeholder:text-muted-foreground bg-transparent resize-none focus:outline-none leading-relaxed"
         />
 
-        {/* 44px Send Button */}
+        {/* 44px Hit Area Send Button */}
         <button
           type="button"
           onClick={handleSubmit}
           disabled={!text.trim() || sending || disabled}
           aria-label="Send message"
           className={cn(
-            'size-11 rounded-[10px] flex items-center justify-center transition-all shrink-0',
+            'size-11 min-w-[44px] min-h-[44px] rounded-[10px] flex items-center justify-center transition-all shrink-0',
             text.trim() && !sending && !disabled
               ? 'bg-brand text-white hover:bg-brand-hover shadow-xs cursor-pointer'
               : 'bg-muted text-muted-foreground cursor-not-allowed opacity-50'
           )}
         >
           {sending ? (
-            <Loader2 className="size-4 animate-spin" />
+            <Icon name="loader" size={16} className="animate-spin" />
           ) : (
-            <ArrowUp className="size-4 stroke-[2.2]" />
+            <Icon name="arrow-up" size={16} />
           )}
         </button>
       </div>

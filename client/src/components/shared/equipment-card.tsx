@@ -1,5 +1,5 @@
 import React from 'react'
-import { CheckCircle2, Heart } from 'lucide-react'
+import { Icon } from '@/components/ui/icon'
 import { AppLink } from './app-link'
 import { PriceText } from './price-text'
 import { ProductImage } from './product-image'
@@ -17,6 +17,11 @@ export interface EquipmentCardProps {
   rentalDays?: number
 }
 
+/**
+ * EquipmentCard: Clean mobile-first retail component.
+ * White surface, 1px border, 8px radius, compact padding on mobile.
+ * 44px minimum tap target for wishlist button, clamped title, price on one line.
+ */
 export function EquipmentCard({
   equipment,
   className,
@@ -40,127 +45,123 @@ export function EquipmentCard({
   return (
     <article
       className={cn(
-        'group relative flex flex-col h-full rounded-[14px] border border-border bg-surface overflow-hidden shadow-none transition-colors duration-150 hover:border-brand/50',
-        isUnavailable && 'opacity-70 hover:opacity-90',
+        'group relative flex flex-col h-full rounded-md border border-border bg-surface overflow-hidden transition-colors duration-150',
+        isUnavailable && 'opacity-70',
         className,
       )}
     >
-      {/* Clickable Card Link Container */}
       <AppLink
         to={`/equipment/${equipment.equipment_id}`}
-        className="flex flex-col flex-1 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2 rounded-[14px]"
+        className="flex flex-col flex-1 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2 rounded-md"
       >
-        {/* Media Container: 4:3 ratio */}
-        <div className="relative w-full aspect-4/3 overflow-hidden bg-muted/40">
+        <div className="relative w-full aspect-[4/3] bg-muted/40 overflow-hidden">
           <ProductImage
             src={equipment.primary_image_url}
             alt={equipment.name}
-            category={equipment.category_id}
+            category={equipment.category_name || equipment.category_id}
             aspectRatio="4/3"
+            widths={[360, 480, 800]}
+            sizes="(max-width: 480px) 100vw, (max-width: 768px) 50vw, 33vw"
           />
 
-          {/* Top-Left: Delivery available badge */}
           {equipment.delivery_available && (
-            <div className="absolute top-3 left-3 z-10">
+            <div className="absolute top-2 left-2 z-10">
               <StatusBadge
                 status="delivery_available"
-                label="Delivery available"
+                label="Delivery"
                 size="sm"
-                className="bg-surface border border-border text-foreground"
+                className="bg-surface/90 backdrop-blur-xs border border-border text-foreground text-[10px] sm:text-xs px-1.5 py-0.5"
               />
             </div>
           )}
 
-          {/* Bottom-Left: Date Availability Badge */}
           {isUnavailable && (
-            <div className="absolute bottom-3 left-3 z-10">
-              <span className="inline-flex items-center px-2.5 py-1 rounded-[6px] text-[11px] font-semibold bg-surface text-muted-foreground border border-border">
-                Unavailable for your dates
+            <div className="absolute bottom-2 left-2 z-10">
+              <span className="inline-flex items-center px-1.5 py-0.5 rounded-sm text-[10px] font-medium bg-surface/90 text-muted-foreground border border-border">
+                Unavailable
               </span>
             </div>
           )}
 
           {isLowStock && (
-            <div className="absolute bottom-3 left-3 z-10">
-              <span className="inline-flex items-center px-2.5 py-1 rounded-[6px] text-[11px] font-semibold bg-warning/15 text-warning border border-warning/30">
+            <div className="absolute bottom-2 left-2 z-10">
+              <span className="inline-flex items-center px-1.5 py-0.5 rounded-sm text-[10px] font-medium bg-surface/90 text-warning border border-warning/40">
                 Only {availableQuantity} left
               </span>
             </div>
           )}
 
-          {/* Top-Right: Wishlist Heart Button (persisted, aria-pressed, doesn't navigate) */}
+          {/* Wishlist Button: 44px tap target */}
           <button
             type="button"
             onClick={handleHeartClick}
             aria-label={
               wishlisted
-                ? `Remove ${equipment.name} from wishlist`
-                : `Save ${equipment.name} to wishlist`
+                ? `Remove ${equipment.name} from saved items`
+                : `Save ${equipment.name}`
             }
             aria-pressed={wishlisted}
             className={cn(
-              'absolute top-3 right-3 z-10 size-8.5 rounded-full flex items-center justify-center transition-colors duration-150 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand border border-border/60',
-              wishlisted
-                ? 'bg-brand text-white border-brand'
-                : 'bg-surface/90 text-muted-foreground hover:text-brand hover:bg-surface',
+              'absolute top-1 right-1 z-10 min-w-[44px] min-h-[44px] rounded-full flex items-center justify-center transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-brand cursor-pointer',
             )}
           >
-            <Heart
-              size={17}
+            <div
               className={cn(
-                'transition-transform active:scale-125',
-                wishlisted ? 'fill-white stroke-white' : 'stroke-current fill-none',
+                'size-8 rounded-full flex items-center justify-center border transition-colors shadow-xs',
+                wishlisted
+                  ? 'bg-brand text-white border-brand'
+                  : 'bg-surface/90 backdrop-blur-xs text-foreground border-border hover:text-brand',
               )}
-            />
+            >
+              <Icon
+                name={wishlisted ? 'heart-filled' : 'heart'}
+                size={16}
+                className={wishlisted ? 'text-white' : 'text-foreground'}
+              />
+            </div>
           </button>
         </div>
 
-        {/* Content Body */}
-        <div className="p-4 flex flex-col flex-1 gap-2">
-          {/* Category Label */}
-          <div className="text-xs font-semibold text-brand">
+        <div className="p-3 sm:p-4 flex flex-col flex-1 gap-1">
+          <div className="text-[11px] sm:text-label-sm font-semibold text-brand truncate">
             {equipment.category_name}
           </div>
 
-          {/* Equipment Name (Semibold, 2-line clamp) */}
-          <h3 className="font-serif text-base sm:text-lg font-semibold text-foreground line-clamp-2 leading-snug group-hover:text-brand transition-colors">
+          <h3 className="text-sm sm:text-body-md font-semibold text-foreground line-clamp-2 leading-snug">
             {equipment.name}
           </h3>
 
-          {/* Vendor Name with Verified Check */}
-          <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+          <div className="flex items-center gap-1.5 text-xs text-text-secondary">
             <span className="truncate">{equipment.vendor_name}</span>
-            <CheckCircle2 className="size-3.5 text-brand shrink-0" />
           </div>
 
-          {/* Rating Row */}
-          <div className="mt-1">
-            <StarRating
-              rating={equipment.avg_rating}
-              reviewCount={equipment.review_count}
-              starSize={14}
-            />
-          </div>
+          {equipment.review_count > 0 && (
+            <div className="mt-0.5">
+              <StarRating
+                rating={equipment.avg_rating}
+                reviewCount={equipment.review_count}
+                starSize={12}
+              />
+            </div>
+          )}
 
-          {/* Price & Deposit Row (Bottom Pinned) */}
-          <div className="mt-auto pt-3 border-t border-border flex items-baseline justify-between gap-2">
-            <div>
+          <div className="mt-auto pt-2.5 border-t border-border flex items-baseline justify-between gap-1 text-xs">
+            <div className="min-w-0">
               <PriceText amount={equipment.price_per_day} period="/day" />
               {rentalDays !== undefined && rentalDays > 0 && (
-                <div className="text-xs font-semibold text-brand tabular-nums mt-0.5">
-                  {formatINR(equipment.price_per_day * rentalDays)} for {rentalDays}{' '}
-                  {rentalDays === 1 ? 'day' : 'days'}
+                <div className="text-[11px] font-semibold text-brand tabular-nums">
+                  {formatINR(equipment.price_per_day * rentalDays)} ({rentalDays}d)
                 </div>
               )}
               {isBelowMinDays && (
-                <div className="text-[11px] font-medium text-warning tabular-nums mt-0.5">
+                <div className="text-[10px] font-medium text-warning tabular-nums">
                   Min. {equipment.min_rental_days} days
                 </div>
               )}
             </div>
-            <div className="text-right self-end">
-              <span className="text-[12px] text-muted-foreground font-normal tabular-nums">
-                {formatINR(equipment.security_deposit)} deposit
+            <div className="text-right shrink-0">
+              <span className="text-[11px] text-text-secondary tabular-nums">
+                {formatINR(equipment.security_deposit)} dep.
               </span>
             </div>
           </div>

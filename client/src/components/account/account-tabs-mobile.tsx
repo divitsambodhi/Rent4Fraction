@@ -1,12 +1,4 @@
-import {
-  CalendarDays,
-  CreditCard,
-  Heart,
-  MapPin,
-  MessageSquare,
-  Settings,
-  Star,
-} from 'lucide-react'
+import { Icon, type IconName } from '@/components/ui/icon'
 import { useWishlist } from '@/providers/wishlist-provider'
 import { useAppSearchParams } from '@/components/shared/app-link'
 import type { AccountTabKey, AccountBadges } from '@/types/account'
@@ -20,46 +12,46 @@ interface AccountTabsMobileProps {
 const TABS: {
   key: AccountTabKey
   label: string
-  icon: typeof CalendarDays
+  iconName: IconName
   count?: (b: AccountBadges | null, wCount: number) => number | null
 }[] = [
   {
     key: 'bookings',
     label: 'Bookings',
-    icon: CalendarDays,
+    iconName: 'calendar',
     count: (b) => (b && b.active_bookings_count > 0 ? b.active_bookings_count : null),
   },
   {
     key: 'inbox',
     label: 'Inbox',
-    icon: MessageSquare,
+    iconName: 'message',
     count: (b) => (b && b.unread_inbox_count > 0 ? b.unread_inbox_count : null),
   },
   {
     key: 'wishlist',
     label: 'Wishlist',
-    icon: Heart,
+    iconName: 'heart',
     count: (_, w) => (w > 0 ? w : null),
   },
   {
     key: 'addresses',
     label: 'Addresses',
-    icon: MapPin,
+    iconName: 'map-pin',
   },
   {
     key: 'profile',
     label: 'Profile',
-    icon: Settings,
+    iconName: 'user',
   },
   {
     key: 'payments',
     label: 'Payments',
-    icon: CreditCard,
+    iconName: 'credit-card',
   },
   {
     key: 'reviews',
     label: 'Reviews',
-    icon: Star,
+    iconName: 'star',
   },
 ]
 
@@ -72,14 +64,13 @@ export function AccountTabsMobile({ activeTab, badges }: AccountTabsMobileProps)
   }
 
   return (
-    <div className="lg:hidden sticky top-12 z-30 -mx-4 px-4 py-2 bg-surface border-b border-border shadow-none">
+    <div className="lg:hidden sticky top-14 z-sticky-header -mx-4 px-4 py-2.5 bg-surface border-b border-border shadow-xs">
       <div
         role="tablist"
         aria-label="Account sections"
-        className="flex items-center gap-1.5 overflow-x-auto no-scrollbar scroll-smooth snap-x snap-mandatory"
+        className="flex items-center gap-2 overflow-x-auto no-scrollbar scroll-smooth snap-x snap-mandatory"
       >
         {TABS.map((tab) => {
-          const Icon = tab.icon
           const isActive = activeTab === tab.key
           const badge = tab.count ? tab.count(badges || null, wishlist.length) : null
 
@@ -90,18 +81,18 @@ export function AccountTabsMobile({ activeTab, badges }: AccountTabsMobileProps)
               aria-selected={isActive}
               onClick={() => handleTabClick(tab.key)}
               className={cn(
-                'snap-start shrink-0 inline-flex items-center gap-1.5 h-8 px-3 rounded-full text-xs font-medium transition-colors cursor-pointer select-none',
+                'snap-start shrink-0 inline-flex items-center gap-1.5 min-h-[44px] h-11 px-4 rounded-full text-xs font-semibold transition-colors cursor-pointer select-none',
                 isActive
-                  ? 'bg-brand text-white'
+                  ? 'bg-brand text-white shadow-xs'
                   : 'bg-muted/50 text-muted-foreground hover:bg-muted hover:text-foreground'
               )}
             >
-              <Icon className="size-3.5 stroke-[1.75]" />
+              <Icon name={tab.iconName} size={15} />
               <span>{tab.label}</span>
               {badge !== null && (
                 <span
                   className={cn(
-                    'inline-flex items-center justify-center px-1.5 min-w-[16px] h-4 rounded-full text-[10px] font-bold tabular-nums',
+                    'inline-flex items-center justify-center px-1.5 min-w-[18px] h-4.5 rounded-full text-[10px] font-bold tabular-nums',
                     isActive ? 'bg-white/20 text-white' : 'bg-muted-foreground/15 text-foreground'
                   )}
                 >

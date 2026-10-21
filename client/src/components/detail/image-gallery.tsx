@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react'
-import { ArrowLeft, ArrowRight, Expand, Heart } from 'lucide-react'
+import { Icon } from '@/components/ui/icon'
 import { ProductImage } from '@/components/shared/product-image'
 import { ShareButton } from './share-button'
 import { Lightbox } from './lightbox'
@@ -60,7 +60,7 @@ export function ImageGallery({
   const handleTouchEnd = () => {
     if (!touchStartX.current || !touchEndX.current) return
     const diff = touchStartX.current - touchEndX.current
-    const threshold = 40 // min distance to trigger swipe
+    const threshold = 35 // min distance to trigger swipe
     if (diff > threshold) {
       goToNext()
     } else if (diff < -threshold) {
@@ -79,15 +79,15 @@ export function ImageGallery({
 
   return (
     <section
-      className="space-y-3"
+      className="space-y-3 -mx-4 sm:mx-0"
       aria-label="Equipment image gallery"
       aria-roledescription="carousel"
       tabIndex={0}
       onKeyDown={handleKeyDown}
     >
-      {/* 4:3 Aspect Main Image Stage */}
+      {/* Edge-to-edge on mobile, 4:3 Aspect Main Image Stage */}
       <div
-        className="relative group rounded-[16px] overflow-hidden border border-border bg-surface shadow-xs select-none aspect-4/3"
+        className="relative group rounded-none sm:rounded-[16px] overflow-hidden border-y sm:border border-border bg-surface select-none aspect-4/3"
         onTouchStart={handleTouchStart}
         onTouchMove={handleTouchMove}
         onTouchEnd={handleTouchEnd}
@@ -102,7 +102,11 @@ export function ImageGallery({
             alt={`${equipmentName} view ${activeIndex + 1}`}
             category={category}
             aspectRatio="4/3"
-            className="size-full object-cover transition-transform duration-300 group-hover:scale-[1.02]"
+            fetchPriority="high"
+            loading="eager"
+            widths={[400, 800, 1200]}
+            sizes="(max-width: 640px) 100vw, (max-width: 1024px) 66vw, 600px"
+            className="size-full object-cover transition-transform duration-300 sm:group-hover:scale-[1.02]"
           />
         </div>
 
@@ -111,8 +115,8 @@ export function ImageGallery({
           {activeIndex + 1} / {images.length}
         </span>
 
-        {/* Overlays: Heart and Share */}
-        <div className="absolute top-3 right-3 flex items-center gap-2 z-10">
+        {/* Overlays: Heart and Share (44px hit areas) */}
+        <div className="absolute top-2.5 right-2.5 sm:top-3 sm:right-3 flex items-center gap-2 z-10">
           <ShareButton title={equipmentName} />
 
           <button
@@ -124,17 +128,16 @@ export function ImageGallery({
             aria-label={wished ? 'Remove from wishlist' : 'Save to wishlist'}
             aria-pressed={wished}
             className={cn(
-              'size-10 rounded-full border shadow-xs flex items-center justify-center transition-all cursor-pointer backdrop-blur-xs',
+              'min-w-[44px] min-h-[44px] rounded-full border shadow-xs flex items-center justify-center transition-all cursor-pointer backdrop-blur-xs',
               wished
                 ? 'bg-brand text-white border-brand'
                 : 'bg-surface/90 text-foreground/80 border-border/80 hover:bg-surface hover:text-brand hover:border-brand/40',
             )}
           >
-            <Heart
-              className={cn(
-                'size-4.5 stroke-[1.75]',
-                wished && 'fill-white stroke-white',
-              )}
+            <Icon
+              name={wished ? 'heart-filled' : 'heart'}
+              size={18}
+              className={wished ? 'text-white' : 'text-foreground'}
             />
           </button>
         </div>
@@ -144,13 +147,13 @@ export function ImageGallery({
           type="button"
           onClick={() => setLightboxOpen(true)}
           aria-label="Open fullscreen image lightbox"
-          className="absolute bottom-3 right-3 px-3 py-1.5 rounded-full bg-black/60 hover:bg-black/80 backdrop-blur-xs text-white text-xs font-medium flex items-center gap-1.5 shadow-xs transition-colors cursor-pointer"
+          className="absolute bottom-3 right-3 min-h-[36px] px-3 py-1.5 rounded-full bg-black/60 hover:bg-black/80 backdrop-blur-xs text-white text-xs font-medium flex items-center gap-1.5 shadow-xs transition-colors cursor-pointer"
         >
-          <Expand className="size-3.5" />
+          <Icon name="maximize" size={14} />
           <span>Expand</span>
         </button>
 
-        {/* Navigation Arrows (Visible on hover or keyboard) */}
+        {/* Navigation Arrows (44px hit areas) */}
         {images.length > 1 && (
           <>
             <button
@@ -160,9 +163,9 @@ export function ImageGallery({
                 goToPrev()
               }}
               aria-label="Previous image"
-              className="absolute left-3 top-1/2 -translate-y-1/2 size-10 rounded-full bg-surface/85 hover:bg-surface text-foreground border border-border shadow-md flex items-center justify-center transition-all opacity-0 group-hover:opacity-100 focus:opacity-100 hover:scale-105 active:scale-95 cursor-pointer"
+              className="absolute left-2.5 top-1/2 -translate-y-1/2 min-w-[44px] min-h-[44px] rounded-full bg-surface/85 hover:bg-surface text-foreground border border-border shadow-md flex items-center justify-center transition-all opacity-80 sm:opacity-0 sm:group-hover:opacity-100 focus:opacity-100 hover:scale-105 active:scale-95 cursor-pointer"
             >
-              <ArrowLeft className="size-4.5 stroke-[2]" />
+              <Icon name="chevron-left" size={20} />
             </button>
 
             <button
@@ -172,18 +175,42 @@ export function ImageGallery({
                 goToNext()
               }}
               aria-label="Next image"
-              className="absolute right-3 top-1/2 -translate-y-1/2 size-10 rounded-full bg-surface/85 hover:bg-surface text-foreground border border-border shadow-md flex items-center justify-center transition-all opacity-0 group-hover:opacity-100 focus:opacity-100 hover:scale-105 active:scale-95 cursor-pointer"
+              className="absolute right-2.5 top-1/2 -translate-y-1/2 min-w-[44px] min-h-[44px] rounded-full bg-surface/85 hover:bg-surface text-foreground border border-border shadow-md flex items-center justify-center transition-all opacity-80 sm:opacity-0 sm:group-hover:opacity-100 focus:opacity-100 hover:scale-105 active:scale-95 cursor-pointer"
             >
-              <ArrowRight className="size-4.5 stroke-[2]" />
+              <Icon name="chevron-right" size={20} />
             </button>
           </>
         )}
       </div>
 
-      {/* Thumbnails Strip (72px high) */}
+      {/* Mobile Swipe Dots Indicator (<sm) */}
+      {images.length > 1 && (
+        <div className="flex sm:hidden items-center justify-center gap-1.5 pt-1">
+          {images.map((_, idx) => (
+            <button
+              key={idx}
+              type="button"
+              onClick={() => setActiveIndex(idx)}
+              aria-label={`Go to slide ${idx + 1}`}
+              className={cn(
+                'min-w-[24px] min-h-[24px] flex items-center justify-center',
+              )}
+            >
+              <span
+                className={cn(
+                  'h-1.5 rounded-full transition-all',
+                  activeIndex === idx ? 'w-6 bg-brand' : 'w-1.5 bg-border',
+                )}
+              />
+            </button>
+          ))}
+        </div>
+      )}
+
+      {/* Thumbnails Strip (Desktop sm:flex) */}
       {images.length > 1 && (
         <div
-          className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-none"
+          className="hidden sm:flex items-center gap-2 overflow-x-auto pb-1 scrollbar-none px-4 sm:px-0"
           role="tablist"
           aria-label="Thumbnail selection"
         >

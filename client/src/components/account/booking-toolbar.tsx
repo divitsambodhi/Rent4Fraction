@@ -105,7 +105,7 @@ export function BookingToolbar({
         <div aria-live="polite" className="text-xs text-muted-foreground font-medium">
           {totalCount > 0 ? (
             <span>
-              Showing {startIndex}–{endIndex} of {totalCount} bookings
+              Showing {startIndex} to {endIndex} of {totalCount} bookings
             </span>
           ) : (
             <span>No bookings found</span>

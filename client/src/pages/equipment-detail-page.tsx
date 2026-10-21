@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useMemo } from 'react'
-import { ArrowLeft, PackageSearch } from 'lucide-react'
+import { Icon } from '@/components/ui/icon'
 import {
   useAppNavigate,
   useAppParams,
@@ -195,19 +195,18 @@ export function EquipmentDetailPage() {
   if (!equipment) {
     return (
       <PageContainer className="py-16 flex flex-col items-center justify-center text-center">
-        <div className="size-16 rounded-full bg-muted/60 text-muted-foreground flex items-center justify-center mb-4">
-          <PackageSearch className="size-8 stroke-[1.5]" />
+        <div className="size-12 rounded-sm bg-muted text-muted-foreground flex items-center justify-center mb-4">
+          <Icon name="box" size={24} />
         </div>
-        <h1 className="font-serif text-2xl sm:text-3xl font-bold text-foreground mb-2">
-          Equipment Listing Not Found
+        <h1 className="text-headline-sm font-semibold text-foreground mb-2">
+          Equipment listing not found
         </h1>
-        <p className="text-sm text-muted-foreground max-w-md mb-6 leading-relaxed">
-          The equipment listing you requested (ID: {id}) could not be located in our verified event inventory.
-          It may have been removed or unlisted by the vendor.
+        <p className="text-body-sm text-text-secondary max-w-md mb-6 leading-normal">
+          The requested equipment (ID: {id}) could not be located. It may have been unlisted or removed.
         </p>
         <div className="flex flex-wrap items-center justify-center gap-3">
           <AppLink to="/equipment">
-            <Button size="default" className="font-semibold px-5 rounded-[10px]">
+            <Button size="default">
               Browse all equipment
             </Button>
           </AppLink>
@@ -215,9 +214,9 @@ export function EquipmentDetailPage() {
             variant="outline"
             size="default"
             onClick={() => navigate(-1)}
-            className="gap-2 rounded-[10px]"
+            className="gap-2"
           >
-            <ArrowLeft className="size-4" />
+            <Icon name="arrow-left" size={16} />
             <span>Go back</span>
           </Button>
         </div>
@@ -228,7 +227,7 @@ export function EquipmentDetailPage() {
   const isUnavailable = equipment.status !== 'active'
 
   return (
-    <PageContainer className="py-5 sm:py-7 space-y-6">
+    <PageContainer className="py-5 sm:py-7 space-y-6 pb-[calc(5rem+env(safe-area-inset-bottom))] lg:pb-7">
       {/* Top Breadcrumb Navigation */}
       <Breadcrumbs items={breadcrumbItems} />
 

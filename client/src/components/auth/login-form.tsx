@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
-import { ArrowRight, Loader2 } from 'lucide-react'
+import { Icon } from '@/components/ui/icon'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -71,7 +71,7 @@ export function LoginForm({ onSwitchMode, redirectParam }: LoginFormProps) {
 
       // Success toast
       const firstName = user.name.split(' ')[0] || user.name
-      toast.success(`Welcome back, ${firstName}!`)
+      toast.success(`Logged in as ${firstName}`)
 
       // Destination calculation
       const sanitized = sanitizeRedirect(redirectParam)
@@ -95,10 +95,10 @@ export function LoginForm({ onSwitchMode, redirectParam }: LoginFormProps) {
   return (
     <div className="space-y-6">
       <div className="space-y-1.5 text-left">
-        <h1 className="font-serif text-2xl sm:text-3xl font-bold tracking-tight text-foreground">
-          Welcome back
+        <h1 className="text-headline-md font-bold text-foreground">
+          Log in
         </h1>
-        <p className="text-sm text-muted-foreground">
+        <p className="text-body-sm text-text-secondary">
           Log in to manage bookings, equipment, and account settings.
         </p>
       </div>
@@ -186,17 +186,17 @@ export function LoginForm({ onSwitchMode, redirectParam }: LoginFormProps) {
         <Button
           type="submit"
           disabled={isSubmitting}
-          className="w-full h-12 bg-brand hover:bg-brand-hover text-white font-medium shadow-xs text-sm mt-2"
+          className="w-full h-12 bg-brand hover:bg-brand-hover text-white font-medium shadow-xs text-sm mt-2 cursor-pointer"
         >
           {isSubmitting ? (
             <span className="flex items-center gap-2">
-              <Loader2 className="size-4.5 animate-spin" />
+              <Icon name="loader" size={18} className="animate-spin" />
               <span>Logging in…</span>
             </span>
           ) : (
             <span className="flex items-center gap-1.5">
               <span>Log in</span>
-              <ArrowRight className="size-4" />
+              <Icon name="arrow-right" size={16} />
             </span>
           )}
         </Button>

@@ -1,4 +1,4 @@
-import { ChevronLeft, ChevronRight } from 'lucide-react'
+import { Icon } from '@/components/ui/icon'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
 
@@ -73,9 +73,9 @@ export function CatalogPagination({
         variant="outline"
         disabled={page <= 1}
         onClick={() => handlePageClick(page - 1)}
-        className="h-10 px-3.5 rounded-[10px] border-border bg-surface text-xs font-semibold text-foreground hover:bg-muted/50 disabled:opacity-40 gap-1.5"
+        className="min-h-[44px] min-w-[44px] h-11 sm:h-10 px-3.5 rounded-[10px] border-border bg-surface text-xs font-semibold text-foreground hover:bg-muted/50 disabled:opacity-40 gap-1.5 cursor-pointer"
       >
-        <ChevronLeft className="size-4" />
+        <Icon name="chevron-left" size={16} />
         <span>Previous</span>
       </Button>
 
@@ -109,7 +109,7 @@ export function CatalogPagination({
               aria-current={isCurrent ? 'page' : undefined}
               aria-label={`Go to page ${pageNum}`}
               className={cn(
-                'size-9 rounded-[8px] text-xs font-semibold tabular-nums transition-colors flex items-center justify-center focus:outline-none focus:ring-2 focus:ring-brand',
+                'size-9 rounded-[8px] text-xs font-semibold tabular-nums transition-colors flex items-center justify-center focus:outline-none focus:ring-2 focus:ring-brand cursor-pointer',
                 isCurrent
                   ? 'bg-brand text-white shadow-xs'
                   : 'bg-surface border border-border text-foreground hover:bg-muted/50 hover:border-brand/40',
@@ -127,10 +127,10 @@ export function CatalogPagination({
         variant="outline"
         disabled={page >= totalPages}
         onClick={() => handlePageClick(page + 1)}
-        className="h-10 px-3.5 rounded-[10px] border-border bg-surface text-xs font-semibold text-foreground hover:bg-muted/50 disabled:opacity-40 gap-1.5"
+        className="min-h-[44px] min-w-[44px] h-11 sm:h-10 px-3.5 rounded-[10px] border-border bg-surface text-xs font-semibold text-foreground hover:bg-muted/50 disabled:opacity-40 gap-1.5 cursor-pointer"
       >
         <span>Next</span>
-        <ChevronRight className="size-4" />
+        <Icon name="chevron-right" size={16} />
       </Button>
     </nav>
   )

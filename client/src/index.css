@@ -1,4 +1,5 @@
-@import '@fontsource-variable/manrope';
+@import '@fontsource-variable/nunito-sans';
+@import '@fontsource-variable/fraunces';
 @import 'tailwindcss';
 
 @custom-variant dark (&:where([data-theme="dark"], [data-theme="dark"] *));
@@ -32,15 +33,17 @@
   --color-input: var(--input);
   --color-ring: var(--ring);
 
-  --font-serif: 'Manrope Variable', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-  --font-sans: 'Manrope Variable', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --font-display: 'Fraunces Variable', Georgia, serif;
+  --font-serif: 'Fraunces Variable', Georgia, serif;
+  --font-sans: 'Nunito Sans Variable', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
 
-  --radius-container: 16px;
-  --radius-card: 12px;
-  --radius-control: 10px;
+  --radius-container: 8px;
+  --radius-card: 8px;
+  --radius-control: 4px;
 }
 
 :root {
+  /* Brand identity (unchanged) */
   --brand: #762B36;
   --brand-hover: #60212B;
   --background: #F7F6F3;
@@ -60,18 +63,18 @@
   --popover-foreground: #252629;
   --primary: #762B36;
   --primary-foreground: #FFFFFF;
-  --secondary: color-mix(in srgb, #762B36 10%, #FFFFFF);
-  --secondary-foreground: #60212B;
-  --muted: color-mix(in srgb, #E5E2DE 55%, #F7F6F3);
+  --secondary: #F7F6F3;
+  --secondary-foreground: #252629;
+  --muted: #EFECE6;
   --muted-foreground: #68686D;
-  --accent: color-mix(in srgb, #762B36 8%, #FFFFFF);
+  --accent: #F2ECE8;
   --accent-foreground: #762B36;
   --destructive: #C43D43;
   --destructive-foreground: #FFFFFF;
   --input: #E5E2DE;
   --ring: #762B36;
 
-  --radius: 10px;
+  --radius: 4px;
 }
 
 [data-theme="dark"] {
@@ -94,11 +97,11 @@
   --popover-foreground: #F2F0EE;
   --primary: #B65362;
   --primary-foreground: #FFFFFF;
-  --secondary: color-mix(in srgb, #B65362 16%, #232428);
+  --secondary: #232428;
   --secondary-foreground: #F2F0EE;
-  --muted: color-mix(in srgb, #393A40 50%, #191A1D);
+  --muted: #2A2B30;
   --muted-foreground: #B8B7BC;
-  --accent: color-mix(in srgb, #B65362 14%, #232428);
+  --accent: #33272B;
   --accent-foreground: #F2F0EE;
   --destructive: #FF777B;
   --destructive-foreground: #191A1D;
@@ -106,10 +109,29 @@
   --ring: #B65362;
 }
 
+:root {
+  --safe-top: env(safe-area-inset-top, 0px);
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
+  --safe-left: env(safe-area-inset-left, 0px);
+  --safe-right: env(safe-area-inset-right, 0px);
+
+  /* Z-Index Token Hierarchy per section 3:
+     content 0, sticky headers 30, sticky bottom bars 40, navbar 50, sheets and drawers 60, dialogs 70, toasts 80
+  */
+  --z-content: 0;
+  --z-sticky-header: 30;
+  --z-sticky-bar: 40;
+  --z-navbar: 50;
+  --z-sheet: 60;
+  --z-dialog: 70;
+  --z-toast: 80;
+}
+
 /* Global base styles */
 html {
   scroll-behavior: smooth;
   font-family: var(--font-sans);
+  -webkit-text-size-adjust: 100%;
 }
 
 body {
@@ -117,37 +139,134 @@ body {
   background-color: var(--background);
   color: var(--foreground);
   font-family: var(--font-sans);
-  font-weight: 400;
-  overflow-x: hidden;
+  font-weight: 500;
+  overflow-x: clip;
   position: relative;
+  min-height: 100dvh;
+  -webkit-tap-highlight-color: transparent;
 }
 
-/* Typography Weight Hierarchy:
-   - 700 for hero headings
-   - 600 for section headings and prices
-   - 500 for buttons and navigation
-   - 400 for body text
+/* Touch action optimization on interactive controls */
+button,
+a,
+input,
+select,
+textarea {
+  touch-action: manipulation;
+}
+
+/* Form controls must be at least 16px font-size on touch devices to prevent iOS auto-zoom on focus */
+@media (max-width: 768px) {
+  input:not([type="checkbox"]):not([type="radio"]),
+  select,
+  textarea {
+    font-size: 16px !important;
+  }
+}
+
+/* Safe area utilities */
+.pb-safe {
+  padding-bottom: max(1rem, var(--safe-bottom));
+}
+.pt-safe {
+  padding-top: max(0.5rem, var(--safe-top));
+}
+
+/* Type tokens per section 3:
+   - display: Fraunces 400, 32px (mobile) to 40px (desktop), line-height 1.1, tracking -0.02em
+   - headline-lg: Fraunces 400, 24px to 28px, line-height 1.2, tracking -0.02em
+   - headline-md: sans 600, 24px/32px, tracking -0.12px
+   - headline-sm: sans 500, 20px/28px
+   - body-lg: sans 500, 18px/28px, tracking -0.05px
+   - body-md: sans 500, 16px/28px, tracking -0.05px
+   - body-sm: sans 400, 14px/22px
+   - label-lg: sans 700, 14px/20px (buttons)
+   - label-md: sans 500, 12px/18px
+   - label-sm: sans 400, 12px/16px
 */
-h1 {
+
+.font-display {
+  font-family: var(--font-display);
+  font-weight: 400;
+  letter-spacing: -0.02em;
+  font-variation-settings: "SOFT" 0, "WONK" 0;
+}
+
+.text-display {
+  font-family: var(--font-display);
+  font-size: clamp(32px, 5vw, 40px);
+  line-height: 1.1;
+  font-weight: 400;
+  letter-spacing: -0.02em;
+  font-variation-settings: "SOFT" 0, "WONK" 0;
+}
+
+.text-headline-lg {
+  font-family: var(--font-display);
+  font-size: clamp(24px, 4vw, 28px);
+  line-height: 1.2;
+  font-weight: 400;
+  letter-spacing: -0.02em;
+  font-variation-settings: "SOFT" 0, "WONK" 0;
+}
+
+.text-headline-md {
   font-family: var(--font-sans);
-  font-weight: 700;
+  font-size: 24px;
+  line-height: 32px;
+  font-weight: 600;
+  letter-spacing: -0.12px;
 }
 
-h2, h3, h4, .section-heading {
+.text-headline-sm {
   font-family: var(--font-sans);
-  font-weight: 600;
-}
-
-.price, .font-price, .tabular-nums {
-  font-weight: 600;
-}
-
-button, [role="button"], nav a, .nav-link {
+  font-size: 20px;
+  line-height: 28px;
   font-weight: 500;
 }
 
-.font-serif {
+.text-body-lg {
   font-family: var(--font-sans);
+  font-size: 18px;
+  line-height: 28px;
+  font-weight: 500;
+  letter-spacing: -0.05px;
+}
+
+.text-body-md {
+  font-family: var(--font-sans);
+  font-size: 16px;
+  line-height: 28px;
+  font-weight: 500;
+  letter-spacing: -0.05px;
+}
+
+.text-body-sm {
+  font-family: var(--font-sans);
+  font-size: 14px;
+  line-height: 22px;
+  font-weight: 400;
+}
+
+.text-label-lg {
+  font-family: var(--font-sans);
+  font-size: 14px;
+  line-height: 20px;
+  font-weight: 700;
+}
+
+.text-label-md {
+  font-family: var(--font-sans);
+  font-size: 12px;
+  line-height: 18px;
+  font-weight: 500;
+}
+
+.text-label-sm {
+  font-family: var(--font-sans);
+  font-size: 12px;
+  line-height: 16px;
+  font-weight: 400;
 }
 
 /* Tabular figures for numbers, body & price */
@@ -155,30 +274,17 @@ button, [role="button"], nav a, .nav-link {
   font-variant-numeric: tabular-nums;
 }
 
-/* Restrained motion */
-@keyframes floatGentle {
-  0%, 100% {
-    transform: translateY(0px);
-  }
-  50% {
-    transform: translateY(-6px);
-  }
-}
-
-.animate-float {
-  animation: floatGentle 6s ease-in-out infinite;
-}
-
+/* Respect prefers-reduced-motion everywhere */
 @media (prefers-reduced-motion: reduce) {
   *, ::before, ::after {
     animation-duration: 0.01ms !important;
     animation-iteration-count: 1 !important;
-    transition-duration: 0.15s !important;
+    transition-duration: 0.01ms !important;
     scroll-behavior: auto !important;
   }
 }
 
-/* Custom focus style */
+/* Custom focus style: visible 2px wine focus ring with 2px offset */
 *:focus-visible {
   outline: 2px solid var(--ring);
   outline-offset: 2px;
@@ -194,4 +300,3 @@ button, [role="button"], nav a, .nav-link {
   background-color: var(--brand);
   color: #ffffff !important;
 }
-

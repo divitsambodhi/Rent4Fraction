@@ -3,17 +3,18 @@
   <head>
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Rent4Fraction — Premium Event Equipment Rental Marketplace</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="color-scheme" content="light dark" />
+    <title>Rent4Fraction | Event Equipment Rental Marketplace</title>
     <meta
       name="description"
-      content="Rent pro audio, stage lighting, DJ gear, seating, and event decor across India. Verified vendors, transparent pricing, and safe deposits."
+      content="Rent sound, stage lighting, furniture, and canopies from verified vendors across India. Unified bookings, transparent pricing, and safe deposits."
     />
     <meta name="theme-color" content="#762B36" id="theme-meta" />
     <script>
       (function () {
         try {
-          var saved = localStorage.getItem('r4f-theme');
+          var saved = localStorage.getItem('r4f_theme') || localStorage.getItem('r4f-theme');
           var theme = saved;
           if (!theme || theme === 'system') {
             theme = window.matchMedia('(prefers-color-scheme: dark)').matches
@@ -35,7 +36,7 @@
       })();
     </script>
   </head>
-  <body class="min-h-screen bg-background text-foreground antialiased selection:bg-brand selection:text-white">
+  <body class="min-h-dvh bg-background text-foreground antialiased selection:bg-brand selection:text-white">
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
   </body>

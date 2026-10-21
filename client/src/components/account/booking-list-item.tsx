@@ -15,9 +15,9 @@ function formatDateRange(startDateStr: string, endDateStr: string, days: number)
   try {
     const s = parseISO(startDateStr)
     const e = parseISO(endDateStr)
-    return `${format(s, 'dd MMM')} – ${format(e, 'dd MMM')} · ${days} ${days === 1 ? 'day' : 'days'}`
+    return `${format(s, 'dd MMM')}  to  ${format(e, 'dd MMM')} · ${days} ${days === 1 ? 'day' : 'days'}`
   } catch {
-    return `${startDateStr} – ${endDateStr} · ${days} days`
+    return `${startDateStr}  to  ${endDateStr} · ${days} days`
   }
 }
 

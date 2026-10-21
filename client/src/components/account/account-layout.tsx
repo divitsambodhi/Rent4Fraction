@@ -28,7 +28,7 @@ export function AccountLayout({
   const currentTabName = TAB_TITLES[activeTab] || 'Account'
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-dvh bg-background">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6">
         {/* Breadcrumbs */}
         <Breadcrumbs

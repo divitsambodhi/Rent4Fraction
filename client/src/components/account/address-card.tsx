@@ -77,7 +77,7 @@ export function AddressCard({
             {address.line1}
             {address.line2 && <><br />{address.line2}</>}
             <br />
-            {address.city}, {address.state} – {address.pincode}
+            {address.city}, {address.state}  to  {address.pincode}
             <br />
             {address.country}
           </p>

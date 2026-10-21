@@ -57,8 +57,17 @@ _v0/
 __v0/
 scratch/
 *.tmp
-*.temp
 coverage/
+test-results/
+playwright-report/
+blob-report/
+.playwright/
+
+# Local notes & scratch files
+*.local.md
+NOTES*.md
+TODO*.md
+SCRATCH*.md
 
 # AI skills, agents, and tooling
 .agents/

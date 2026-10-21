@@ -26,6 +26,18 @@ npm run typecheck
 # Run ESLint validation
 npm run lint
 
+# Run unit and integration tests
+npm test
+
+# Run automated anti-slop guard scan
+npm run check:slop
+
+# Run automated mobile-first static guard scan (no 100vh, ad-hoc z-index, or zoom blocks)
+npm run check:mobile
+
+# Run Playwright mobile responsiveness test suite (Chromium viewports: 320 to 768px, landscape)
+npm run test:mobile
+
 # Create production build
 npm run build
 

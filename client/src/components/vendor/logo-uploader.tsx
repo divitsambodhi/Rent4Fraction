@@ -1,6 +1,7 @@
-import { useRef } from 'react'
-import { Trash2, Upload } from 'lucide-react'
+import { useRef, useState } from 'react'
 import { Button } from '@/components/ui/button'
+import { Icon } from '@/components/ui/icon'
+import { processImageUpload } from '@/lib/image-processing'
 import { toast } from 'sonner'
 
 interface LogoUploaderProps {
@@ -17,32 +18,26 @@ export function LogoUploader({
   disabled = false,
 }: LogoUploaderProps) {
   const fileInputRef = useRef<HTMLInputElement>(null)
+  const [isProcessing, setIsProcessing] = useState(false)
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
     if (!file) return
 
-    // Allowed types: image/jpeg, image/png, image/webp
-    const allowed = ['image/jpeg', 'image/png', 'image/webp']
-    if (!allowed.includes(file.type)) {
-      toast.error('Only JPG, PNG, and WebP images are supported.')
-      return
-    }
-
-    // Max size: 2MB (2 * 1024 * 1024 bytes)
-    if (file.size > 2 * 1024 * 1024) {
-      toast.error('File size must be under 2MB.')
-      return
-    }
-
-    const reader = new FileReader()
-    reader.onload = (event) => {
-      if (typeof event.target?.result === 'string') {
-        onLogoChange(event.target.result)
-        toast.success('Logo uploaded successfully.')
+    setIsProcessing(true)
+    try {
+      // Downscale logo to max 800px on the long side with EXIF correction
+      const processed = await processImageUpload(file, 800, 0.85)
+      onLogoChange(processed.dataUrl)
+      toast.success('Logo uploaded and optimized.')
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : 'Logo upload failed.')
+    } finally {
+      setIsProcessing(false)
+      if (fileInputRef.current) {
+        fileInputRef.current.value = ''
       }
     }
-    reader.readAsDataURL(file)
   }
 
   const handleRemove = () => {
@@ -53,7 +48,7 @@ export function LogoUploader({
   }
 
   return (
-    <div className="flex items-center gap-4">
+    <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
       {/* Visual Avatar / Logo Box */}
       <div className="size-20 rounded-2xl border-2 border-border bg-muted/30 flex items-center justify-center overflow-hidden shrink-0 shadow-xs relative">
         {logoUrl ? (
@@ -63,47 +58,50 @@ export function LogoUploader({
         )}
       </div>
 
-      <div className="space-y-1.5">
+      <div className="space-y-2">
         <input
           ref={fileInputRef}
           type="file"
-          accept="image/jpeg,image/png,image/webp"
+          accept="image/*"
+          capture="environment"
           onChange={handleFileChange}
-          disabled={disabled}
+          disabled={disabled || isProcessing}
           className="hidden"
           id="vendor-logo-input"
         />
 
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2">
           <Button
             type="button"
             variant="outline"
-            size="sm"
-            disabled={disabled}
+            disabled={disabled || isProcessing}
             onClick={() => fileInputRef.current?.click()}
-            className="text-xs h-8 gap-1.5"
+            className="text-xs h-11 sm:h-9 px-4 gap-1.5 cursor-pointer"
           >
-            <Upload className="size-3.5" />
-            <span>{logoUrl ? 'Change logo' : 'Upload logo'}</span>
+            {isProcessing ? (
+              <Icon name="loader" size={14} className="animate-spin" />
+            ) : (
+              <Icon name="upload" size={14} />
+            )}
+            <span>{isProcessing ? 'Optimizing...' : logoUrl ? 'Change logo' : 'Upload logo'}</span>
           </Button>
 
           {logoUrl && (
             <Button
               type="button"
               variant="ghost"
-              size="sm"
-              disabled={disabled}
+              disabled={disabled || isProcessing}
               onClick={handleRemove}
-              className="text-xs h-8 text-danger hover:text-danger hover:bg-danger/10 gap-1.5"
+              className="text-xs h-11 sm:h-9 px-3 text-danger hover:text-danger hover:bg-danger/10 gap-1.5 cursor-pointer"
             >
-              <Trash2 className="size-3.5" />
+              <Icon name="trash" size={14} />
               <span>Remove</span>
             </Button>
           )}
         </div>
 
         <p className="text-[11px] text-muted-foreground">
-          JPG, PNG or WebP up to 2MB. Square aspect recommended.
+          Auto-scaled square photo up to 1600px.
         </p>
       </div>
     </div>

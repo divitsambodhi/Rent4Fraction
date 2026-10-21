@@ -1,0 +1,15 @@
+{
+  "comments": "Allowlist for mobile guard checks with documented reasons",
+  "entries": [
+    {
+      "pattern": "calendar.tsx",
+      "rule": "table-no-mobile-card",
+      "reason": "React Day Picker calendar table renders 7-day grid cells, which are sized to 44px on mobile via custom classNames rather than card mode"
+    },
+    {
+      "pattern": "availability-calendar.tsx",
+      "rule": "table-no-mobile-card",
+      "reason": "Availability calendar renders month grid with 44px tap targets"
+    }
+  ]
+}

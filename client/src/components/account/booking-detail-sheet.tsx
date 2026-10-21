@@ -160,7 +160,7 @@ export function BookingDetailSheet({
                         <span>Rental dates</span>
                       </div>
                       <div className="font-semibold text-foreground">
-                        {formatDate(booking.start_date)} – {formatDate(booking.end_date)}
+                        {formatDate(booking.start_date)}  to  {formatDate(booking.end_date)}
                       </div>
                       <div className="text-[11px] text-muted-foreground">
                         {booking.rental_days} {booking.rental_days === 1 ? 'day' : 'days'} duration (inclusive)
@@ -190,7 +190,7 @@ export function BookingDetailSheet({
                         {booking.delivery_address.line1}
                         {booking.delivery_address.line2 && `, ${booking.delivery_address.line2}`}
                         <br />
-                        {booking.delivery_address.city}, {booking.delivery_address.state} – {booking.delivery_address.pincode}
+                        {booking.delivery_address.city}, {booking.delivery_address.state}  to  {booking.delivery_address.pincode}
                       </div>
                     </div>
                   </div>

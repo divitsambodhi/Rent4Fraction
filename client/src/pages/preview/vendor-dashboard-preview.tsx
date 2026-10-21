@@ -119,7 +119,7 @@ export function VendorDashboardPreview() {
                   <td className="p-3.5 pl-5 font-mono font-semibold">#ORD-9024</td>
                   <td className="p-3.5 font-medium">Pro Line-Array Speaker Pair (x2)</td>
                   <td className="p-3.5 text-muted-foreground">Jio World Garden, BKC</td>
-                  <td className="p-3.5 tabular-nums">24 Oct – 26 Oct</td>
+                  <td className="p-3.5 tabular-nums">24 Oct  to  26 Oct</td>
                   <td className="p-3.5 tabular-nums">{formatINR(20000)}</td>
                   <td className="p-3.5 pr-5">
                     <StatusBadge status="dispatched" label="Dispatched" size="sm" />
@@ -129,7 +129,7 @@ export function VendorDashboardPreview() {
                   <td className="p-3.5 pl-5 font-mono font-semibold">#ORD-9028</td>
                   <td className="p-3.5 font-medium">Wireless Handheld Mic Set (4)</td>
                   <td className="p-3.5 text-muted-foreground">The St. Regis, Lower Parel</td>
-                  <td className="p-3.5 tabular-nums">28 Oct – 29 Oct</td>
+                  <td className="p-3.5 tabular-nums">28 Oct  to  29 Oct</td>
                   <td className="p-3.5 tabular-nums">{formatINR(3000)}</td>
                   <td className="p-3.5 pr-5">
                     <StatusBadge status="confirmed" label="Confirmed" size="sm" />
@@ -139,7 +139,7 @@ export function VendorDashboardPreview() {
                   <td className="p-3.5 pl-5 font-mono font-semibold">#ORD-9031</td>
                   <td className="p-3.5 font-medium">DJ Controller + Mixer Setup</td>
                   <td className="p-3.5 text-muted-foreground">Taj Lands End, Bandra</td>
-                  <td className="p-3.5 tabular-nums">02 Nov – 03 Nov</td>
+                  <td className="p-3.5 tabular-nums">02 Nov  to  03 Nov</td>
                   <td className="p-3.5 tabular-nums">{formatINR(12000)}</td>
                   <td className="p-3.5 pr-5">
                     <StatusBadge status="scheduled" label="Scheduled" size="sm" />

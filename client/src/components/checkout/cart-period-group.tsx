@@ -44,8 +44,8 @@ export function CartPeriodGroup({
   const [conflictDialogOpen, setConflictDialogOpen] = useState(false)
   const [conflicts, setConflicts] = useState<{ equipment_id: string; name: string; available: number }[]>([])
 
-  // Format dates e.g. "12 Nov – 14 Nov · 3 days"
-  const formattedDates = `${period.start_date} – ${period.end_date} · ${period.days} ${period.days === 1 ? 'day' : 'days'}`
+  // Format dates e.g. "12 Nov to 14 Nov · 3 days"
+  const formattedDates = `${period.start_date} to ${period.end_date} · ${period.days} ${period.days === 1 ? 'day' : 'days'}`
 
   const handleApplyAll = () => {
     const res = onApplyDatesToAll()

@@ -121,7 +121,7 @@ export function ActiveFilterChips({
       {(params.price_min !== undefined || params.price_max !== undefined) && (
         <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium bg-surface border border-border text-foreground shadow-2xs">
           <span>
-            {formatINR(params.price_min ?? 0)} –{' '}
+            {formatINR(params.price_min ?? 0)} to{' '}
             {formatINR(params.price_max ?? 10000)}
           </span>
           <button

@@ -282,7 +282,7 @@ export function NextStepPanel({
                 </span>
               </div>
               <p className="text-xs text-amber-800/80 dark:text-amber-300/80">
-                Order completion will automatically unlock once the customer accepts the deduction or platform admin
+                Order completion will automatically become available once the customer accepts the deduction or platform admin
                 resolves the dispute.
               </p>
             </div>

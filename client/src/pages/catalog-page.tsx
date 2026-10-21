@@ -1,5 +1,5 @@
 import { useEffect, useState, useRef, useCallback } from 'react'
-import { ChevronRight, HelpCircle } from 'lucide-react'
+import { Icon } from '@/components/ui/icon'
 import { AppLink } from '@/components/shared/app-link'
 import { PageContainer } from '@/components/shared/page-container'
 import { EquipmentCard } from '@/components/shared/equipment-card'
@@ -139,7 +139,7 @@ export function CatalogPage() {
         <AppLink to="/" className="hover:text-brand transition-colors">
           Home
         </AppLink>
-        <ChevronRight className="size-3.5 text-muted-foreground/60 shrink-0" />
+        <Icon name="chevron-right" size={14} className="text-muted-foreground/60 shrink-0" />
         <AppLink
           to="/equipment"
           className={
@@ -153,7 +153,7 @@ export function CatalogPage() {
 
         {(activeCategory || activeGroup) && (
           <>
-            <ChevronRight className="size-3.5 text-muted-foreground/60 shrink-0" />
+            <Icon name="chevron-right" size={14} className="text-muted-foreground/60 shrink-0" />
             <span className="text-foreground font-semibold">
               {activeCategory?.name || activeGroup?.name}
             </span>
@@ -162,7 +162,7 @@ export function CatalogPage() {
 
         {activeVendor && (
           <>
-            <ChevronRight className="size-3.5 text-muted-foreground/60 shrink-0" />
+            <Icon name="chevron-right" size={14} className="text-muted-foreground/60 shrink-0" />
             <span className="text-foreground font-semibold">
               {activeVendor.name}
             </span>
@@ -172,16 +172,12 @@ export function CatalogPage() {
 
       {/* Mode Header 1: Default Hero Header (When no specific category/vendor selected) */}
       {!params.category && !params.vendor && (
-        <div className="mb-8 max-w-3xl">
-          <p className="text-[11px] font-bold uppercase tracking-widest text-brand mb-2">
-            Make room for more
-          </p>
-          <h1 className="font-serif text-3xl sm:text-4xl md:text-5xl font-semibold text-foreground tracking-tight leading-tight">
-            Rent better.{' '}
-            <em className="italic font-normal text-brand">Live bigger.</em>
+        <div className="mb-6 max-w-3xl">
+          <h1 className="text-headline-md font-semibold text-foreground">
+            Event equipment catalog
           </h1>
-          <p className="text-sm sm:text-base text-muted-foreground mt-3 leading-relaxed">
-            Quality event equipment from trusted local suppliers, verified and ready for your next celebration, concert, or gathering.
+          <p className="text-body-sm text-text-secondary mt-1">
+            Sound systems, lighting fixtures, staging, and seating available for rent from local equipment owners.
           </p>
         </div>
       )}
@@ -197,16 +193,12 @@ export function CatalogPage() {
 
       {/* Mode Header 2b: Category Group Banner (e.g. Sound, Lighting) */}
       {activeGroup && (
-        <div className="rounded-[20px] border border-border bg-surface p-6 sm:p-8 shadow-xs mb-6">
-          <p className="text-[11px] font-bold uppercase tracking-widest text-brand mb-1">
-            Category Group
-          </p>
-          <h1 className="font-serif text-2xl sm:text-3xl md:text-4xl font-semibold text-foreground tracking-tight">
-            {activeGroup.name} Equipment.{' '}
-            <em className="italic font-normal text-brand">Explore all.</em>
+        <div className="rounded-md border border-border bg-surface p-6 mb-6">
+          <h1 className="text-headline-md font-semibold text-foreground">
+            {activeGroup.name} equipment
           </h1>
-          <p className="text-sm text-muted-foreground mt-2 max-w-2xl">
-            Browse all items under {activeGroup.name}. Select a sub-category in the filter panel to narrow down specific gear.
+          <p className="text-body-sm text-text-secondary mt-1 max-w-2xl">
+            Browse all items under {activeGroup.name}. Select a category in the filter panel to narrow down specific equipment.
           </p>
         </div>
       )}
@@ -216,17 +208,17 @@ export function CatalogPage() {
 
       {/* In-page Not Found Block for Unknown Category or Vendor */}
       {(isUnknownCategory || isUnknownVendor) && (
-        <div className="rounded-[20px] border border-warning/30 bg-warning/5 p-6 sm:p-8 shadow-xs mb-8 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+        <div className="rounded-md border border-border bg-surface p-5 mb-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
           <div className="flex items-start gap-3">
-            <HelpCircle className="size-6 text-warning shrink-0 mt-0.5" />
+            <Icon name="help" size={20} className="text-warning shrink-0 mt-0.5" />
             <div>
-              <h2 className="font-serif text-lg font-semibold text-foreground">
+              <h2 className="text-body-md font-semibold text-foreground">
                 {isUnknownCategory
                   ? `Category "${params.category}" not found`
                   : `Vendor "${params.vendor}" not found`}
               </h2>
-              <p className="text-xs text-muted-foreground mt-1">
-                The requested {isUnknownCategory ? 'category' : 'vendor'} could not be located in our verified directory. Showing all equipment instead.
+              <p className="text-body-sm text-text-secondary mt-0.5">
+                The requested {isUnknownCategory ? 'category' : 'vendor'} could not be found. Showing all equipment instead.
               </p>
             </div>
           </div>
@@ -261,7 +253,7 @@ export function CatalogPage() {
         {/* Desktop Sticky Filter Sidebar (≥1024px) */}
         <aside
           aria-label="Filters"
-          className="hidden lg:block sticky top-[88px] max-h-[calc(100vh-104px)] overflow-y-auto pr-1 scrollbar-thin"
+          className="hidden lg:block sticky top-[88px] max-h-[calc(100dvh-104px)] overflow-y-auto pr-1 scrollbar-thin"
         >
           <FilterPanel
             params={params}
@@ -300,7 +292,7 @@ export function CatalogPage() {
           {/* Main Results View States */}
           {loading ? (
             /* 12-Card Loading Skeleton Grid matching real card layout */
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+            <div className="grid grid-cols-1 min-[360px]:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-5">
               {Array.from({ length: 12 }).map((_, idx) => (
                 <EquipmentCardSkeleton key={idx} />
               ))}
@@ -323,7 +315,7 @@ export function CatalogPage() {
             />
           ) : (
             /* 12-Card Responsive Grid */
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+            <div className="grid grid-cols-1 min-[360px]:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-5">
               {searchResult.items.map((item) => (
                 <EquipmentCard
                   key={item.equipment_id}

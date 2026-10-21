@@ -1,24 +1,10 @@
 import { useMemo, useState } from 'react'
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog'
+import { ResponsiveDialog } from '@/components/ui/responsive-dialog'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
 import { Stepper } from '@/components/shared/stepper'
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
-import {
-  AlertCircle,
-  AlertTriangle,
-  Camera,
-  CheckCircle2,
-  ClipboardCheck,
-} from 'lucide-react'
+import { Icon } from '@/components/ui/icon'
 import type { BookingItemDetail, ItemCondition } from '@/types/account'
 import type { InspectionItemResult, InspectionPayload } from '@/lib/lifecycle'
 import { cn } from '@/lib/utils'
@@ -174,293 +160,37 @@ export function InspectionDialog({
   }
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[760px] max-h-[90vh] flex flex-col p-0 overflow-hidden">
-        <DialogHeader className="p-6 pb-4 border-b border-border bg-card/50">
-          <DialogTitle className="text-xl font-display font-semibold text-foreground flex items-center gap-2">
-            <ClipboardCheck className="size-5 text-brand" />
-            <span>Equipment Return Inspection · {orderId}</span>
-          </DialogTitle>
-          <DialogDescription className="text-xs text-muted-foreground">
-            Verify condition, inventory counts, and file damage claims against security deposit.
-          </DialogDescription>
-          <div className="pt-2">
-            <Stepper steps={steps} currentStep={step} />
-          </div>
-        </DialogHeader>
-
-        <div className="flex-1 overflow-y-auto p-6 space-y-6">
-          {/* STEP 1: Conditions & Quantities */}
-          {step === 1 && (
-            <div className="space-y-4">
-              <h4 className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
-                Item Condition Assessment
-              </h4>
-
-              <div className="space-y-4">
-                {items.map((it) => {
-                  const s = formState[it.item_id]
-                  return (
-                    <div
-                      key={it.item_id}
-                      className="p-4 rounded-xl border border-border bg-card space-y-3"
-                    >
-                      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-                        <div>
-                          <p className="text-sm font-semibold text-foreground">{it.name}</p>
-                          <p className="text-xs text-muted-foreground">
-                            Delivered: {it.quantity} unit{it.quantity > 1 ? 's' : ''}
-                          </p>
-                        </div>
-
-                        <div className="flex items-center gap-2">
-                          <label className="text-xs text-muted-foreground">Returned:</label>
-                          <select
-                            value={s.returnedQuantity}
-                            onChange={(e) =>
-                              updateItem(it.item_id, { returnedQuantity: parseInt(e.target.value, 10) })
-                            }
-                            className="h-8 px-2 rounded-lg border border-border bg-card text-xs text-foreground font-semibold"
-                          >
-                            {Array.from({ length: it.quantity + 1 }).map((_, q) => (
-                              <option key={q} value={q}>
-                                {q}
-                              </option>
-                            ))}
-                          </select>
-                        </div>
-                      </div>
-
-                      <div className="space-y-1.5">
-                        <label className="text-xs font-semibold text-foreground">Physical Condition</label>
-                        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-                          {(['Good', 'Minor damage', 'Major damage', 'Lost'] as ItemCondition[]).map(
-                            (cond) => {
-                              const isSelected = s.condition === cond
-                              return (
-                                <button
-                                  key={cond}
-                                  type="button"
-                                  onClick={() => updateItem(it.item_id, { condition: cond })}
-                                  className={cn(
-                                    'py-2 px-3 rounded-lg text-xs font-medium border text-center transition-all',
-                                    isSelected
-                                      ? cond === 'Good'
-                                        ? 'bg-emerald-500/15 border-emerald-500 text-emerald-700 dark:text-emerald-400 font-semibold'
-                                        : 'bg-rose-500/15 border-rose-500 text-rose-700 dark:text-rose-400 font-semibold'
-                                      : 'bg-card border-border text-muted-foreground hover:border-foreground/40'
-                                  )}
-                                >
-                                  {cond}
-                                </button>
-                              )
-                            }
-                          )}
-                        </div>
-                      </div>
-                    </div>
-                  )
-                })}
-              </div>
-            </div>
-          )}
-
-          {/* STEP 2: Damage Details (if damage exists) */}
-          {step === 2 && hasDamage && (
-            <div className="space-y-4">
-              <div className="p-3 rounded-xl bg-amber-500/10 border border-amber-500/20 text-xs text-amber-800 dark:text-amber-300 flex items-center gap-2">
-                <AlertTriangle className="size-4 shrink-0" />
-                <span>
-                  Please describe the physical damage observed and estimate repair or replacement costs.
-                </span>
-              </div>
-
-              <div className="space-y-4">
-                {items
-                  .filter((it) => formState[it.item_id].condition !== 'Good')
-                  .map((it) => {
-                    const s = formState[it.item_id]
-                    const unitDep = equipmentDeposits[it.equipment_id] ?? 2000
-                    const itemDepositShare = unitDep * it.quantity
-                    return (
-                      <div
-                        key={it.item_id}
-                        className="p-4 rounded-xl border border-border bg-card space-y-3"
-                      >
-                        <div className="flex items-center justify-between">
-                          <span className="text-sm font-semibold text-foreground">{it.name}</span>
-                          <span className="text-xs font-medium text-rose-600 dark:text-rose-400">
-                            Condition: {s.condition}
-                          </span>
-                        </div>
-
-                        <div className="space-y-1.5">
-                          <label className="text-xs font-semibold text-foreground">
-                            Damage Description <span className="text-destructive">*</span>
-                          </label>
-                          <Textarea
-                            value={s.description}
-                            onChange={(e) => updateItem(it.item_id, { description: e.target.value })}
-                            placeholder="e.g. Deep dent on speaker horn grill and cracked mounting bracket. Requires component swap."
-                            rows={2}
-                            className="text-xs resize-none"
-                            required
-                          />
-                        </div>
-
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                          <div className="space-y-1.5">
-                            <label className="text-xs font-semibold text-foreground flex items-center justify-between">
-                              <span>Estimated Repair Cost (₹)</span>
-                              <span className="text-[11px] text-muted-foreground font-normal">
-                                Held: ₹{itemDepositShare.toLocaleString('en-IN')}
-                              </span>
-                            </label>
-                            <Input
-                              type="number"
-                              min={0}
-                              value={s.cost || ''}
-                              onChange={(e) => updateItem(it.item_id, { cost: parseFloat(e.target.value) || 0 })}
-                              placeholder="e.g. 1500"
-                              className="text-xs h-9"
-                            />
-                          </div>
-
-                          <div className="flex items-center justify-between pt-5 px-3 rounded-lg bg-muted/20 border border-border">
-                            <label className="text-xs font-medium text-foreground cursor-pointer">
-                              Deduct from deposit share
-                            </label>
-                            <input
-                              type="checkbox"
-                              checked={s.deductFromDeposit}
-                              onChange={(e) => updateItem(it.item_id, { deductFromDeposit: e.target.checked })}
-                              className="size-4 rounded text-brand focus:ring-brand"
-                            />
-                          </div>
-                        </div>
-
-                        <div className="flex items-center justify-between pt-1">
-                          <TooltipProvider>
-                            <Tooltip>
-                              <TooltipTrigger asChild>
-                                <Button
-                                  type="button"
-                                  variant="outline"
-                                  size="sm"
-                                  disabled
-                                  className="h-8 text-xs gap-1.5 text-muted-foreground"
-                                >
-                                  <Camera className="size-3.5" />
-                                  <span>Attach photos</span>
-                                </Button>
-                              </TooltipTrigger>
-                              <TooltipContent>
-                                <p className="text-xs">Photo upload comes later</p>
-                              </TooltipContent>
-                            </Tooltip>
-                          </TooltipProvider>
-
-                          <span className="text-[11px] text-muted-foreground">
-                            Claim capped by deposit policy
-                          </span>
-                        </div>
-                      </div>
-                    )
-                  })}
-              </div>
-            </div>
-          )}
-
-          {/* STEP 3: Review & Summary (or Step 2 when no damage) */}
-          {(step === 3 || (!hasDamage && step === 2)) && (
-            <div className="space-y-4">
-              <h4 className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
-                Inspection Summary & Outcome
-              </h4>
-
-              {!hasDamage ? (
-                <div className="p-4 rounded-xl border border-emerald-500/20 bg-emerald-500/10 space-y-2">
-                  <div className="flex items-center gap-2 text-emerald-700 dark:text-emerald-400 font-semibold text-sm">
-                    <CheckCircle2 className="size-5" />
-                    <span>All Items Returned in Clean & Good Condition</span>
-                  </div>
-                  <p className="text-xs text-emerald-800/80 dark:text-emerald-300/80">
-                    Submitting this inspection will immediately mark the order <strong>Completed</strong>. Your
-                    vendor payout will be created and the customer's full security deposit share of{' '}
-                    <strong>₹{totalDepositHeld.toLocaleString('en-IN')}</strong> will be refunded.
-                  </p>
-                </div>
-              ) : (
-                <div className="space-y-4">
-                  {totalClaimed > totalDepositHeld && (
-                    <div className="p-3 rounded-xl bg-destructive/10 border border-destructive/20 text-xs text-destructive flex items-center gap-2">
-                      <AlertCircle className="size-4 shrink-0" />
-                      <span>
-                        <strong>Warning:</strong> Total claimed damage (₹{totalClaimed.toLocaleString('en-IN')})
-                        exceeds the deposit share held (₹{totalDepositHeld.toLocaleString('en-IN')}). Platform
-                        arbitration will cap deduction to the available deposit.
-                      </span>
-                    </div>
-                  )}
-
-                  <div className="p-4 rounded-xl border border-border bg-card space-y-3">
-                    <div className="flex items-center justify-between text-xs py-1 border-b border-border">
-                      <span className="text-muted-foreground">Deposit Share Held</span>
-                      <strong className="text-foreground">₹{totalDepositHeld.toLocaleString('en-IN')}</strong>
-                    </div>
-                    <div className="flex items-center justify-between text-xs py-1 border-b border-border">
-                      <span className="text-muted-foreground">Total Claimed Deductions</span>
-                      <strong className="text-destructive">−₹{totalClaimed.toLocaleString('en-IN')}</strong>
-                    </div>
-                    <div className="flex items-center justify-between text-xs py-1">
-                      <span className="text-muted-foreground">Estimated Customer Refund</span>
-                      <strong className="text-emerald-600 dark:text-emerald-400">
-                        ₹{Math.max(0, totalDepositHeld - totalClaimed).toLocaleString('en-IN')}
-                      </strong>
-                    </div>
-                  </div>
-
-                  <p className="text-xs text-muted-foreground">
-                    Upon submission, a damage report will be presented to the customer. They may accept the deduction
-                    or dispute it for admin review. Order completion will unlock once all claims are resolved.
-                  </p>
-                </div>
-              )}
-
-              {error && (
-                <div className="flex items-center gap-2 p-3 rounded-xl bg-destructive/10 text-destructive text-xs">
-                  <AlertCircle className="size-4 shrink-0" />
-                  <span>{error}</span>
-                </div>
-              )}
-            </div>
-          )}
-        </div>
-
-        <DialogFooter className="p-4 px-6 border-t border-border bg-card/60 flex items-center justify-between">
+    <ResponsiveDialog
+      open={open}
+      onOpenChange={onOpenChange}
+      fullScreenMobile={true}
+      overlayId="inspection-dialog"
+      title={`Return Inspection · ${orderId}`}
+      description="Verify condition, counts, and file damage claims."
+      className="sm:max-w-[760px]"
+      footer={
+        <div className="flex flex-col-reverse sm:flex-row sm:items-center justify-between w-full gap-2">
           <div>
             {step > 1 && (
               <Button
                 type="button"
                 variant="outline"
-                size="sm"
                 onClick={handleBack}
                 disabled={isSubmitting}
-                className="h-9 text-xs"
+                className="h-11 sm:h-9 text-xs w-full sm:w-auto"
               >
                 Back
               </Button>
             )}
           </div>
 
-          <div className="flex items-center gap-2">
+          <div className="flex flex-col sm:flex-row items-center gap-2 w-full sm:w-auto">
             <Button
               type="button"
               variant="outline"
-              size="sm"
               onClick={() => onOpenChange(false)}
               disabled={isSubmitting}
-              className="h-9 text-xs"
+              className="h-11 sm:h-9 text-xs w-full sm:w-auto"
             >
               Cancel
             </Button>
@@ -468,20 +198,18 @@ export function InspectionDialog({
             {step < (hasDamage ? 3 : 2) ? (
               <Button
                 type="button"
-                size="sm"
                 onClick={handleNext}
-                className="h-9 text-xs bg-brand hover:bg-brand-hover text-brand-foreground"
+                className="h-11 sm:h-9 text-xs bg-brand hover:bg-brand-hover text-brand-foreground w-full sm:w-auto"
               >
                 Continue
               </Button>
             ) : (
               <Button
                 type="button"
-                size="sm"
                 onClick={handleSubmit}
                 disabled={isSubmitting}
                 className={cn(
-                  'h-9 text-xs',
+                  'h-11 sm:h-9 text-xs w-full sm:w-auto',
                   hasDamage
                     ? 'bg-brand hover:bg-brand-hover text-brand-foreground'
                     : 'bg-emerald-600 hover:bg-emerald-700 text-white'
@@ -491,8 +219,235 @@ export function InspectionDialog({
               </Button>
             )}
           </div>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
+        </div>
+      }
+    >
+      <div className="space-y-6">
+        <div className="pt-1 pb-3">
+          <Stepper steps={steps} currentStep={step} />
+        </div>
+
+        {/* STEP 1: Conditions & Quantities */}
+        {step === 1 && (
+          <div className="space-y-4">
+            <h4 className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
+              Item Condition Assessment
+            </h4>
+
+            <div className="space-y-4">
+              {items.map((it) => {
+                const s = formState[it.item_id]
+                return (
+                  <div
+                    key={it.item_id}
+                    className="p-4 rounded-xl border border-border bg-card space-y-3"
+                  >
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                      <div>
+                        <p className="text-sm font-semibold text-foreground">{it.name}</p>
+                        <p className="text-xs text-muted-foreground">
+                          Delivered: {it.quantity} unit{it.quantity > 1 ? 's' : ''}
+                        </p>
+                      </div>
+
+                      <div className="flex items-center gap-2">
+                        <label className="text-xs text-muted-foreground">Returned:</label>
+                        <select
+                          value={s.returnedQuantity}
+                          onChange={(e) =>
+                            updateItem(it.item_id, { returnedQuantity: parseInt(e.target.value, 10) })
+                          }
+                          className="h-10 sm:h-8 px-2 rounded-lg border border-border bg-card text-base sm:text-xs text-foreground font-semibold"
+                        >
+                          {Array.from({ length: it.quantity + 1 }).map((_, q) => (
+                            <option key={q} value={q}>
+                              {q}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+                    </div>
+
+                    <div className="space-y-1.5">
+                      <label className="text-xs font-semibold text-foreground">Physical Condition</label>
+                      <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                        {(['Good', 'Minor damage', 'Major damage', 'Lost'] as ItemCondition[]).map(
+                          (cond) => {
+                            const isSelected = s.condition === cond
+                            return (
+                              <button
+                                key={cond}
+                                type="button"
+                                onClick={() => updateItem(it.item_id, { condition: cond })}
+                                className={cn(
+                                  'min-h-[44px] py-2 px-3 rounded-lg text-xs font-medium border text-center transition-all cursor-pointer',
+                                  isSelected
+                                    ? cond === 'Good'
+                                      ? 'bg-emerald-500/15 border-emerald-500 text-emerald-700 dark:text-emerald-400 font-semibold'
+                                      : 'bg-rose-500/15 border-rose-500 text-rose-700 dark:text-rose-400 font-semibold'
+                                    : 'bg-card border-border text-muted-foreground hover:border-foreground/40'
+                                )}
+                              >
+                                {cond}
+                              </button>
+                            )
+                          }
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                )
+              })}
+            </div>
+          </div>
+        )}
+
+        {/* STEP 2: Damage Details (if damage exists) */}
+        {step === 2 && hasDamage && (
+          <div className="space-y-4">
+            <div className="p-3 rounded-xl bg-amber-500/10 border border-amber-500/20 text-xs text-amber-800 dark:text-amber-300 flex items-center gap-2">
+              <Icon name="alert" size={16} className="shrink-0" />
+              <span>
+                Please describe the physical damage observed and estimate repair or replacement costs.
+              </span>
+            </div>
+
+            <div className="space-y-4">
+              {items
+                .filter((it) => formState[it.item_id].condition !== 'Good')
+                .map((it) => {
+                  const s = formState[it.item_id]
+                  const unitDep = equipmentDeposits[it.equipment_id] ?? 2000
+                  const itemDepositShare = unitDep * it.quantity
+                  return (
+                    <div
+                      key={it.item_id}
+                      className="p-4 rounded-xl border border-border bg-card space-y-3"
+                    >
+                      <div className="flex items-center justify-between">
+                        <span className="text-sm font-semibold text-foreground">{it.name}</span>
+                        <span className="text-xs font-medium text-rose-600 dark:text-rose-400">
+                          Condition: {s.condition}
+                        </span>
+                      </div>
+
+                      <div className="space-y-1.5">
+                        <label className="text-xs font-semibold text-foreground">
+                          Damage Description <span className="text-destructive">*</span>
+                        </label>
+                        <Textarea
+                          value={s.description}
+                          onChange={(e) => updateItem(it.item_id, { description: e.target.value })}
+                          placeholder="e.g. Deep dent on speaker horn grill and cracked mounting bracket. Requires component swap."
+                          rows={2}
+                          className="text-base sm:text-xs resize-none"
+                          required
+                        />
+                      </div>
+
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <div className="space-y-1.5">
+                          <label className="text-xs font-semibold text-foreground flex items-center justify-between">
+                            <span>Estimated Repair Cost (₹)</span>
+                            <span className="text-[11px] text-muted-foreground font-normal">
+                              Held: ₹{itemDepositShare.toLocaleString('en-IN')}
+                            </span>
+                          </label>
+                          <Input
+                            type="number"
+                            inputMode="numeric"
+                            min={0}
+                            value={s.cost || ''}
+                            onChange={(e) => updateItem(it.item_id, { cost: parseFloat(e.target.value) || 0 })}
+                            placeholder="e.g. 1500"
+                            className="text-base sm:text-xs h-11 sm:h-9"
+                          />
+                        </div>
+
+                        <div className="flex items-center justify-between min-h-[44px] px-3 rounded-lg bg-muted/20 border border-border">
+                          <label className="text-xs font-medium text-foreground cursor-pointer">
+                            Deduct from deposit share
+                          </label>
+                          <input
+                            type="checkbox"
+                            checked={s.deductFromDeposit}
+                            onChange={(e) => updateItem(it.item_id, { deductFromDeposit: e.target.checked })}
+                            className="size-5 rounded text-brand focus:ring-brand cursor-pointer"
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  )
+                })}
+            </div>
+          </div>
+        )}
+
+        {/* STEP 3: Review & Summary (or Step 2 when no damage) */}
+        {(step === 3 || (!hasDamage && step === 2)) && (
+          <div className="space-y-4">
+            <h4 className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
+              Inspection Summary & Outcome
+            </h4>
+
+            {!hasDamage ? (
+              <div className="p-4 rounded-xl border border-emerald-500/20 bg-emerald-500/10 space-y-2">
+                <div className="flex items-center gap-2 text-emerald-700 dark:text-emerald-400 font-semibold text-sm">
+                  <Icon name="check" size={20} />
+                  <span>All Items Returned in Clean & Good Condition</span>
+                </div>
+                <p className="text-xs text-emerald-800/80 dark:text-emerald-300/80">
+                  Submitting this inspection will immediately mark the order <strong>Completed</strong>. Your
+                  vendor payout will be created and the customer's full security deposit share of{' '}
+                  <strong>₹{totalDepositHeld.toLocaleString('en-IN')}</strong> will be refunded.
+                </p>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                {totalClaimed > totalDepositHeld && (
+                  <div className="p-3 rounded-xl bg-destructive/10 border border-destructive/20 text-xs text-destructive flex items-center gap-2">
+                    <Icon name="alert" size={16} className="shrink-0" />
+                    <span>
+                      <strong>Warning:</strong> Total claimed damage (₹{totalClaimed.toLocaleString('en-IN')})
+                      exceeds the deposit share held (₹{totalDepositHeld.toLocaleString('en-IN')}). Platform
+                      arbitration will cap deduction to the available deposit.
+                    </span>
+                  </div>
+                )}
+
+                <div className="p-4 rounded-xl border border-border bg-card space-y-3">
+                  <div className="flex items-center justify-between text-xs py-1 border-b border-border">
+                    <span className="text-muted-foreground">Deposit Share Held</span>
+                    <strong className="text-foreground">₹{totalDepositHeld.toLocaleString('en-IN')}</strong>
+                  </div>
+                  <div className="flex items-center justify-between text-xs py-1 border-b border-border">
+                    <span className="text-muted-foreground">Total Claimed Deductions</span>
+                    <strong className="text-destructive">−₹{totalClaimed.toLocaleString('en-IN')}</strong>
+                  </div>
+                  <div className="flex items-center justify-between text-xs py-1">
+                    <span className="text-muted-foreground">Estimated Customer Refund</span>
+                    <strong className="text-emerald-600 dark:text-emerald-400">
+                      ₹{Math.max(0, totalDepositHeld - totalClaimed).toLocaleString('en-IN')}
+                    </strong>
+                  </div>
+                </div>
+
+                <p className="text-xs text-muted-foreground">
+                  Upon submission, a damage report will be presented to the customer. They may accept the deduction
+                  or dispute it for admin review. Order completion will proceed once all claims are resolved.
+                </p>
+              </div>
+            )}
+
+            {error && (
+              <div className="flex items-center gap-2 p-3 rounded-xl bg-destructive/10 text-destructive text-xs">
+                <Icon name="alert" size={16} className="shrink-0" />
+                <span>{error}</span>
+              </div>
+            )}
+          </div>
+        )}
+      </div>
+    </ResponsiveDialog>
   )
 }

@@ -190,8 +190,8 @@ export function OverviewTab({
         </div>
       </div>
 
-      {/* Six KPI Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4">
+      {/* Six KPI Cards - 2 columns on mobile */}
+      <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-3 sm:gap-4">
         <KpiCard
           label="Net earnings"
           value={`₹${overview.kpis.net_earnings.toLocaleString('en-IN')}`}
@@ -240,17 +240,17 @@ export function OverviewTab({
         />
       </div>
 
-      {/* Grid: Earnings Chart & Attention List */}
+      {/* Grid: Attention List FIRST on mobile, then Earnings Chart */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <div className="lg:col-span-2">
+        <div className="order-1 lg:order-2">
+          <AttentionList items={attentionItems} />
+        </div>
+        <div className="order-2 lg:order-1 lg:col-span-2">
           <EarningsChart
             series={overview.earnings_series}
             rangeTotal={overview.kpis.net_earnings}
             deltaPercent={overview.kpis.net_earnings_delta_percent}
           />
-        </div>
-        <div>
-          <AttentionList items={attentionItems} />
         </div>
       </div>
 

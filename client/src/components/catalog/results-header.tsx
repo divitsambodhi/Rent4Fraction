@@ -1,6 +1,6 @@
-import { SlidersHorizontal } from 'lucide-react'
 import { SortSelect } from './sort-select'
 import { Button } from '@/components/ui/button'
+import { Icon } from '@/components/ui/icon'
 import { cn } from '@/lib/utils'
 
 export interface ResultsHeaderProps {
@@ -32,7 +32,7 @@ export function ResultsHeader({
   return (
     <div
       className={cn(
-        'flex flex-col sm:flex-row sm:items-center justify-between gap-3.5 pb-4 border-b border-border',
+        'sticky top-14 sm:top-16 z-sticky-header bg-background/95 backdrop-blur-xs py-3 border-b border-border flex flex-col sm:flex-row sm:items-center justify-between gap-3',
         className,
       )}
     >
@@ -43,7 +43,7 @@ export function ResultsHeader({
         </p>
         <h2
           aria-live="polite"
-          className="font-serif text-lg sm:text-xl font-semibold text-foreground"
+          className="font-serif text-base sm:text-xl font-semibold text-foreground"
         >
           {loading ? (
             'Finding equipment...'
@@ -51,7 +51,7 @@ export function ResultsHeader({
             '0 equipment found'
           ) : (
             <span>
-              Showing <span className="tabular-nums">{startItem}–{endItem}</span> of{' '}
+              Showing <span className="tabular-nums">{startItem} to {endItem}</span> of{' '}
               <span className="tabular-nums">{total}</span> equipment
             </span>
           )}
@@ -60,17 +60,17 @@ export function ResultsHeader({
 
       {/* Controls: Mobile Filters Button + Sort Select */}
       <div className="flex items-center justify-between sm:justify-end gap-2.5">
-        {/* Mobile Filters Trigger (lg:hidden) */}
+        {/* Mobile Filters Trigger (lg:hidden) with 44px hit area */}
         <Button
           type="button"
           variant="outline"
           onClick={onOpenMobileFilters}
-          className="lg:hidden h-10 px-3.5 rounded-[10px] border-border bg-surface text-xs font-semibold text-foreground hover:bg-muted/50 gap-2 shrink-0"
+          className="lg:hidden min-h-[44px] h-11 sm:h-10 px-4 rounded-[10px] border-border bg-surface text-xs font-semibold text-foreground hover:bg-muted/50 gap-2 shrink-0 cursor-pointer"
         >
-          <SlidersHorizontal className="size-3.5 text-brand" />
+          <Icon name="adjustments" size={16} className="text-brand" />
           <span>Filters</span>
           {activeFilterCount > 0 && (
-            <span className="size-4.5 rounded-full bg-brand text-white text-[10px] font-bold flex items-center justify-center">
+            <span className="size-5 rounded-full bg-brand text-white text-[11px] font-bold flex items-center justify-center">
               {activeFilterCount}
             </span>
           )}

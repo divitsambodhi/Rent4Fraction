@@ -3,26 +3,30 @@ import { cva, type VariantProps } from 'class-variance-authority'
 import { cn } from '@/lib/utils'
 
 const badgeVariants = cva(
-  'inline-flex items-center gap-1.5 h-6.5 px-2.5 rounded-full text-xs font-medium tracking-wide transition-colors',
+  'inline-flex items-center gap-1.5 h-6 px-2.5 rounded-full text-label-sm font-medium transition-colors',
   {
     variants: {
       variant: {
         default:
-          'bg-brand text-white border-transparent',
+          'bg-muted text-brand border border-transparent',
+        chip:
+          'bg-muted text-brand border border-transparent hover:border-brand/30',
+        'chip-selected':
+          'bg-muted text-brand border border-brand font-semibold',
         secondary:
-          'bg-secondary text-secondary-foreground border-transparent',
+          'bg-muted text-foreground border border-transparent',
         outline:
           'border border-border text-foreground bg-transparent',
         success:
-          'bg-success/15 text-success border border-success/30 dark:bg-success/20',
+          'bg-muted text-success border border-success/30',
         warning:
-          'bg-warning/15 text-warning border border-warning/30 dark:bg-warning/20',
+          'bg-muted text-warning border border-warning/30',
         info:
-          'bg-info/15 text-info border border-info/30 dark:bg-info/20',
+          'bg-muted text-info border border-info/30',
         danger:
-          'bg-danger/15 text-danger border border-danger/30 dark:bg-danger/20',
+          'bg-muted text-danger border border-danger/30',
         brand:
-          'bg-brand/10 text-brand border border-brand/20 dark:bg-brand/20 dark:text-brand',
+          'bg-muted text-brand border border-brand/30',
         neutral:
           'bg-muted text-muted-foreground border border-border',
       },

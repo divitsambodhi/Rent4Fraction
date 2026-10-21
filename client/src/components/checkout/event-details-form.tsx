@@ -66,7 +66,7 @@ export function EventDetailsForm({
   type FormData = z.infer<typeof schema>
 
   const formattedDeliveryAddress = deliveryAddress
-    ? `${deliveryAddress.name}, ${deliveryAddress.line1}${deliveryAddress.line2 ? `, ${deliveryAddress.line2}` : ''}, ${deliveryAddress.city}, ${deliveryAddress.state} – ${deliveryAddress.pincode}`
+    ? `${deliveryAddress.name}, ${deliveryAddress.line1}${deliveryAddress.line2 ? `, ${deliveryAddress.line2}` : ''}, ${deliveryAddress.city}, ${deliveryAddress.state}  to  ${deliveryAddress.pincode}`
     : ''
 
   const {

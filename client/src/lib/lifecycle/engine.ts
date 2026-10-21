@@ -29,7 +29,6 @@ export interface LifecycleContext {
   checkAvailability?: (equipmentId: string, startDate: string, endDate: string, qty: number) => boolean
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function applyAction(
   initialBooking: BookingDetail,
   vendorOrderId: string,

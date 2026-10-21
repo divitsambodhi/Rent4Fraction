@@ -1,0 +1,15 @@
+# Slop Guard Allowlist
+
+This file defines approved exceptions for `scripts/check-slop.mjs`. Every entry must have a documented reason.
+
+## Popovers and Menus Shadows
+# Subtle shadow is permitted on dropdown menus and popovers per section 4 of the specification.
+src/components/ui/select.tsx:shadow-sm (Select dropdown popper menu)
+src/components/ui/dropdown-menu.tsx:shadow-sm (Dropdown menu content)
+src/components/ui/popover.tsx:shadow-sm (Popover content)
+src/components/catalog/results-header.tsx:shadow-sm (Sort dropdown)
+
+## Internal Code References
+# The design brief and reference audit document the reference retail system per prompt instructions.
+docs/DESIGN_BRIEF.md:furlenco (Documents the reference design system spec path)
+docs/SLOP_AUDIT.md:furlenco (Documents the reference design system audit)

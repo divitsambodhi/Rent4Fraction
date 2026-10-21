@@ -59,7 +59,7 @@ export function AddressFormSheet({
       })
 
       toast.success(isNew ? 'Address added' : 'Address updated', {
-        description: `${data.name} – ${data.line1}, ${data.city}`,
+        description: `${data.name}  to  ${data.line1}, ${data.city}`,
       })
       onAddressSaved()
       onClose()

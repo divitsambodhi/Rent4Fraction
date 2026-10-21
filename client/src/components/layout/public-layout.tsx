@@ -17,7 +17,7 @@ export function PublicLayout({ children }: PublicLayoutProps) {
 
   if (isDashboardRoute) {
     return (
-      <div className="min-h-screen bg-background text-foreground antialiased selection:bg-brand selection:text-white relative">
+      <div className="min-h-dvh bg-background text-foreground antialiased selection:bg-brand selection:text-white relative">
         {children}
         <DevRoleSwitcher />
       </div>
@@ -25,7 +25,7 @@ export function PublicLayout({ children }: PublicLayoutProps) {
   }
 
   return (
-    <div className="min-h-screen flex flex-col bg-background text-foreground antialiased selection:bg-brand selection:text-white relative">
+    <div className="min-h-dvh flex flex-col bg-background text-foreground antialiased selection:bg-brand selection:text-white relative">
       {/* Skip to Main Content Link for Keyboard Accessibility */}
       <a
         href="#main"

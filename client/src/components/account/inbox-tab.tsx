@@ -5,7 +5,7 @@ import { NotificationsPane } from './notifications-pane'
 import { useAppSearchParams } from '@/components/shared/app-link'
 import { getConversations, getNotifications } from '@/lib/api'
 import type { Conversation } from '@/types/account'
-import { MessageSquare, Bell, Search, X, Inbox } from 'lucide-react'
+import { Icon } from '@/components/ui/icon'
 import { cn } from '@/lib/utils'
 
 export function InboxTab() {
@@ -60,7 +60,6 @@ export function InboxTab() {
   }
 
   const handleSelectThread = (id: string) => {
-    // Thread selection pushes history per spec
     updateQuery({ thread: id }, true)
   }
 
@@ -86,13 +85,13 @@ export function InboxTab() {
             aria-selected={view === 'messages'}
             onClick={() => handleSelectView('messages')}
             className={cn(
-              'h-8 px-4 rounded-[8px] text-xs font-semibold inline-flex items-center gap-2 transition-all cursor-pointer',
+              'min-h-[44px] h-11 sm:h-8 px-4 rounded-[8px] text-xs font-semibold inline-flex items-center gap-2 transition-all cursor-pointer',
               view === 'messages'
                 ? 'bg-surface text-foreground shadow-xs'
                 : 'text-muted-foreground hover:text-foreground'
             )}
           >
-            <MessageSquare className="size-3.5 stroke-[2]" />
+            <Icon name="message" size={16} />
             <span>Messages</span>
             {totalUnreadMessages > 0 && (
               <span className="px-1.5 py-0.2 rounded-full text-[10px] font-bold bg-brand text-white tabular-nums">
@@ -107,13 +106,13 @@ export function InboxTab() {
             aria-selected={view === 'notifications'}
             onClick={() => handleSelectView('notifications')}
             className={cn(
-              'h-8 px-4 rounded-[8px] text-xs font-semibold inline-flex items-center gap-2 transition-all cursor-pointer',
+              'min-h-[44px] h-11 sm:h-8 px-4 rounded-[8px] text-xs font-semibold inline-flex items-center gap-2 transition-all cursor-pointer',
               view === 'notifications'
                 ? 'bg-surface text-foreground shadow-xs'
                 : 'text-muted-foreground hover:text-foreground'
             )}
           >
-            <Bell className="size-3.5 stroke-[2]" />
+            <Icon name="bell" size={16} />
             <span>Notifications</span>
             {unreadNotifsCount > 0 && (
               <span className="px-1.5 py-0.2 rounded-full text-[10px] font-bold bg-brand text-white tabular-nums">
@@ -133,7 +132,7 @@ export function InboxTab() {
         />
       ) : (
         /* VIEW: MESSAGES (Master-Detail Card) */
-        <div className="rounded-[16px] bg-surface border border-border shadow-xs overflow-hidden h-[calc(100vh-240px)] min-h-[560px] flex">
+        <div className="rounded-[16px] bg-surface border border-border shadow-xs overflow-hidden h-[calc(100dvh-200px)] min-h-[480px] flex">
           {/* Conversation List Pane (340px on desktop) */}
           <div
             className={cn(
@@ -144,7 +143,7 @@ export function InboxTab() {
             {/* Search Header */}
             <div className="p-3 border-b border-border bg-muted/20">
               <div className="relative">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-3.5 text-muted-foreground pointer-events-none" />
+                <Icon name="search" className="absolute left-3 top-1/2 -translate-y-1/2 size-3.5 text-muted-foreground pointer-events-none" />
                 <input
                   type="search"
                   value={searchQuery}
@@ -158,7 +157,7 @@ export function InboxTab() {
                     onClick={() => setSearchQuery('')}
                     className="absolute right-2.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
                   >
-                    <X className="size-3" />
+                    <Icon name="close" className="size-3" />
                   </button>
                 )}
               </div>
@@ -172,7 +171,7 @@ export function InboxTab() {
                 </div>
               ) : conversations.length === 0 ? (
                 <div className="p-8 text-center space-y-2">
-                  <Inbox className="size-8 text-muted-foreground mx-auto stroke-[1.5]" />
+                  <Icon name="inbox" className="size-8 text-muted-foreground mx-auto" />
                   <p className="text-xs text-muted-foreground">
                     {searchQuery ? 'No matching conversations found.' : 'No conversations yet.'}
                   </p>
@@ -208,7 +207,7 @@ export function InboxTab() {
               /* No-thread selected placeholder */
               <div className="flex-1 flex flex-col items-center justify-center text-center p-8 text-muted-foreground space-y-2">
                 <div className="size-14 rounded-full bg-muted/60 flex items-center justify-center">
-                  <MessageSquare className="size-6 text-muted-foreground" />
+                  <Icon name="message" className="size-6 text-muted-foreground" />
                 </div>
                 <h3 className="font-serif font-semibold text-foreground text-sm">
                   Select a conversation

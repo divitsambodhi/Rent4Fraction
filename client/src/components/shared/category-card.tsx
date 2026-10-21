@@ -1,15 +1,3 @@
-import React from 'react'
-import {
-  Armchair,
-  Disc3,
-  Flame,
-  Mic,
-  Package,
-  Sparkles,
-  SquareMenu,
-  Tent,
-  Volume2,
-} from 'lucide-react'
 import { AppLink } from './app-link'
 import { formatINR } from '@/lib/format'
 import type { Category } from '@/types'
@@ -21,55 +9,31 @@ interface CategoryCardProps {
   className?: string
 }
 
-const CATEGORY_ICON_MAP: Record<string, React.ComponentType<{ className?: string }>> = {
-  Volume2,
-  Mic,
-  Disc3,
-  Sparkles,
-  Flame,
-  Armchair,
-  SquareMenu,
-  Tent,
-}
-
+/**
+ * CategoryCard: Compact bordered tile per section 5.
+ * 8px radius, 16px padding, category name + "From ₹X per day", zero icons.
+ */
 export function CategoryCard({
   category,
   isSelected = false,
   className,
 }: CategoryCardProps) {
-  const Icon = CATEGORY_ICON_MAP[category.icon] || Package
-
   return (
     <AppLink
       to={`/equipment?category=${encodeURIComponent(category.id)}`}
       className={cn(
-        'group flex flex-col items-center justify-center p-3.5 sm:p-4 rounded-[12px] border bg-surface transition-all duration-200 text-center shrink-0 w-32 sm:w-auto',
+        'group flex flex-col justify-between p-4 rounded-md border bg-surface transition-colors duration-150 text-left h-full',
         isSelected
-          ? 'border-brand bg-brand/5 shadow-xs ring-1 ring-brand'
-          : 'border-border hover:border-brand/40 hover:bg-muted/40 hover:shadow-xs',
+          ? 'border-brand ring-1 ring-brand'
+          : 'border-border hover:border-brand/40',
         className,
       )}
     >
-      {/* Icon Tile: 56px to 64px */}
-      <div
-        className={cn(
-          'size-14 sm:size-15 rounded-[12px] flex items-center justify-center transition-all duration-200 mb-2.5',
-          isSelected
-            ? 'bg-brand text-white'
-            : 'bg-brand/10 text-brand group-hover:bg-brand group-hover:text-white',
-        )}
-      >
-        <Icon className="size-6 sm:size-7" />
-      </div>
-
-      {/* Label: 14 to 15px semibold */}
-      <span className="text-sm sm:text-[15px] font-semibold text-foreground line-clamp-1 group-hover:text-brand transition-colors">
+      <span className="text-body-md font-semibold text-foreground group-hover:text-brand transition-colors line-clamp-1">
         {category.name}
       </span>
-
-      {/* Price caption: 13px */}
-      <span className="text-[13px] text-muted-foreground font-normal tabular-nums mt-0.5">
-        From {formatINR(category.starting_price)}/day
+      <span className="text-label-sm text-text-secondary font-normal tabular-nums mt-2">
+        From {formatINR(category.starting_price)} per day
       </span>
     </AppLink>
   )

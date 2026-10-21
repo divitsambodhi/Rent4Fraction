@@ -90,7 +90,7 @@ export function VendorsSection({
       accessor: (vendor: VendorProfile) => (
         <div className="text-xs">
           <div className="text-foreground font-medium">{vendor.owner_name || vendor.business_name}</div>
-          <div className="text-muted-foreground">{vendor.email || vendor.owner_email || '—'}</div>
+          <div className="text-muted-foreground">{vendor.email || vendor.owner_email || ' - '}</div>
         </div>
       ),
     },

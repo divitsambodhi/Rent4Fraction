@@ -45,7 +45,7 @@ export const MOCK_EQUIPMENT: EquipmentListingView[] = [
     review_count: 88,
     specifications: {
       'Power Output': '2400W Peak',
-      'Frequency Response': '55Hz – 20kHz',
+      'Frequency Response': '55Hz  to  20kHz',
       'Max SPL': '136 dB',
       Weight: '28 kg per unit',
     },
@@ -95,7 +95,7 @@ export const MOCK_EQUIPMENT: EquipmentListingView[] = [
     review_count: 64,
     specifications: {
       'Power Output': '2000W Peak',
-      'Frequency Response': '32Hz – 130Hz',
+      'Frequency Response': '32Hz  to  130Hz',
       Crossover: '80Hz / 100Hz / 120Hz selectable',
       Weight: '41 kg',
     },
@@ -135,7 +135,7 @@ export const MOCK_EQUIPMENT: EquipmentListingView[] = [
   {
     equipment_id: '33',
     name: 'Column Portable PA Sound Bar',
-    description: 'Sleek all-in-one vertical column speaker with integrated subwoofer base. Perfect for corporate talks, weddings, and acoustic sets.',
+    description: 'Sleek integrated vertical column speaker with built-in subwoofer base. Ideal for corporate presentations, wedding ceremonies, and acoustic sets.',
     price_per_day: 1400,
     security_deposit: 6000,
     quantity: 5,
@@ -362,7 +362,7 @@ export const MOCK_EQUIPMENT: EquipmentListingView[] = [
   },
   {
     equipment_id: '34',
-    name: 'Standalone All-In-One DJ Console',
+    name: 'Integrated Standalone DJ Console',
     description: '2-deck, 4-channel standalone DJ system requiring no laptop. High definition display, streaming integration, and dual microphone processing.',
     price_per_day: 3800,
     security_deposit: 16000,
@@ -451,7 +451,7 @@ export const MOCK_EQUIPMENT: EquipmentListingView[] = [
     specifications: {
       Power: '400W High-Intensity LED Array',
       Segments: '16 Independently controllable pixel segments',
-      StrobeRate: '0 – 30 flashes per second',
+      StrobeRate: '0  to  30 flashes per second',
       Weight: '7.5 kg',
     },
     vendor_id: '2',
@@ -756,7 +756,7 @@ export const MOCK_EQUIPMENT: EquipmentListingView[] = [
     review_count: 62,
     specifications: {
       Quantity: '5 Rectangular banquet tables per set',
-      Size: '72" Long x 30" Wide x 29" High (Seats 6–8 adults)',
+      Size: '72" Long x 30" Wide x 29" High (Seats 6 to 8 adults)',
       Top: 'High-density polyethylene (HDPE) waterproof surface',
       Capacity: '1,000 lbs distributed weight rating per table',
     },
@@ -805,7 +805,7 @@ export const MOCK_EQUIPMENT: EquipmentListingView[] = [
     avg_rating: 4.9,
     review_count: 58,
     specifications: {
-      Size: '96" Long x 40" Wide x 30" High (Seats 8–10)',
+      Size: '96" Long x 40" Wide x 30" High (Seats 8 to 10)',
       Wood: 'Solid reclaimed pine with matte polyurethane clear coat',
       Legs: 'Fold-flat heavy trestle supports with locking steel pins',
       Weight: '48 kg',
@@ -857,7 +857,7 @@ export const MOCK_EQUIPMENT: EquipmentListingView[] = [
     avg_rating: 4.9,
     review_count: 45,
     specifications: {
-      Size: '20 ft x 40 ft (6m x 12m, accommodates 70–90 guests)',
+      Size: '20 ft x 40 ft (6m x 12m, accommodates 70 to 90 guests)',
       Frame: 'Heavy structural truss aluminium with steel joiners',
       Walls: 'Cathedral window panels + 2 zippered entrance bays',
       WindRating: 'Certified up to 80 km/h gusts with ballast weights',
@@ -907,7 +907,7 @@ export const MOCK_EQUIPMENT: EquipmentListingView[] = [
     avg_rating: 4.6,
     review_count: 51,
     specifications: {
-      Size: 'Telescoping 8–10ft height x 8–10ft width adjustable',
+      Size: 'Telescoping 8 to 10ft height x 8 to 10ft width adjustable',
       Fabric: 'Premium flame-retardant ivory sheer voile chiffon',
       Hardware: 'Telescoping aluminium uprights with 18x18" base plates',
       Included: 'Crossbar, uprights, bases, 4 fabric panels',
@@ -986,7 +986,7 @@ export const MOCK_FAQS: FAQItem[] = [
   {
     id: 'faq-1',
     question: 'How does the refundable security deposit work?',
-    answer: 'Each listing states a clear security deposit amount held securely upon checkout. Once the rental duration concludes and the equipment is inspected upon return, the deposit is automatically released to your original payment method within 24–48 hours.',
+    answer: 'Each listing states a clear security deposit amount held securely upon checkout. Once the rental duration concludes and the equipment is inspected upon return, the deposit is automatically released to your original payment method within 24 to 48 hours.',
     category: 'pricing',
   },
   {

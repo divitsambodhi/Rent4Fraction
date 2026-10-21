@@ -1,13 +1,8 @@
 import { useRef, useState } from 'react'
-import {
-  ArrowLeft,
-  ArrowRight,
-  Star,
-  Trash2,
-  Upload,
-} from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import { Icon } from '@/components/ui/icon'
 import { ConfirmDialog } from '@/components/account/confirm-dialog'
+import { processImageUpload } from '@/lib/image-processing'
 import { toast } from 'sonner'
 import { cn } from '@/lib/utils'
 
@@ -33,54 +28,47 @@ export function ImageUploader({
 }: ImageUploaderProps) {
   const fileInputRef = useRef<HTMLInputElement>(null)
   const [isDragging, setIsDragging] = useState(false)
+  const [isProcessing, setIsProcessing] = useState(false)
   const [imageToRemove, setImageToRemove] = useState<UploadedImage | null>(null)
 
-  const processFiles = (fileList: FileList | null) => {
+  const processFiles = async (fileList: FileList | null) => {
     if (!fileList || fileList.length === 0) return
 
     const files = Array.from(fileList)
-    const allowed = ['image/jpeg', 'image/png', 'image/webp']
+    setIsProcessing(true)
     const newItems: UploadedImage[] = []
 
-    for (const file of files) {
-      if (images.length + newItems.length >= maxImages) {
-        toast.error(`Maximum ${maxImages} images allowed.`)
-        break
-      }
+    try {
+      for (const file of files) {
+        if (images.length + newItems.length >= maxImages) {
+          toast.error(`Maximum ${maxImages} images allowed.`)
+          break
+        }
 
-      if (!allowed.includes(file.type)) {
-        toast.error(`${file.name}: only JPG, PNG, and WebP files are supported.`)
-        continue
-      }
-
-      // 5MB limit
-      if (file.size > 5 * 1024 * 1024) {
-        toast.error(`${file.name} exceeds the 5MB file size limit.`)
-        continue
-      }
-
-      const reader = new FileReader()
-      reader.onload = (e) => {
-        if (typeof e.target?.result === 'string') {
+        try {
+          const processed = await processImageUpload(file, 1600, 0.8)
           const item: UploadedImage = {
             id: `img-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
-            url: e.target.result,
+            url: processed.dataUrl,
             isPrimary: images.length === 0 && newItems.length === 0,
           }
           newItems.push(item)
-
-          if (newItems.length === files.length || images.length + newItems.length >= maxImages) {
-            const combined = [...images, ...newItems]
-            // Ensure exactly one primary
-            if (!combined.some((img) => img.isPrimary) && combined.length > 0) {
-              combined[0].isPrimary = true
-            }
-            onChange(combined)
-            toast.success(`Added ${newItems.length} image(s).`)
-          }
+        } catch (err) {
+          toast.error(`${file.name}: ${err instanceof Error ? err.message : 'Processing failed'}`)
         }
       }
-      reader.readAsDataURL(file)
+
+      if (newItems.length > 0) {
+        const combined = [...images, ...newItems]
+        if (!combined.some((img) => img.isPrimary) && combined.length > 0) {
+          combined[0].isPrimary = true
+        }
+        onChange(combined)
+        toast.success(`Processed & added ${newItems.length} image(s).`)
+      }
+    } finally {
+      setIsProcessing(false)
+      if (fileInputRef.current) fileInputRef.current.value = ''
     }
   }
 
@@ -129,7 +117,6 @@ export function ImageUploader({
   const handleConfirmRemove = () => {
     if (!imageToRemove) return
     const filtered = images.filter((img) => img.id !== imageToRemove.id)
-    // If we removed the primary, promote the first remaining
     if (imageToRemove.isPrimary && filtered.length > 0) {
       filtered[0].isPrimary = true
     }
@@ -146,7 +133,7 @@ export function ImageUploader({
             Equipment photography
           </label>
           <span className="text-[11px] text-muted-foreground">
-            First image is primary (shown in catalogue cards). Drag or use arrow buttons to reorder.
+            First image is primary. Auto-downscaled and EXIF-corrected.
           </span>
         </div>
         <span className="text-xs font-semibold tabular-nums text-muted-foreground">
@@ -154,51 +141,56 @@ export function ImageUploader({
         </span>
       </div>
 
-      {/* Drag & Drop Zone */}
+      {/* Drag & Drop / Mobile Tap Zone */}
       <div
         onDragOver={handleDragOver}
         onDragLeave={handleDragLeave}
         onDrop={handleDrop}
         onClick={() => fileInputRef.current?.click()}
         className={cn(
-          'p-6 rounded-2xl border-2 border-dashed transition-all flex flex-col items-center justify-center text-center cursor-pointer',
+          'p-6 rounded-2xl border-2 border-dashed transition-all flex flex-col items-center justify-center text-center cursor-pointer min-h-[120px]',
           isDragging
             ? 'border-brand bg-brand/5 scale-[1.01]'
             : 'border-border bg-muted/20 hover:border-brand/40 hover:bg-muted/30',
-          disabled && 'opacity-60 cursor-not-allowed',
+          (disabled || isProcessing) && 'opacity-60 cursor-not-allowed',
         )}
       >
         <input
           ref={fileInputRef}
           type="file"
-          accept="image/jpeg,image/png,image/webp"
+          accept="image/*"
+          capture="environment"
           multiple
-          disabled={disabled || images.length >= maxImages}
+          disabled={disabled || isProcessing || images.length >= maxImages}
           onChange={(e) => processFiles(e.target.files)}
           className="hidden"
           id="equipment-image-input"
         />
 
         <div className="size-10 rounded-xl bg-brand/10 text-brand flex items-center justify-center mb-2">
-          <Upload className="size-5" />
+          {isProcessing ? (
+            <Icon name="loader" size={20} className="animate-spin" />
+          ) : (
+            <Icon name="camera" size={20} />
+          )}
         </div>
 
         <p className="text-xs sm:text-sm font-semibold text-foreground">
-          Click to upload or drag and drop images here
+          {isProcessing ? 'Optimizing photo...' : 'Tap to capture / upload images'}
         </p>
         <p className="text-[11px] text-muted-foreground mt-0.5">
-          JPG, PNG or WebP · Up to 5MB each · Maximum {maxImages} images
+          Automatic EXIF orientation & 1600px optimization
         </p>
       </div>
 
-      {/* Uploaded Images Grid with Controls */}
+      {/* Uploaded Images Grid with Touch-Friendly Controls */}
       {images.length > 0 && (
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-2">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 pt-2">
           {images.map((img, index) => (
             <div
               key={img.id}
               className={cn(
-                'rounded-xl border border-border bg-surface overflow-hidden group shadow-xs relative flex flex-col',
+                'rounded-xl border border-border bg-surface overflow-hidden shadow-xs relative flex flex-col',
                 img.isPrimary && 'ring-2 ring-brand',
               )}
             >
@@ -212,58 +204,56 @@ export function ImageUploader({
 
                 {/* Primary Tag Indicator */}
                 {img.isPrimary ? (
-                  <span className="absolute top-2 left-2 px-2 py-0.5 rounded-full bg-brand text-white text-[10px] font-bold shadow-xs flex items-center gap-1">
-                    <Star className="size-3 fill-white" />
+                  <span className="absolute top-2 left-2 px-2.5 py-1 rounded-full bg-brand text-white text-[11px] font-bold shadow-xs flex items-center gap-1">
+                    <Icon name="check" size={12} />
                     <span>Primary</span>
                   </span>
                 ) : (
                   <button
                     type="button"
                     onClick={() => handleSetPrimary(img.id)}
-                    className="absolute top-2 left-2 px-2 py-0.5 rounded-full bg-black/60 hover:bg-brand text-white text-[10px] font-medium transition-colors cursor-pointer opacity-0 group-hover:opacity-100"
+                    className="absolute top-2 left-2 min-h-[36px] px-2.5 py-1 rounded-full bg-black/70 hover:bg-brand text-white text-[11px] font-medium transition-colors cursor-pointer"
                   >
                     Set as primary
                   </button>
                 )}
 
-                {/* Remove button */}
+                {/* 44px Hit Area Remove button */}
                 <button
                   type="button"
                   onClick={() => setImageToRemove(img)}
-                  className="absolute top-2 right-2 size-6 rounded-full bg-black/60 hover:bg-danger text-white flex items-center justify-center transition-colors cursor-pointer opacity-0 group-hover:opacity-100"
+                  className="absolute top-2 right-2 min-w-[44px] min-h-[44px] rounded-full bg-black/70 hover:bg-danger text-white flex items-center justify-center transition-colors cursor-pointer"
                   aria-label="Remove image"
                 >
-                  <Trash2 className="size-3" />
+                  <Icon name="trash" size={16} />
                 </button>
               </div>
 
-              {/* Bottom Reorder Controls */}
-              <div className="p-1.5 flex items-center justify-between border-t border-border bg-background text-[11px]">
-                <span className="text-muted-foreground px-1 font-medium">#{index + 1}</span>
+              {/* Bottom Reorder Controls with 44px Hit Areas */}
+              <div className="p-2 flex items-center justify-between border-t border-border bg-background text-xs">
+                <span className="text-muted-foreground px-2 font-medium">#{index + 1}</span>
 
                 <div className="flex items-center gap-1">
                   <Button
                     type="button"
                     variant="ghost"
-                    size="icon-sm"
                     disabled={disabled || index === 0}
                     onClick={() => handleMoveLeft(index)}
-                    className="size-6"
+                    className="min-w-[44px] min-h-[44px] p-2 inline-flex items-center justify-center cursor-pointer"
                     aria-label="Move image left"
                   >
-                    <ArrowLeft className="size-3" />
+                    <Icon name="chevron-left" size={16} />
                   </Button>
 
                   <Button
                     type="button"
                     variant="ghost"
-                    size="icon-sm"
                     disabled={disabled || index === images.length - 1}
                     onClick={() => handleMoveRight(index)}
-                    className="size-6"
+                    className="min-w-[44px] min-h-[44px] p-2 inline-flex items-center justify-center cursor-pointer"
                     aria-label="Move image right"
                   >
-                    <ArrowRight className="size-3" />
+                    <Icon name="chevron-right" size={16} />
                   </Button>
                 </div>
               </div>

@@ -87,7 +87,7 @@ const HERO_SLIDES: HeroSlide[] = [
     accentWord: 'bespoke',
     titleSuffix: ' marquees.',
     subtitle:
-      'Champagne velvet banquet chairs, high-top standing cocktail tables, and heavy-duty pagoda canopy tents designed for seamless wedding productions.',
+      'Champagne velvet banquet chairs, high-top standing cocktail tables, and heavy-duty pagoda canopy tents for wedding celebrations.',
     bgImage: '/images/hero/wedding-marquee.svg',
     primaryCtaText: 'Explore Furniture',
     primaryCtaHref: '/equipment?category=6',

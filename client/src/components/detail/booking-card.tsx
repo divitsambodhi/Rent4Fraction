@@ -46,9 +46,9 @@ function formatDatesLabel(from?: string, to?: string): string {
     const d1 = new Date(from)
     const d2 = new Date(to)
     const opt: Intl.DateTimeFormatOptions = { day: 'numeric', month: 'short' }
-    return `${d1.toLocaleDateString('en-IN', opt)} – ${d2.toLocaleDateString('en-IN', opt)}`
+    return `${d1.toLocaleDateString('en-IN', opt)} to ${d2.toLocaleDateString('en-IN', opt)}`
   } catch {
-    return `${from} – ${to}`
+    return `${from} to ${to}`
   }
 }
 
@@ -134,7 +134,7 @@ export function BookingCard({
   return (
     <aside
       className={cn(
-        'w-full max-w-[380px] rounded-[16px] border border-border bg-surface p-5 sm:p-6 shadow-none space-y-5 text-foreground max-h-[calc(100vh-100px)] overflow-y-auto scrollbar-none',
+        'w-full max-w-[380px] rounded-[16px] border border-border bg-surface p-5 sm:p-6 shadow-none space-y-5 text-foreground max-h-[calc(100dvh-100px)] overflow-y-auto scrollbar-none',
         className,
       )}
       aria-label="Booking and reservation card"

@@ -30,7 +30,7 @@ export function OrderReview({
           <div>
             <h3 className="font-serif font-bold text-sm text-foreground">Order Review</h3>
             <p className="text-[11px] text-muted-foreground">
-              {period.start_date} – {period.end_date} · {period.days} {period.days === 1 ? 'day' : 'days'}
+              {period.start_date} to {period.end_date} · {period.days} {period.days === 1 ? 'day' : 'days'}
             </p>
           </div>
         </div>
@@ -117,7 +117,7 @@ export function OrderReview({
               </div>
               {address ? (
                 <p className="text-muted-foreground leading-relaxed text-[11px]">
-                  <strong>{address.name}</strong>, {address.line1}, {address.city} – {address.pincode}
+                  <strong>{address.name}</strong>, {address.line1}, {address.city}, {address.pincode}
                 </p>
               ) : (
                 <p className="text-muted-foreground text-[11px] italic">Not selected</p>

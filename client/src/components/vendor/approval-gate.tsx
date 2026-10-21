@@ -152,7 +152,7 @@ export function ApprovalGate({
     { title: 'Account created', status: 'complete', description: 'Vendor login credentials set up' },
     { title: 'Email verified', status: 'complete', description: 'Primary contact address confirmed' },
     { title: 'Admin review', status: 'current', description: 'Our team is reviewing your business details' },
-    { title: 'Start listing equipment', status: 'upcoming', description: 'Unlock catalogue, orders, and payouts' },
+    { title: 'Start listing equipment', status: 'upcoming', description: 'Access catalogue, orders, and payouts' },
   ]
 
   return (

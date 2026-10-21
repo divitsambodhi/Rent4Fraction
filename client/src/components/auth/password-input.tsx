@@ -1,5 +1,5 @@
 import { forwardRef, useState } from 'react'
-import { Eye, EyeOff, Lock } from 'lucide-react'
+import { Icon } from '@/components/ui/icon'
 import { cn } from '@/lib/utils'
 
 export interface PasswordInputProps
@@ -13,12 +13,12 @@ export const PasswordInput = forwardRef<HTMLInputElement, PasswordInputProps>(
 
     return (
       <div className="relative flex items-center">
-        <Lock className="absolute left-3.5 size-4.5 text-muted-foreground pointer-events-none stroke-[1.75]" />
+        <Icon name="lock" size={18} className="absolute left-3.5 text-muted-foreground pointer-events-none" />
         <input
           ref={ref}
           type={showPassword ? 'text' : 'password'}
           className={cn(
-            'w-full h-12 pl-10 pr-11 rounded-[10px] border border-border bg-surface text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-brand focus:border-transparent transition-all disabled:opacity-50',
+            'w-full h-12 pl-10 pr-12 rounded-[10px] border border-border bg-surface text-base sm:text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-brand focus:border-transparent transition-all disabled:opacity-50',
             error && 'border-danger focus:ring-danger',
             className,
           )}
@@ -29,13 +29,9 @@ export const PasswordInput = forwardRef<HTMLInputElement, PasswordInputProps>(
           onClick={() => setShowPassword(!showPassword)}
           aria-label={showPassword ? 'Hide password' : 'Show password'}
           aria-pressed={showPassword}
-          className="absolute right-2.5 size-8 rounded-[6px] text-muted-foreground hover:text-foreground hover:bg-muted/60 flex items-center justify-center transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-brand cursor-pointer"
+          className="absolute right-1 min-w-[44px] min-h-[44px] rounded-md text-muted-foreground hover:text-foreground hover:bg-muted/40 flex items-center justify-center transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-brand cursor-pointer"
         >
-          {showPassword ? (
-            <EyeOff className="size-4 stroke-[1.75]" />
-          ) : (
-            <Eye className="size-4 stroke-[1.75]" />
-          )}
+          <Icon name={showPassword ? 'eye-off' : 'eye'} size={18} />
         </button>
       </div>
     )

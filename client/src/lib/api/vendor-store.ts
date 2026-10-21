@@ -300,7 +300,7 @@ export function ensureVendorOrdersSeeded(): void {
           delivery: {
             type: 'delivery',
             status: ev.status === 'completed' ? 'delivered' : 'scheduled',
-            scheduled_window: 'Between 10:00 AM – 12:00 PM',
+            scheduled_window: 'Between 10:00 AM  to  12:00 PM',
             updated_at: createdAt,
           },
         },
@@ -643,7 +643,7 @@ export function getVendorOverview(range: OverviewRange = '30d', vendorId = '1'):
         {
           id: 'ev-1',
           type: 'delivery',
-          time: '10:00 AM – 12:00 PM',
+          time: '10:00 AM  to  12:00 PM',
           customer_name: 'Ananya Rao',
           equipment_name: 'Pro Line-Array Speaker Pair',
           location: 'Indiranagar, Bengaluru',
@@ -658,7 +658,7 @@ export function getVendorOverview(range: OverviewRange = '30d', vendorId = '1'):
         {
           id: 'ev-2',
           type: 'pickup',
-          time: '02:00 PM – 04:00 PM',
+          time: '02:00 PM  to  04:00 PM',
           customer_name: 'Rohan Iyer',
           equipment_name: 'Compact PA Speaker (Single)',
           location: 'Koramangala, Bengaluru',
@@ -766,7 +766,7 @@ export function getVendorPayouts(
         booking_id: booking.booking_id,
         customer_name: booking.delivery_address.name,
         items_summary: itemsStr,
-        rental_dates: `${booking.start_date} – ${booking.end_date}`,
+        rental_dates: `${booking.start_date}  to  ${booking.end_date}`,
         gross: amounts.gross,
         gross_amount: amounts.gross,
         commission_rate: profile.commission_rate,

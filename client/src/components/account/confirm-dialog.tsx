@@ -1,14 +1,7 @@
 import React from 'react'
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog'
+import { ResponsiveDialog } from '@/components/ui/responsive-dialog'
 import { Button } from '@/components/ui/button'
-import { Loader2 } from 'lucide-react'
+import { Icon } from '@/components/ui/icon'
 
 interface ConfirmDialogProps {
   open: boolean
@@ -34,23 +27,19 @@ export function ConfirmDialog({
   onConfirm,
 }: ConfirmDialogProps) {
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-md bg-surface border-border">
-        <DialogHeader className="space-y-2">
-          <DialogTitle className="text-lg font-serif font-bold text-foreground">
-            {title}
-          </DialogTitle>
-          <DialogDescription className="text-sm text-muted-foreground leading-relaxed">
-            {description}
-          </DialogDescription>
-        </DialogHeader>
-        <DialogFooter className="flex items-center justify-end gap-2 pt-4">
+    <ResponsiveDialog
+      open={open}
+      onOpenChange={onOpenChange}
+      title={title}
+      overlayId="confirm-dialog"
+      footer={
+        <>
           <Button
             type="button"
             variant="ghost"
             disabled={loading}
             onClick={() => onOpenChange(false)}
-            className="h-10 text-xs font-medium"
+            className="h-11 sm:h-10 text-xs font-medium w-full sm:w-auto"
           >
             {cancelLabel}
           </Button>
@@ -59,13 +48,17 @@ export function ConfirmDialog({
             variant={variant === 'danger' ? 'danger' : 'default'}
             disabled={loading}
             onClick={onConfirm}
-            className="h-10 px-4 text-xs font-semibold gap-1.5"
+            className="h-11 sm:h-10 px-4 text-xs font-semibold gap-1.5 w-full sm:w-auto"
           >
-            {loading && <Loader2 className="size-4 animate-spin" />}
+            {loading && <Icon name="loader" size={16} className="animate-spin" />}
             <span>{confirmLabel}</span>
           </Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
+        </>
+      }
+    >
+      <div className="text-body-sm text-muted-foreground leading-relaxed">
+        {description}
+      </div>
+    </ResponsiveDialog>
   )
 }

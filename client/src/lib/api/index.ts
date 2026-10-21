@@ -24,11 +24,13 @@ import {
   getAllStoredEquipment,
   getInventoryItemById,
 } from './equipment-store'
+import { MOCK_LATENCY_MS } from './latency'
 
 export * from './canonical-ids'
 export * from './equipment-detail'
 export * from './equipment-store'
 export * from './vendor-store'
+export * from './latency'
 export { MOCK_CATEGORIES, MOCK_EQUIPMENT, MOCK_FAQS, MOCK_NOTIFICATIONS, MOCK_VENDORS }
 
 export interface CatalogSearchParams {
@@ -71,7 +73,7 @@ export interface CategoryTreeGroup {
   totalCount: number
 }
 
-const DEFAULT_DELAY = 140
+const DEFAULT_DELAY = MOCK_LATENCY_MS
 
 function shouldSimulate(type: 'error' | 'empty', paramSimulate?: string): boolean {
   if (paramSimulate === type) return true

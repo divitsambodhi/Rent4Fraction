@@ -2,14 +2,7 @@ import { useRef, useState, useEffect } from 'react'
 import { useForm, Controller } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
-import {
-  ArrowLeft,
-  ArrowRight,
-  CheckCircle2,
-  Edit2,
-  Info,
-  Loader2,
-} from 'lucide-react'
+import { Icon } from '@/components/ui/icon'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { FormField } from '@/components/shared/form-field'
@@ -485,7 +478,7 @@ export function VendorSignupWizard({
 
             {/* Info Alert: No time promise */}
             <div className="rounded-xl border border-brand/30 bg-brand/5 p-4 flex items-start gap-3">
-              <Info className="size-5 text-brand shrink-0 mt-0.5" />
+              <Icon name="info" className="size-5 text-brand shrink-0 mt-0.5" />
               <div className="text-xs leading-relaxed text-foreground">
                 <p className="font-semibold mb-0.5">Admin Review Notice</p>
                 <p className="text-muted-foreground">
@@ -508,7 +501,7 @@ export function VendorSignupWizard({
                     onClick={() => setCurrentStep(0)}
                     className="inline-flex items-center gap-1 text-brand hover:underline font-medium cursor-pointer"
                   >
-                    <Edit2 className="size-3" />
+                    <Icon name="edit" className="size-3" />
                     <span>Edit</span>
                   </button>
                 </div>
@@ -539,7 +532,7 @@ export function VendorSignupWizard({
                     onClick={() => setCurrentStep(1)}
                     className="inline-flex items-center gap-1 text-brand hover:underline font-medium cursor-pointer"
                   >
-                    <Edit2 className="size-3" />
+                    <Icon name="edit" className="size-3" />
                     <span>Edit</span>
                   </button>
                 </div>
@@ -600,17 +593,17 @@ export function VendorSignupWizard({
           </div>
         )}
 
-        {/* Footer Navigation Buttons */}
-        <div className="flex flex-col-reverse sm:flex-row items-center gap-3 pt-3 border-t border-border/70">
+        {/* Sticky Mobile Footer Navigation Buttons */}
+        <div className="sticky bottom-0 z-sticky-bar bg-surface/95 backdrop-blur-xs py-3 border-t border-border flex flex-col-reverse sm:flex-row items-center gap-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] -mx-4 px-4 sm:mx-0 sm:px-0 sm:static sm:bg-transparent sm:pb-0 sm:pt-3">
           {currentStep > 0 ? (
             <Button
               type="button"
               variant="outline"
               onClick={handlePrevStep}
               disabled={isSubmitting}
-              className="w-full sm:w-auto h-12 px-5 text-sm font-medium"
+              className="w-full sm:w-auto h-12 px-5 text-sm font-medium cursor-pointer"
             >
-              <ArrowLeft className="size-4 mr-1.5" />
+              <Icon name="arrow-left" size={16} className="mr-1.5" />
               <span>Back</span>
             </Button>
           ) : (
@@ -619,7 +612,7 @@ export function VendorSignupWizard({
               variant="ghost"
               onClick={() => onSwitchMode('login')}
               disabled={isSubmitting}
-              className="w-full sm:w-auto h-12 text-sm text-muted-foreground hover:text-foreground"
+              className="w-full sm:w-auto h-12 text-sm text-muted-foreground hover:text-foreground cursor-pointer"
             >
               Cancel
             </Button>
@@ -630,25 +623,25 @@ export function VendorSignupWizard({
               <Button
                 type="button"
                 onClick={handleNextStep}
-                className="w-full sm:w-auto h-12 px-6 bg-brand hover:bg-brand-hover text-white font-medium shadow-xs text-sm"
+                className="w-full sm:w-auto h-12 px-6 bg-brand hover:bg-brand-hover text-white font-medium shadow-xs text-sm cursor-pointer"
               >
                 <span>Continue to {STEPS[currentStep + 1]?.title || 'Next'}</span>
-                <ArrowRight className="size-4 ml-1.5" />
+                <Icon name="arrow-right" size={16} className="ml-1.5" />
               </Button>
             ) : (
               <Button
                 type="submit"
                 disabled={isSubmitting}
-                className="w-full sm:w-auto h-12 px-6 bg-brand hover:bg-brand-hover text-white font-medium shadow-xs text-sm"
+                className="w-full sm:w-auto h-12 px-6 bg-brand hover:bg-brand-hover text-white font-medium shadow-xs text-sm cursor-pointer"
               >
                 {isSubmitting ? (
                   <span className="flex items-center gap-2">
-                    <Loader2 className="size-4.5 animate-spin" />
+                    <Icon name="loader" size={18} className="animate-spin" />
                     <span>Submitting application…</span>
                   </span>
                 ) : (
                   <span className="flex items-center gap-1.5">
-                    <CheckCircle2 className="size-4.5" />
+                    <Icon name="check" size={18} />
                     <span>Submit application</span>
                   </span>
                 )}

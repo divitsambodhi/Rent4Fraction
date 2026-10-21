@@ -277,7 +277,7 @@ export function DashboardLayout({
   }
 
   return (
-    <div className="h-screen flex flex-col bg-background text-foreground overflow-hidden font-sans">
+    <div className="h-dvh flex flex-col bg-background text-foreground overflow-hidden font-sans">
       {/* 48px Top Navigation Bar - Chrome ground with no divider to sidebar */}
       <header className="h-12 shrink-0 px-3 sm:px-4 flex items-center justify-between z-20 bg-background border-b-0">
         <div className="flex items-center gap-2.5">

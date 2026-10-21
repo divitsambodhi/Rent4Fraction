@@ -17,9 +17,9 @@ function formatDatesShort(from?: string, to?: string): string | null {
     const d1 = new Date(from)
     const d2 = new Date(to)
     const opt: Intl.DateTimeFormatOptions = { day: 'numeric', month: 'short' }
-    return `${d1.toLocaleDateString('en-IN', opt)} – ${d2.toLocaleDateString('en-IN', opt)}`
+    return `${d1.toLocaleDateString('en-IN', opt)} to ${d2.toLocaleDateString('en-IN', opt)}`
   } catch {
-    return `${from} – ${to}`
+    return `${from} to ${to}`
   }
 }
 
@@ -36,7 +36,7 @@ export function MobileBookingBar({
   return (
     <div
       className={cn(
-        'lg:hidden fixed bottom-0 inset-x-0 z-40 bg-surface/95 backdrop-blur-md border-t border-border px-4 py-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] shadow-lg flex items-center justify-between gap-4',
+        'lg:hidden fixed bottom-0 inset-x-0 z-sticky-bar bg-surface/95 backdrop-blur-md border-t border-border px-4 py-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] shadow-lg flex items-center justify-between gap-4',
         className,
       )}
       aria-label="Mobile booking action bar"
