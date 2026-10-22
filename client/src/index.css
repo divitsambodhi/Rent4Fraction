@@ -101,7 +101,7 @@
   --foreground: #F2F0EE;
   --card: #232428;
   --card-foreground: #F2F0EE;
-  --popover: #232428;
+  --popover: #2A2B30;
   --popover-foreground: #F2F0EE;
   --primary: #B65362;
   --primary-foreground: #FFFFFF;
@@ -372,3 +372,135 @@ input:focus-visible {
   background-color: var(--brand);
   color: #ffffff !important;
 }
+
+/* P-025: Availability Calendar crosshatch on booked dates & 180ms month slide */
+.calendar-day-booked {
+  background: repeating-linear-gradient(
+    45deg,
+    transparent,
+    transparent 3px,
+    var(--border) 3px,
+    var(--border) 4px
+  ) !important;
+  color: var(--muted-foreground) !important;
+  opacity: 0.55;
+  cursor: not-allowed;
+  text-decoration: line-through;
+}
+
+.calendar-legend-booked {
+  background: repeating-linear-gradient(
+    45deg,
+    transparent,
+    transparent 2px,
+    var(--border) 2px,
+    var(--border) 3px
+  );
+}
+
+.calendar-month-slide-next {
+  animation: calendarSlideNext 180ms cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.calendar-month-slide-prev {
+  animation: calendarSlidePrev 180ms cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@keyframes calendarSlideNext {
+  from {
+    opacity: 0.4;
+    transform: translateX(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes calendarSlidePrev {
+  from {
+    opacity: 0.4;
+    transform: translateX(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+/* P-024: Checkout rail directional slide transitions */
+.checkout-slide-forward {
+  animation: checkoutSlideForward 200ms cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.checkout-slide-backward {
+  animation: checkoutSlideBackward 200ms cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@keyframes checkoutSlideForward {
+  from {
+    opacity: 0;
+    transform: translateX(16px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes checkoutSlideBackward {
+  from {
+    opacity: 0;
+    transform: translateX(-16px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+/* P-039: Switch thumb spring elongation */
+.switch-thumb {
+  transition: transform 200ms cubic-bezier(0.34, 1.25, 0.64, 1), width 150ms ease-out;
+}
+.switch-root:active:not(:disabled) .switch-thumb {
+  width: 1.15rem; /* Elongates to 18.4px during toggle press */
+}
+
+/* P-047: Progressive View Transitions API */
+@keyframes vt-fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes vt-fade-out {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+  }
+}
+
+::view-transition-old(root) {
+  animation: 160ms cubic-bezier(0.16, 1, 0.3, 1) both vt-fade-out;
+}
+
+::view-transition-new(root) {
+  animation: 180ms cubic-bezier(0.16, 1, 0.3, 1) both vt-fade-in;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  ::view-transition-old(root),
+  ::view-transition-new(root) {
+    animation: none !important;
+  }
+}
+
+
+
+

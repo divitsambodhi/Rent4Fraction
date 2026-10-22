@@ -13,3 +13,11 @@ src/components/catalog/results-header.tsx:shadow-sm (Sort dropdown)
 # The design brief and reference audit document the reference retail system per prompt instructions.
 docs/DESIGN_BRIEF.md:furlenco (Documents the reference design system spec path)
 docs/SLOP_AUDIT.md:furlenco (Documents the reference design system audit)
+
+## Scroll-Fade Masks
+# Linear gradient used strictly as an edge scroll-fade mask for horizontal category strip navigation per user approval (P-021)
+src/components/layout/category-strip.tsx:linear-gradient (Scroll-fade mask on category strip)
+
+## Booked Dates Calendar Crosshatch
+# Repeating linear gradient used strictly as a hairline diagonal crosshatch on booked dates per user approval (P-025)
+src/index.css:repeating-linear-gradient (Booked dates calendar crosshatch)

@@ -44,8 +44,8 @@ export function ReturnsTable({
       header: 'Order / Customer',
       className: 'w-[160px]',
       accessor: (r) => (
-        <div className="space-y-0.5">
-          <p className="font-semibold text-foreground text-xs font-mono">{r.order.vendor_order_id}</p>
+        <div className="space-y-0.5 font-sans tabular-nums">
+          <p className="font-semibold text-foreground text-xs">{r.order.vendor_order_id}</p>
           <p className="text-xs text-muted-foreground">{r.customerName}</p>
         </div>
       ),
@@ -166,8 +166,8 @@ export function ReturnsTable({
   const renderMobileCard = (r: VendorReturnRowData) => (
     <div className={cn('space-y-3', r.isLate && 'bg-destructive/5 border-destructive/20')}>
       <div className="flex items-start justify-between">
-        <div>
-          <span className="font-mono text-xs font-bold text-foreground">{r.order.vendor_order_id}</span>
+        <div className="font-sans tabular-nums">
+          <span className="text-xs font-bold text-foreground">{r.order.vendor_order_id}</span>
           <p className="text-xs text-muted-foreground">{r.customerName}</p>
         </div>
         {r.isLate && (

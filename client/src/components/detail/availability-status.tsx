@@ -79,7 +79,7 @@ export function AvailabilityStatus({
           className,
         )}
       >
-        <span className="size-2 rounded-full bg-brand animate-pulse" />
+        <span className="size-2 rounded-full bg-brand" />
         <span>
           Only {availableQuantity} {availableQuantity === 1 ? 'unit' : 'units'} left for these dates
         </span>

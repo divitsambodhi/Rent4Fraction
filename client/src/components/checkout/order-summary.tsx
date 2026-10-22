@@ -74,7 +74,7 @@ export function OrderSummary({
         <div className="pt-2 border-t border-border/70 space-y-2">
           <div className="flex items-center gap-2 text-[11px] text-muted-foreground">
             <ShieldCheck className="size-4 shrink-0 text-brand stroke-[2]" />
-            <span>Deposit is 100% refundable after return inspection.</span>
+            <span>Refundable security deposit, returned after inspection. Damage charges may apply.</span>
             <TooltipProvider delayDuration={150}>
               <Tooltip>
                 <TooltipTrigger asChild>

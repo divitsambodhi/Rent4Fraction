@@ -78,7 +78,7 @@ export function ActivityTimeline({ activity, className }: ActivityTimelineProps)
                   {item.description}
                 </div>
               )}
-              <div className="text-[10px] text-muted-foreground font-mono">
+              <div className="text-[10px] text-muted-foreground tabular-nums font-sans">
                 {formatTime(item.timestamp)}
               </div>
             </div>

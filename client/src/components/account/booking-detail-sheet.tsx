@@ -12,6 +12,7 @@ import { PriceSummary } from './price-summary'
 import { PaymentList } from './payment-list'
 import { DepositSummary } from './deposit-summary'
 import { ActivityTimeline } from './activity-timeline'
+import { BookingProgress } from './booking-progress'
 import { CancelBookingDialog } from './cancel-booking-dialog'
 import {
   CalendarDays,
@@ -148,11 +149,10 @@ export function BookingDetailSheet({
               </div>
             ) : booking ? (
               <>
-                {/* 1. OVERVIEW SECTION */}
+                {/* 1. OVERVIEW & ORDER LIFECYCLE */}
                 <section className="space-y-3">
-                  <h3 className="text-xs font-semibold text-muted-foreground">
-                    Booking Overview
-                  </h3>
+                  <BookingProgress status={booking.status} variant="detailed" />
+
                   <div className="p-4 rounded-[14px] bg-muted/30 border border-border grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
                     <div className="space-y-1">
                       <div className="text-muted-foreground text-[11px] flex items-center gap-1">
@@ -273,9 +273,9 @@ export function BookingDetailSheet({
           </div>
 
           {/* Sticky Footer */}
-          <footer className="px-5 py-3.5 border-t border-border bg-surface/95 backdrop-blur-md flex items-center justify-between gap-3 shrink-0">
+          <footer className="px-5 py-3.5 border-t border-border bg-surface flex items-center justify-between gap-3 shrink-0">
             {mode === 'admin' ? (
-              <span className="text-xs text-muted-foreground font-mono">
+              <span className="text-xs text-muted-foreground tabular-nums font-sans">
                 Admin Console · Read-only view
               </span>
             ) : canCancel ? (

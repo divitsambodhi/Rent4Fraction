@@ -10,6 +10,7 @@
     "typecheck": "tsc --noEmit",
     "test": "vitest run src",
     "check:slop": "node scripts/check-slop.mjs",
+    "check:motion": "node scripts/check-motion.mjs",
     "check:mobile": "node scripts/check-mobile.mjs",
     "test:mobile": "playwright test",
     "preview": "vite preview"

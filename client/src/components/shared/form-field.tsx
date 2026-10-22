@@ -58,7 +58,7 @@ export function FormField({
           <p
             id={errorId}
             role="alert"
-            className="text-xs text-danger font-medium leading-none animate-in fade-in-0 duration-150 pt-0.5"
+            className="text-xs text-danger font-medium leading-none animate-in fade-in-0 slide-in-from-top-1 duration-150 ease-out pt-0.5"
           >
             {error}
           </p>

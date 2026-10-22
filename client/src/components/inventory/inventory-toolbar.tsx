@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { AlertTriangle, Search, X } from 'lucide-react'
+import { Switch } from '@/components/ui/switch'
 import type { EquipmentStatus } from '@/types/vendor'
 
 interface StatusCount {
@@ -157,16 +158,18 @@ export function InventoryToolbar({
         </div>
 
         {/* Low Stock Only Switch */}
-        <label className="flex items-center gap-2 cursor-pointer text-xs font-medium text-foreground select-none shrink-0">
-          <input
-            type="checkbox"
+        <div className="flex items-center gap-2 text-xs font-medium text-foreground select-none shrink-0">
+          <Switch
+            id="low-stock-toggle"
             checked={lowStockOnly}
-            onChange={(e) => onLowStockChange(e.target.checked)}
-            className="rounded border-border text-brand focus:ring-brand size-3.5"
+            onCheckedChange={onLowStockChange}
+            aria-label="Filter low stock only"
           />
-          <AlertTriangle className={`size-3.5 ${lowStockOnly ? 'text-warning' : 'text-muted-foreground'}`} />
-          <span>Low stock only (≤ 2 units)</span>
-        </label>
+          <label htmlFor="low-stock-toggle" className="flex items-center gap-1.5 cursor-pointer">
+            <AlertTriangle className={`size-3.5 ${lowStockOnly ? 'text-warning' : 'text-muted-foreground'}`} />
+            <span>Low stock only (≤ 2 units)</span>
+          </label>
+        </div>
       </div>
     </div>
   )

@@ -34,7 +34,7 @@ export function FeaturedSection({ dates }: FeaturedSectionProps) {
     <section className="py-10 md:py-16">
       <div className="flex items-baseline justify-between mb-6">
         <div>
-          <h2 className="text-headline-md font-semibold text-foreground">
+          <h2 className="font-serif text-2xl md:text-3xl font-semibold tracking-[-0.02em] text-foreground">
             Popular equipment
           </h2>
           <p className="text-body-sm text-text-secondary mt-1">

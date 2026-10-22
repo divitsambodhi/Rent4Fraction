@@ -23,6 +23,7 @@ import { useTheme } from '@/providers/theme-provider'
 import { useCart } from '@/providers/cart-provider'
 import { getNotifications } from '@/lib/api'
 import { STRIP_CATEGORIES } from './category-strip'
+import { cn } from '@/lib/utils'
 
 export function Navbar() {
   const { role, user, logout } = useAuth()
@@ -36,6 +37,17 @@ export function Navbar() {
   const [categoriesOpen, setCategoriesOpen] = useState(false)
   const [navSearch, setNavSearch] = useState('')
   const [customerUnreadCount, setCustomerUnreadCount] = useState(0)
+  const [isScrolled, setIsScrolled] = useState(false)
+
+  // Scroll listener for hairline border elevation (>10px, no blur per P-008)
+  useEffect(() => {
+    const handleScroll = () => {
+      setIsScrolled(window.scrollY > 10)
+    }
+    handleScroll()
+    window.addEventListener('scroll', handleScroll, { passive: true })
+    return () => window.removeEventListener('scroll', handleScroll)
+  }, [])
 
   // Keep search input in sync if URL has ?q=
   useEffect(() => {
@@ -102,7 +114,12 @@ export function Navbar() {
   }
 
   return (
-    <header className="sticky top-0 z-navbar z-50 w-full bg-surface border-b border-border select-none">
+    <header
+      className={cn(
+        'sticky top-0 z-navbar z-50 w-full bg-surface select-none transition-colors duration-200',
+        isScrolled ? 'border-b border-border shadow-xs' : 'border-b border-transparent',
+      )}
+    >
       <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8">
         {/* DESKTOP NAVBAR (>= 1024px) */}
         <div className="hidden lg:flex items-center justify-between gap-6 h-16">

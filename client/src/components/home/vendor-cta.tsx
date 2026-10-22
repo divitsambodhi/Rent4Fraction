@@ -17,7 +17,7 @@ export function VendorCTA() {
     <section className="py-10 md:py-14">
       <div className="rounded-md bg-brand text-white p-8 md:p-12">
         <div className="max-w-2xl space-y-3">
-          <h2 className="text-headline-md font-semibold text-white">
+          <h2 className="font-serif text-2xl md:text-3xl font-semibold tracking-[-0.02em] text-white">
             List your equipment on Rent4Fraction
           </h2>
 

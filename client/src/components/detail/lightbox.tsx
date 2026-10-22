@@ -13,6 +13,7 @@ export interface LightboxProps {
   onIndexChange: (index: number) => void
   equipmentName: string
   category?: string
+  originRect?: { x: number; y: number; width: number; height: number } | null
 }
 
 export function Lightbox({
@@ -23,8 +24,15 @@ export function Lightbox({
   onIndexChange,
   equipmentName,
   category,
+  originRect,
 }: LightboxProps) {
   const currentImg = images[activeIndex] || images[0]
+
+  const originStyle = originRect
+    ? {
+        transformOrigin: `${((originRect.x + originRect.width / 2) / (typeof window !== 'undefined' && window.innerWidth ? window.innerWidth : 1)) * 100}% ${((originRect.y + originRect.height / 2) / (typeof window !== 'undefined' && window.innerHeight ? window.innerHeight : 1)) * 100}%`,
+      }
+    : { transformOrigin: 'center center' }
 
   // Zoom & Pan state (task C3)
   const [isZoomed, setIsZoomed] = useState(false)
@@ -161,7 +169,8 @@ export function Lightbox({
         <DialogPrimitive.Overlay className="fixed inset-0 z-50 bg-neutral-950/95 transition-opacity duration-150 motion-reduce:transition-none" />
 
         <DialogPrimitive.Content
-          className="fixed inset-0 z-50 flex flex-col items-center justify-between p-2 sm:p-4 text-white focus:outline-none select-none"
+          style={originStyle}
+          className="fixed inset-0 z-50 flex flex-col items-center justify-between p-2 sm:p-4 text-white focus:outline-none select-none duration-200 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 motion-reduce:animate-none"
           aria-label={`${equipmentName} image gallery`}
         >
           {/* Top Bar: Title, Counter, 44px Close button */}

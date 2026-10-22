@@ -24,8 +24,22 @@ export function ImageGallery({
 }: ImageGalleryProps) {
   const [activeIndex, setActiveIndex] = useState(0)
   const [lightboxOpen, setLightboxOpen] = useState(false)
+  const [originRect, setOriginRect] = useState<{ x: number; y: number; width: number; height: number } | null>(null)
   const touchStartX = useRef<number | null>(null)
   const touchEndX = useRef<number | null>(null)
+
+  const handleOpenLightbox = (e?: React.MouseEvent) => {
+    if (e?.currentTarget) {
+      const rect = (e.currentTarget as HTMLElement).getBoundingClientRect()
+      setOriginRect({
+        x: rect.left,
+        y: rect.top,
+        width: rect.width,
+        height: rect.height,
+      })
+    }
+    setLightboxOpen(true)
+  }
 
   const active = images[activeIndex] || images[0]
 
@@ -93,7 +107,7 @@ export function ImageGallery({
         onTouchEnd={handleTouchEnd}
       >
         <div
-          onClick={() => setLightboxOpen(true)}
+          onClick={handleOpenLightbox}
           className="size-full cursor-zoom-in"
           title="Click to view full screen"
         >
@@ -111,7 +125,7 @@ export function ImageGallery({
         </div>
 
         {/* Counter Chip */}
-        <span className="absolute top-3 left-3 px-2.5 py-1 rounded-full bg-black/60 backdrop-blur-xs text-white text-xs font-semibold tabular-nums shadow-xs pointer-events-none">
+        <span className="absolute top-3 left-3 px-2.5 py-1 rounded-full bg-black/75 text-white text-xs font-semibold tabular-nums shadow-xs pointer-events-none">
           {activeIndex + 1} / {images.length}
         </span>
 
@@ -124,9 +138,9 @@ export function ImageGallery({
         {/* Expand / Lightbox Trigger Button */}
         <button
           type="button"
-          onClick={() => setLightboxOpen(true)}
+          onClick={handleOpenLightbox}
           aria-label="Open fullscreen image lightbox"
-          className="absolute bottom-3 right-3 min-h-[36px] px-3 py-1.5 rounded-full bg-black/60 hover:bg-black/80 backdrop-blur-xs text-white text-xs font-medium flex items-center gap-1.5 shadow-xs transition-colors cursor-pointer"
+          className="absolute bottom-3 right-3 min-h-[36px] px-3 py-1.5 rounded-full bg-black/75 hover:bg-black/90 text-white text-xs font-medium flex items-center gap-1.5 shadow-xs transition-colors cursor-pointer"
         >
           <Icon name="maximize" size={14} />
           <span>Expand</span>
@@ -232,6 +246,7 @@ export function ImageGallery({
         onIndexChange={setActiveIndex}
         equipmentName={equipmentName}
         category={category}
+        originRect={originRect}
       />
     </section>
   )

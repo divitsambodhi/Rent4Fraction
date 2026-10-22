@@ -33,9 +33,9 @@ export function AddressCard({
     <div
       onClick={selectable ? onSelect : undefined}
       className={cn(
-        'p-5 rounded-[16px] border bg-surface flex flex-col justify-between space-y-4 shadow-xs transition-all relative',
+        'p-4 sm:p-6 rounded-[16px] border bg-surface flex flex-col justify-between space-y-4 shadow-xs transition-colors relative',
         selectable && 'cursor-pointer hover:border-brand/40',
-        selected && 'border-brand ring-2 ring-brand/20 bg-brand/5',
+        selected ? 'border-brand border-[1.5px] bg-brand/[0.03]' : 'border-border',
         className
       )}
     >

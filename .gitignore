@@ -185,16 +185,45 @@ CHANGELOG_*.md
 **/CHANGELOG_*.md
 docs/
 **/docs/
+documentation/
+**/documentation/
 MOVE_TO_CLIENT.md
 **/MOVE_TO_CLIENT.md
+
+# General markdown and text files (keep only standard repository READMEs and required project files)
+*.md
+**/*.md
+!README.md
+!client/README.md
+!database/README.md
+
+*.txt
+**/*.txt
+!database/requirements.txt
+!client/slop-allowlist.txt
+
+*.doc
+*.docx
+*.pdf
 
 # Environment and sensitive credential files
 .env
 .env.*
+.env*.local
 !.env.example
+*.local
+*.local.json
 *.pem
 *.key
 *.cert
 *.crt
-credentials.json
+*.pfx
+*.p12
+*.token
+*credentials*
+*credential*.json
 client_secrets*.json
+id_rsa*
+id_ed25519*
+auth-tokens*.json
+

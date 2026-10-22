@@ -38,7 +38,7 @@ export function AddressPicker({
         <button
           type="button"
           onClick={onAddNew}
-          className="p-5 rounded-[16px] border border-dashed border-border hover:border-brand/50 hover:bg-muted/30 flex flex-col items-center justify-center text-center space-y-2 min-h-[140px] transition-all cursor-pointer group"
+          className="p-4 sm:p-6 rounded-[16px] border border-dashed border-border hover:border-brand/50 hover:bg-muted/30 flex flex-col items-center justify-center text-center space-y-2 min-h-[140px] transition-colors cursor-pointer group"
         >
           <div className="size-10 rounded-full bg-brand/10 text-brand flex items-center justify-center group-hover:scale-110 transition-transform">
             <Plus className="size-5 stroke-[2]" />

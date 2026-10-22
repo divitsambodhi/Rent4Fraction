@@ -26,10 +26,10 @@ export function PriceBreakdown({
       {/* Calculation Line */}
       <div className="flex items-center justify-between text-muted-foreground">
         <span>
-          <PriceText amount={pricePerDay} /> × {days} {days === 1 ? 'day' : 'days'} × {quantity}{' '}
+          <PriceText amount={pricePerDay} /> × <span key={days} className="inline-block transition-all duration-150 animate-in fade-in-0 slide-in-from-bottom-1 tabular-nums">{days}</span> {days === 1 ? 'day' : 'days'} × <span key={quantity} className="inline-block transition-all duration-150 animate-in fade-in-0 slide-in-from-bottom-1 tabular-nums">{quantity}</span>{' '}
           {quantity === 1 ? 'unit' : 'units'}
         </span>
-        <span className="font-semibold text-foreground">
+        <span key={rentalSubtotal} className="font-semibold text-foreground inline-block transition-all duration-150 animate-in fade-in-0 slide-in-from-bottom-1 tabular-nums">
           <PriceText amount={rentalSubtotal} />
         </span>
       </div>
@@ -56,12 +56,12 @@ export function PriceBreakdown({
             >
               <div className="font-semibold text-foreground">Refundable Security Deposit</div>
               <p className="text-muted-foreground leading-relaxed">
-                Pre-authorized on booking and automatically released within 48 hours of return inspection.
+                Refundable security deposit, returned after inspection. Damage charges may apply.
               </p>
             </PopoverContent>
           </Popover>
         </div>
-        <span className="font-medium text-foreground/80">
+        <span key={totalDeposit} className="font-medium text-foreground/80 inline-block transition-all duration-150 animate-in fade-in-0 slide-in-from-bottom-1 tabular-nums">
           <PriceText amount={totalDeposit} />
         </span>
       </div>
@@ -71,7 +71,7 @@ export function PriceBreakdown({
       {/* Total Line */}
       <div className="flex items-center justify-between text-sm sm:text-base font-bold text-foreground">
         <span>Estimated rental total</span>
-        <span className="text-brand font-serif text-lg sm:text-xl">
+        <span key={rentalSubtotal} className="text-brand font-sans font-bold text-lg sm:text-xl tabular-nums inline-block transition-all duration-150 animate-in fade-in-0 slide-in-from-bottom-1">
           <PriceText amount={rentalSubtotal} />
         </span>
       </div>

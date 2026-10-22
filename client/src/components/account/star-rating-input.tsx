@@ -114,11 +114,12 @@ export function StarRatingInput({
             >
               <Star
                 size={24}
+                style={{ transitionDelay: isFilled ? `${(star - 1) * 25}ms` : '0ms' }}
                 className={cn(
-                  'transition-all duration-100',
+                  'transition-all duration-150',
                   isFilled
-                    ? 'fill-warning stroke-warning text-warning'
-                    : 'fill-transparent stroke-border text-border',
+                    ? 'fill-warning stroke-warning text-warning scale-105'
+                    : 'fill-transparent stroke-border text-border scale-100',
                 )}
               />
             </button>

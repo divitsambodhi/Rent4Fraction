@@ -92,6 +92,19 @@ GUIDELINES*.md
 *.webm
 !public/**/*
 
+# General markdown & text notes (keep only client README and slop allowlist)
+*.md
+**/*.md
+!README.md
+
+*.txt
+**/*.txt
+!slop-allowlist.txt
+
+*.doc
+*.docx
+*.pdf
+
 # Test results & browser run artifacts
 coverage/
 test-results/

@@ -16,13 +16,13 @@ function Calendar({
       showOutsideDays={showOutsideDays}
       className={cn('p-3', className)}
       classNames={{
-        months: 'flex flex-col sm:flex-row gap-6',
+        months: 'relative flex flex-col sm:flex-row gap-6',
         month: 'flex flex-col gap-3',
-        month_caption: 'flex justify-center pt-1 relative items-center text-sm font-semibold text-foreground',
+        month_caption: 'flex justify-center relative items-center h-9 text-sm font-semibold text-foreground',
         caption_label: 'text-sm font-semibold',
-        nav: 'flex items-center gap-1',
-        button_previous: 'absolute left-1 min-w-[44px] min-h-[44px] sm:min-w-0 sm:size-7 bg-transparent p-0 opacity-70 hover:opacity-100 flex items-center justify-center rounded-[6px] hover:bg-muted text-foreground transition-colors cursor-pointer',
-        button_next: 'absolute right-1 min-w-[44px] min-h-[44px] sm:min-w-0 sm:size-7 bg-transparent p-0 opacity-70 hover:opacity-100 flex items-center justify-center rounded-[6px] hover:bg-muted text-foreground transition-colors cursor-pointer',
+        nav: 'flex items-center justify-between absolute inset-x-0 top-0 h-9 px-1 pointer-events-none z-10',
+        button_previous: 'pointer-events-auto relative size-8 sm:size-7 bg-transparent p-0 opacity-70 hover:opacity-100 flex items-center justify-center rounded-[6px] hover:bg-muted text-foreground transition-colors cursor-pointer after:content-[""] after:absolute after:inset-[-6px] sm:after:hidden',
+        button_next: 'pointer-events-auto relative size-8 sm:size-7 bg-transparent p-0 opacity-70 hover:opacity-100 flex items-center justify-center rounded-[6px] hover:bg-muted text-foreground transition-colors cursor-pointer after:content-[""] after:absolute after:inset-[-6px] sm:after:hidden',
         month_grid: 'w-full border-collapse space-y-1',
         weekdays: 'flex justify-between',
         weekday: 'text-muted-foreground rounded-md w-11 sm:w-9 font-normal text-[0.8rem] text-center',

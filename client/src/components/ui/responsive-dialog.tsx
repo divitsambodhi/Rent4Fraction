@@ -40,6 +40,31 @@ export function ResponsiveDialog({
     enabled: !isDesktop && open,
   })
 
+  // P-020: Drag-to-dismiss gesture and spring deceleration physics
+  const [dragY, setDragY] = React.useState(0)
+  const [isDragging, setIsDragging] = React.useState(false)
+  const touchStartY = React.useRef(0)
+
+  const handleTouchStart = (e: React.TouchEvent) => {
+    touchStartY.current = e.touches[0].clientY
+    setIsDragging(true)
+  }
+
+  const handleTouchMove = (e: React.TouchEvent) => {
+    const delta = e.touches[0].clientY - touchStartY.current
+    if (delta > 0) {
+      setDragY(delta)
+    }
+  }
+
+  const handleTouchEnd = () => {
+    setIsDragging(false)
+    if (dragY > 90) {
+      onOpenChange(false)
+    }
+    setDragY(0)
+  }
+
   return (
     <DialogPrimitive.Root open={open} onOpenChange={onOpenChange}>
       <DialogPrimitive.Portal>
@@ -134,14 +159,26 @@ export function ResponsiveDialog({
         ) : (
           /* Mobile Bottom Drawer / Sheet */
           <DialogPrimitive.Content
+            style={{
+              transform: dragY > 0 ? `translateY(${dragY}px)` : undefined,
+              transition: isDragging ? 'none' : 'transform 220ms cubic-bezier(0.16, 1, 0.3, 1)',
+            }}
             className={cn(
               'fixed inset-x-0 bottom-0 z-dialog flex flex-col max-h-[90dvh] bg-surface rounded-t-[16px] border-t border-border overflow-hidden duration-200',
               'data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:slide-out-to-bottom data-[state=open]:slide-in-from-bottom',
               className,
             )}
           >
-            {/* Drag Handle */}
-            <div className="mx-auto mt-2.5 mb-1 h-1.5 w-12 rounded-full bg-border shrink-0 touch-pan-x select-none" aria-hidden="true" />
+            {/* Drag Handle with touch-to-dismiss */}
+            <div
+              onTouchStart={handleTouchStart}
+              onTouchMove={handleTouchMove}
+              onTouchEnd={handleTouchEnd}
+              className="w-full pt-3 pb-1 flex justify-center cursor-grab active:cursor-grabbing touch-none select-none"
+              aria-hidden="true"
+            >
+              <div className="h-1.5 w-12 rounded-full bg-border shrink-0" />
+            </div>
 
             <div className="flex items-start justify-between px-5 pt-2 pb-3 border-b border-border bg-surface shrink-0">
               <div className="flex flex-col pr-2">

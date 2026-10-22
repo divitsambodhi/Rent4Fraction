@@ -1,3 +1,4 @@
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import { AppLink, useAppPathname } from '@/components/shared/app-link'
 import { Icon, type IconName } from '@/components/ui/icon'
@@ -29,14 +30,56 @@ interface CategoryStripProps {
  * (also shown at top of Catalog page, not sticky).
  * 8 real categories, 24px icon above 13px label, ~64px total height.
  * Evenly spaced on desktop, horizontally scrollable with snap on phones.
- * No boxes, no tinted circles, no shadows.
  * Active category has a 2px wine underline.
+ * P-021: Scroll-fade gradient mask when content overflows horizontally.
  */
 export function CategoryStrip({ className }: CategoryStripProps) {
   const pathname = useAppPathname()
   const [searchParams] = useSearchParams()
+  const navRef = useRef<HTMLElement>(null)
+  const [canScrollLeft, setCanScrollLeft] = useState(false)
+  const [canScrollRight, setCanScrollRight] = useState(false)
 
   const currentCategory = pathname === '/equipment' ? searchParams.get('category') : null
+
+  const checkScroll = useCallback(() => {
+    const el = navRef.current
+    if (!el) return
+    setCanScrollLeft(el.scrollLeft > 4)
+    setCanScrollRight(el.scrollLeft + el.clientWidth < el.scrollWidth - 4)
+  }, [])
+
+  useEffect(() => {
+    const el = navRef.current
+    if (!el) return
+    checkScroll()
+    el.addEventListener('scroll', checkScroll, { passive: true })
+    window.addEventListener('resize', checkScroll)
+    return () => {
+      el.removeEventListener('scroll', checkScroll)
+      window.removeEventListener('resize', checkScroll)
+    }
+  }, [checkScroll])
+
+  const maskStyle = useMemo(() => {
+    if (!canScrollLeft && !canScrollRight) return undefined
+    if (canScrollLeft && canScrollRight) {
+      return {
+        WebkitMaskImage: 'linear-gradient(to right, transparent, black 24px, black calc(100% - 24px), transparent)',
+        maskImage: 'linear-gradient(to right, transparent, black 24px, black calc(100% - 24px), transparent)',
+      }
+    }
+    if (canScrollLeft) {
+      return {
+        WebkitMaskImage: 'linear-gradient(to right, transparent, black 24px, black 100%)',
+        maskImage: 'linear-gradient(to right, transparent, black 24px, black 100%)',
+      }
+    }
+    return {
+      WebkitMaskImage: 'linear-gradient(to right, black calc(100% - 24px), transparent)',
+      maskImage: 'linear-gradient(to right, black calc(100% - 24px), transparent)',
+    }
+  }, [canScrollLeft, canScrollRight])
 
   return (
     <div
@@ -47,7 +90,9 @@ export function CategoryStrip({ className }: CategoryStripProps) {
     >
       <div className="max-w-7xl mx-auto px-2 sm:px-6">
         <nav
+          ref={navRef}
           aria-label="Categories"
+          style={maskStyle}
           className="flex items-center justify-between overflow-x-auto scrollbar-none snap-x snap-mandatory py-1 sm:py-0 min-h-[64px]"
         >
           {STRIP_CATEGORIES.map((cat) => {

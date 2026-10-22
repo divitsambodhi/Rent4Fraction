@@ -38,9 +38,9 @@ export function OrdersTable({
       header: 'Order / Booking',
       className: 'w-[140px]',
       accessor: (r) => (
-        <div className="space-y-0.5">
-          <p className="font-semibold text-foreground text-xs font-mono">{r.order.vendor_order_id}</p>
-          <p className="text-[11px] text-muted-foreground font-mono">{r.booking.booking_id}</p>
+        <div className="space-y-0.5 font-sans tabular-nums">
+          <p className="font-semibold text-foreground text-xs">{r.order.vendor_order_id}</p>
+          <p className="text-[11px] text-muted-foreground">{r.booking.booking_id}</p>
         </div>
       ),
     },
@@ -122,9 +122,9 @@ export function OrdersTable({
   const renderMobileCard = (r: VendorOrderRowData) => (
     <div className="space-y-3">
       <div className="flex items-start justify-between gap-2">
-        <div>
-          <span className="font-mono text-xs font-bold text-foreground">{r.order.vendor_order_id}</span>
-          <span className="text-[11px] text-muted-foreground ml-2 font-mono">{r.booking.booking_id}</span>
+        <div className="font-sans tabular-nums">
+          <span className="text-xs font-bold text-foreground">{r.order.vendor_order_id}</span>
+          <span className="text-[11px] text-muted-foreground ml-2">{r.booking.booking_id}</span>
         </div>
         <StatusBadge status={r.order.status} size="sm" />
       </div>

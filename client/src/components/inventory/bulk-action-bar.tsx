@@ -35,9 +35,9 @@ export function BulkActionBar({
 
   return (
     <>
-      <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-40 bg-foreground text-background dark:bg-surface dark:text-foreground px-4 sm:px-6 py-3 rounded-2xl shadow-xl border border-border flex items-center gap-3 sm:gap-4 animate-in fade-in slide-in-from-bottom-4 duration-200 max-w-[90vw]">
+      <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-40 bg-foreground text-background dark:bg-surface dark:text-foreground px-4 sm:px-6 py-2.5 rounded-full shadow-xl border border-border flex items-center gap-3 sm:gap-4 animate-in fade-in slide-in-from-bottom-4 duration-200 max-w-[92vw]">
         <div className="flex items-center gap-2 pr-3 border-r border-background/20 dark:border-border text-xs sm:text-sm font-semibold whitespace-nowrap">
-          <span>{selectedCount} item{selectedCount > 1 ? 's' : ''} selected</span>
+          <span className="tabular-nums font-sans">{selectedCount} item{selectedCount > 1 ? 's' : ''} selected</span>
           <button
             type="button"
             onClick={onClearSelection}

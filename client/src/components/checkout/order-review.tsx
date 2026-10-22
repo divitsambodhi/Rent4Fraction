@@ -20,7 +20,7 @@ export function OrderReview({
   const [collapsed, setCollapsed] = useState(false)
 
   return (
-    <div className="p-5 rounded-[16px] bg-surface border border-border space-y-4 shadow-xs">
+    <div className="p-4 sm:p-6 rounded-[16px] bg-surface border border-border space-y-4 shadow-xs">
       {/* Header */}
       <div className="flex items-center justify-between pb-3 border-b border-border/70">
         <div className="flex items-center gap-2.5">

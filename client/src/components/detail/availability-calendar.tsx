@@ -44,6 +44,16 @@ export function AvailabilityCalendar({
 }: AvailabilityCalendarProps) {
   // Desktop 2 months vs mobile 1 month
   const [month, setMonth] = useState<Date>(() => parseDateStr(from) || new Date())
+  const [slideDirection, setSlideDirection] = useState<'next' | 'prev' | null>(null)
+
+  const handleMonthChange = (newMonth: Date) => {
+    if (newMonth.getTime() > month.getTime()) {
+      setSlideDirection('next')
+    } else if (newMonth.getTime() < month.getTime()) {
+      setSlideDirection('prev')
+    }
+    setMonth(newMonth)
+  }
 
   // Controlled date range
   const selectedRange: DateRange | undefined = useMemo(() => {
@@ -162,32 +172,41 @@ export function AvailabilityCalendar({
             <span>Limited stock</span>
           </div>
           <div className="flex items-center gap-1.5">
-            <span className="size-2 rounded-full bg-muted-foreground/40 line-through" />
+            <span className="size-2.5 rounded-[3px] border border-border calendar-legend-booked" />
             <span>Fully booked</span>
           </div>
         </div>
       </div>
 
       {/* Calendar Grid Container */}
-      <div className="p-2 sm:p-4 rounded-[12px] border border-border/80 bg-muted/20 flex flex-col items-center">
-        <Calendar
-          mode="range"
-          selected={selectedRange}
-          onSelect={handleSelectRange}
-          month={month}
-          onMonthChange={setMonth}
-          numberOfMonths={2}
-          disabled={disabledDays}
-          modifiers={{
-            limited: limitedDays,
-            booked: fullyBookedDays,
-          }}
-          modifiersClassNames={{
-            limited: 'relative font-bold after:content-[""] after:absolute after:bottom-1 after:left-1/2 after:-translate-x-1/2 after:size-1 after:rounded-full after:bg-amber-500',
-            booked: 'line-through text-muted-foreground/30 opacity-40 cursor-not-allowed',
-          }}
-          className="w-full flex justify-center [&_.rdp-day]:h-10 [&_.rdp-day]:w-10 sm:[&_.rdp-day]:h-11 sm:[&_.rdp-day]:w-11"
-        />
+      <div className="p-2 sm:p-4 rounded-[12px] border border-border/80 bg-muted/20 flex flex-col items-center overflow-hidden">
+        <div
+          key={month.toISOString().slice(0, 7)}
+          className={cn(
+            'w-full flex justify-center',
+            slideDirection === 'next' && 'calendar-month-slide-next',
+            slideDirection === 'prev' && 'calendar-month-slide-prev',
+          )}
+        >
+          <Calendar
+            mode="range"
+            selected={selectedRange}
+            onSelect={handleSelectRange}
+            month={month}
+            onMonthChange={handleMonthChange}
+            numberOfMonths={2}
+            disabled={disabledDays}
+            modifiers={{
+              limited: limitedDays,
+              booked: fullyBookedDays,
+            }}
+            modifiersClassNames={{
+              limited: 'relative font-bold after:content-[""] after:absolute after:bottom-1 after:left-1/2 after:-translate-x-1/2 after:size-1 after:rounded-full after:bg-amber-500',
+              booked: 'calendar-day-booked',
+            }}
+            className="w-full flex justify-center [&_.rdp-day]:h-10 [&_.rdp-day]:w-10 sm:[&_.rdp-day]:h-11 sm:[&_.rdp-day]:w-11"
+          />
+        </div>
       </div>
 
       {/* Live status line */}

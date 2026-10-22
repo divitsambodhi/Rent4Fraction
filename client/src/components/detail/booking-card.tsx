@@ -135,7 +135,7 @@ export function BookingCard({
   return (
     <aside
       className={cn(
-        'w-full max-w-[380px] rounded-[16px] border border-border bg-surface p-5 sm:p-6 shadow-none space-y-5 text-foreground max-h-[calc(100dvh-100px)] overflow-y-auto scrollbar-none',
+        'w-full max-w-[380px] rounded-[16px] border border-border bg-surface p-4 sm:p-6 shadow-none space-y-4 sm:space-y-6 text-foreground max-h-[calc(100dvh-100px)] overflow-y-auto scrollbar-none',
         className,
       )}
       aria-label="Booking and reservation card"
@@ -144,7 +144,7 @@ export function BookingCard({
       <div className="flex items-baseline justify-between gap-2 border-b border-border/80 pb-4">
         <div>
           <div className="flex items-baseline gap-1">
-            <span className="font-serif text-2xl sm:text-3xl font-bold text-foreground">
+            <span className="font-sans text-2xl sm:text-3xl font-bold text-foreground tabular-nums">
               <PriceText amount={equipment.price_per_day} />
             </span>
             <span className="text-xs sm:text-sm font-normal text-muted-foreground">
@@ -343,7 +343,7 @@ export function BookingCard({
       <ul className="pt-3 border-t border-border/80 space-y-2 text-xs text-muted-foreground">
         <li className="flex items-center gap-2">
           <ShieldCheck className="size-4 text-brand shrink-0" />
-          <span>Refundable security deposit</span>
+          <span>Refundable security deposit, returned after inspection. Damage charges may apply.</span>
         </li>
         <li className="flex items-center gap-2">
           <ShieldCheck className="size-4 text-brand shrink-0" />

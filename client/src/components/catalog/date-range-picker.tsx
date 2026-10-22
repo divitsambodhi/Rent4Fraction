@@ -66,6 +66,7 @@ export function DateRangePicker({
 
   // Track draft selection on desktop before both start & end dates are chosen
   const [desktopDraft, setDesktopDraft] = useState<DateRange | undefined>(undefined)
+  const [hoveredDate, setHoveredDate] = useState<Date | undefined>(undefined)
 
   // Track draft selection on mobile before clicking "Apply"
   const [mobileDraft, setMobileDraft] = useState<DateRange | undefined>(undefined)
@@ -301,6 +302,22 @@ export function DateRangePicker({
             onSelect={handleSelectDesktop}
             numberOfMonths={1}
             disabled={(date) => isBefore(date, today)}
+            modifiers={{
+              hover_range: (date) => {
+                if (!desktopDraft?.from || desktopDraft?.to || !hoveredDate) return false
+                return date > desktopDraft.from && date < hoveredDate
+              },
+              hover_end: (date) => {
+                if (!desktopDraft?.from || desktopDraft?.to || !hoveredDate) return false
+                return date.toDateString() === hoveredDate.toDateString() && date > desktopDraft.from
+              },
+            }}
+            modifiersClassNames={{
+              hover_range: 'bg-brand/10 text-brand rounded-none',
+              hover_end: 'bg-brand/20 text-brand rounded-r-[8px]',
+            }}
+            onDayMouseEnter={(date) => setHoveredDate(date)}
+            onDayMouseLeave={() => setHoveredDate(undefined)}
           />
           {desktopDraft?.from && (
             <div className="p-2.5 border-t border-border flex items-center justify-between gap-2 bg-muted/20">

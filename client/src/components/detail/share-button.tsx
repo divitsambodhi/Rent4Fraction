@@ -24,13 +24,13 @@ export function ShareButton({
       if (typeof window !== 'undefined' && navigator.clipboard) {
         await navigator.clipboard.writeText(window.location.href)
         setCopied(true)
-        toast.success('Link copied to clipboard', {
+        toast.success('Link copied', {
           description: `Share ${title} with your event team.`,
         })
         setTimeout(() => setCopied(false), 2000)
       }
     } catch {
-      toast.error('Could not copy link to clipboard')
+      toast.error('Could not copy link')
     }
   }
 
@@ -42,7 +42,7 @@ export function ShareButton({
       onClick={handleShare}
       aria-label="Share this equipment"
       className={cn(
-        'size-10 rounded-full bg-surface/90 backdrop-blur-xs border border-border/80 shadow-xs hover:bg-surface hover:border-brand/40 transition-colors',
+        'size-10 rounded-full bg-surface border border-border/80 shadow-xs hover:bg-muted hover:border-brand/40 transition-colors',
         className,
       )}
     >

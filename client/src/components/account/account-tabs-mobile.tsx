@@ -81,10 +81,10 @@ export function AccountTabsMobile({ activeTab, badges }: AccountTabsMobileProps)
               aria-selected={isActive}
               onClick={() => handleTabClick(tab.key)}
               className={cn(
-                'snap-start shrink-0 inline-flex items-center gap-1.5 min-h-[44px] h-11 px-4 rounded-full text-xs font-semibold transition-colors cursor-pointer select-none',
+                'snap-start shrink-0 inline-flex items-center gap-1.5 min-h-[44px] h-11 px-3 border-b-2 text-xs font-medium transition-colors cursor-pointer select-none whitespace-nowrap',
                 isActive
-                  ? 'bg-brand text-white shadow-xs'
-                  : 'bg-muted/50 text-muted-foreground hover:bg-muted hover:text-foreground'
+                  ? 'border-brand text-brand font-semibold'
+                  : 'border-transparent text-muted-foreground hover:text-foreground hover:border-border'
               )}
             >
               <Icon name={tab.iconName} size={15} />

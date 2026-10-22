@@ -50,6 +50,7 @@ export const AppLink = React.forwardRef<HTMLAnchorElement, AppLinkProps>(
         <NavLink
           ref={ref}
           to={to}
+          viewTransition
           className={({ isActive }) =>
             `${className || ''} ${isActive ? activeClassName : ''}`.trim()
           }
@@ -61,7 +62,7 @@ export const AppLink = React.forwardRef<HTMLAnchorElement, AppLinkProps>(
     }
 
     return (
-      <Link ref={ref} to={to} className={className} {...props}>
+      <Link ref={ref} to={to} viewTransition className={className} {...props}>
         {children}
       </Link>
     )
@@ -71,7 +72,7 @@ export const AppLink = React.forwardRef<HTMLAnchorElement, AppLinkProps>(
 AppLink.displayName = 'AppLink'
 
 /**
- * Custom hook returning navigation function.
+ * Custom hook returning navigation function with View Transitions support.
  */
 export function useAppNavigate() {
   const navigate = useNavigate()
@@ -79,7 +80,7 @@ export function useAppNavigate() {
     if (typeof to === 'number') {
       navigate(to)
     } else {
-      navigate(to, options)
+      navigate(to, { viewTransition: true, ...options })
     }
   }
 }

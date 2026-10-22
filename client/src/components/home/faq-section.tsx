@@ -20,7 +20,7 @@ export function FAQSection() {
     <section className="py-12 md:py-16 border-t border-border">
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
         <div className="lg:col-span-5">
-          <h2 className="text-headline-md font-semibold text-foreground">
+          <h2 className="font-serif text-2xl md:text-3xl font-semibold tracking-[-0.02em] text-foreground">
             Frequently asked questions
           </h2>
           <p className="text-body-sm text-text-secondary mt-2">

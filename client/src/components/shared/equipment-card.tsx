@@ -35,7 +35,7 @@ export function EquipmentCard({
   return (
     <article
       className={cn(
-        'group relative flex flex-col h-full rounded-md border border-border bg-surface overflow-hidden transition-colors duration-150',
+        'group relative flex flex-col h-full rounded-md border border-border bg-surface overflow-hidden transition-colors duration-200 hover:border-brand',
         isUnavailable && 'opacity-70',
         className,
       )}

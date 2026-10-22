@@ -36,7 +36,7 @@ export function HowItWorks() {
   return (
     <section id="how-it-works" className="py-12 md:py-16 border-t border-border">
       <div className="mb-8">
-        <h2 className="text-headline-md font-semibold text-foreground">
+        <h2 className="font-serif text-2xl md:text-3xl font-semibold tracking-[-0.02em] text-foreground">
           How booking works
         </h2>
         <p className="text-body-sm text-text-secondary mt-1">

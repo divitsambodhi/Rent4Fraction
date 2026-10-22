@@ -58,6 +58,7 @@ export function NextStepPanel({
   const [showInspectionDialog, setShowInspectionDialog] = useState(false)
   const [showCompleteConfirm, setShowCompleteConfirm] = useState(false)
   const [isBusy, setIsBusy] = useState(false)
+  const [successAction, setSuccessAction] = useState<string | null>(null)
 
   const isPickup = order.fulfilment_type === 'pickup'
   const orderItems = items.filter((it) => order.item_ids.includes(it.item_id))
@@ -75,13 +76,22 @@ export function NextStepPanel({
     setIsBusy(true)
     try {
       await onAction(action, payload)
+      setSuccessAction(action)
+      setTimeout(() => setSuccessAction(null), 2500)
     } finally {
       setIsBusy(false)
     }
   }
 
   return (
-    <div className={cn('p-5 rounded-2xl border border-border bg-card shadow-xs space-y-4', className)}>
+    <div className={cn('p-4 sm:p-6 rounded-[16px] border border-border bg-card shadow-xs space-y-4', className)}>
+      {successAction && (
+        <div className="p-3 rounded-[12px] bg-success/15 border border-success/30 text-success flex items-center gap-2 text-xs font-semibold animate-in fade-in zoom-in-95 duration-200">
+          <CheckCircle2 className="size-4 shrink-0 text-success" />
+          <span>Milestone updated successfully</span>
+        </div>
+      )}
+
       <div className="flex items-center justify-between">
         <span className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground">
           Next Fulfilment Action

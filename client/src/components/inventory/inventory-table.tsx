@@ -23,6 +23,7 @@ import {
 } from '@/components/ui/dropdown-menu'
 import { AppLink } from '@/components/shared/app-link'
 import { ProductImage } from '@/components/shared/product-image'
+import { Switch } from '@/components/ui/switch'
 import { StatusBadge } from '@/components/shared/status-badge'
 import { ConfirmDialog } from '@/components/account/confirm-dialog'
 import { resolveCommission } from '@/lib/pricing'
@@ -239,7 +240,15 @@ export function InventoryTable({
                         </td>
 
                         <td className="px-3 py-2 whitespace-nowrap">
-                          {getStatusBadge(item.status)}
+                          <div className="flex items-center gap-2">
+                            <Switch
+                              checked={item.status === 'active'}
+                              onCheckedChange={() => onToggleStatus(item.id, item.status)}
+                              aria-label={`Toggle availability for ${item.name}`}
+                              title={item.status === 'active' ? 'Click to deactivate' : 'Click to activate'}
+                            />
+                            {getStatusBadge(item.status)}
+                          </div>
                         </td>
 
                         <td className="px-3 py-2 text-muted-foreground whitespace-nowrap text-xs">

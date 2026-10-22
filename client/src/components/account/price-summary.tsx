@@ -58,7 +58,7 @@ export function PriceSummary({ summary, className }: PriceSummaryProps) {
         <div className="flex items-center gap-1">
           <span>Security deposit</span>
           <span className="text-[10px] text-muted-foreground/80 font-normal">
-            (100% refundable)
+            (refundable after inspection)
           </span>
         </div>
         <span className="font-semibold text-foreground tabular-nums">

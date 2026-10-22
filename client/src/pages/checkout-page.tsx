@@ -19,6 +19,7 @@ import type {
   Coupon,
 } from '@/types/checkout'
 import type { Address } from '@/types/account'
+import { cn } from '@/lib/utils'
 
 const STEPS: StepItem[] = [
   { id: 'cart', title: 'Cart', label: 'Cart' },
@@ -43,6 +44,23 @@ export function CheckoutPage() {
   const bookingParam = searchParams.get('booking')
   const resultParam = (searchParams.get('result') as 'success' | 'failed') || 'success'
   const simulateParam = searchParams.get('simulate') || undefined
+
+  // P-024: Directional step slide transition state
+  const stepOrder = useMemo<Record<CheckoutStep, number>>(
+    () => ({ cart: 0, details: 1, payment: 2, result: 3 }),
+    [],
+  )
+  const prevStepRef = useRef<CheckoutStep>(currentStep)
+  const [slideDirection, setSlideDirection] = useState<'forward' | 'backward' | null>(null)
+
+  useEffect(() => {
+    if (prevStepRef.current !== currentStep) {
+      const prevIdx = stepOrder[prevStepRef.current] ?? 0
+      const currIdx = stepOrder[currentStep] ?? 0
+      setSlideDirection(currIdx >= prevIdx ? 'forward' : 'backward')
+      prevStepRef.current = currentStep
+    }
+  }, [currentStep, stepOrder])
 
   // Cart store
   const {
@@ -315,57 +333,66 @@ export function CheckoutPage() {
                 : 'col-span-12 lg:col-span-8 space-y-6'
             }
           >
-            {currentStep === 'cart' && (
-              <CartStep
-                periods={groupedPeriods}
-                selectedPeriodKey={selectedPeriod?.period_key || ''}
-                availabilityMap={availabilityMap}
-                appliedCoupon={appliedCoupon}
-                subtotal={quote.subtotal}
-                hasAvailabilityIssues={hasAvailabilityIssues}
-                onSelectPeriod={setPeriodKey}
-                onApplyDatesToAll={(pk) => applyPeriodToAll(pk)}
-                onUpdateQuantity={updateQuantity}
-                onUpdateDates={updateLineDates}
-                onRemoveLine={handleRemoveLine}
-                onSaveForLater={moveToWishlist}
-                onApplyCoupon={(c) => setAppliedCoupon(c)}
-                onRemoveCoupon={() => setAppliedCoupon(undefined)}
-                onLoadDemoItems={loadDemoItems}
-                onContinue={() => setStep('details')}
-              />
-            )}
+            <div
+              key={currentStep}
+              className={cn(
+                'w-full space-y-6',
+                slideDirection === 'forward' && 'checkout-slide-forward',
+                slideDirection === 'backward' && 'checkout-slide-backward',
+              )}
+            >
+              {currentStep === 'cart' && (
+                <CartStep
+                  periods={groupedPeriods}
+                  selectedPeriodKey={selectedPeriod?.period_key || ''}
+                  availabilityMap={availabilityMap}
+                  appliedCoupon={appliedCoupon}
+                  subtotal={quote.subtotal}
+                  hasAvailabilityIssues={hasAvailabilityIssues}
+                  onSelectPeriod={setPeriodKey}
+                  onApplyDatesToAll={(pk) => applyPeriodToAll(pk)}
+                  onUpdateQuantity={updateQuantity}
+                  onUpdateDates={updateLineDates}
+                  onRemoveLine={handleRemoveLine}
+                  onSaveForLater={moveToWishlist}
+                  onApplyCoupon={(c) => setAppliedCoupon(c)}
+                  onRemoveCoupon={() => setAppliedCoupon(undefined)}
+                  onLoadDemoItems={loadDemoItems}
+                  onContinue={() => setStep('details')}
+                />
+              )}
 
-            {currentStep === 'details' && selectedPeriod && (
-              <DetailsStep
-                period={selectedPeriod}
-                draft={draft}
-                onUpdateDraft={(patch) => setDraft((p) => ({ ...p, ...patch }))}
-                onBack={() => setStep('cart')}
-                onContinue={() => setStep('payment')}
-              />
-            )}
+              {currentStep === 'details' && selectedPeriod && (
+                <DetailsStep
+                  period={selectedPeriod}
+                  draft={draft}
+                  onUpdateDraft={(patch) => setDraft((p) => ({ ...p, ...patch }))}
+                  onBack={() => setStep('cart')}
+                  onContinue={() => setStep('payment')}
+                />
+              )}
 
-            {currentStep === 'payment' && selectedPeriod && (
-              <PaymentStep
-                period={selectedPeriod}
-                draft={draft}
-                quote={quote}
-                address={selectedAddress}
-                onUpdateDraft={(patch) => setDraft((p) => ({ ...p, ...patch }))}
-                onBack={() => setStep('details')}
-                onEditStep={(s) => setStep(s)}
-                onCompletePayment={handleCompleteOrder}
-              />
-            )}
+              {currentStep === 'payment' && selectedPeriod && (
+                <PaymentStep
+                  period={selectedPeriod}
+                  draft={draft}
+                  quote={quote}
+                  address={selectedAddress}
+                  onUpdateDraft={(patch) => setDraft((p) => ({ ...p, ...patch }))}
+                  onBack={() => setStep('details')}
+                  onEditStep={(s) => setStep(s)}
+                  onCompletePayment={handleCompleteOrder}
+                />
+              )}
 
-            {currentStep === 'result' && (
-              <ResultStep
-                bookingId={bookingParam || undefined}
-                resultStatus={resultParam}
-                onRetryPayment={() => setStep('payment')}
-              />
-            )}
+              {currentStep === 'result' && (
+                <ResultStep
+                  bookingId={bookingParam || undefined}
+                  resultStatus={resultParam}
+                  onRetryPayment={() => setStep('payment')}
+                />
+              )}
+            </div>
           </main>
 
           {/* Sticky Order Summary Column (4 cols on desktop, hidden on result) */}

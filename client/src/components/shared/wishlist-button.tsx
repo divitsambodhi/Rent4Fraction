@@ -35,7 +35,7 @@ export function WishlistButton({
     }
 
     setAnimating(true)
-    setTimeout(() => setAnimating(false), 150)
+    setTimeout(() => setAnimating(false), 200)
 
     const willRemove = isSaved
     toggleWishlist(equipmentId)
@@ -69,9 +69,9 @@ export function WishlistButton({
     >
       <div
         className={cn(
-          'size-9 rounded-full bg-surface border border-border flex items-center justify-center shadow-xs transition-transform duration-100 active:scale-95',
+          'size-9 rounded-full bg-surface border border-border flex items-center justify-center shadow-xs transition-transform duration-200 active:scale-95',
           '[@media(hover:hover)]:group-hover:bg-muted/70',
-          animating && 'scale-[1.12] duration-150',
+          animating && 'scale-[1.2] transition-transform ease-out',
         )}
       >
         <Icon

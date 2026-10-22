@@ -27,7 +27,7 @@ export function FulfilmentCard({
   return (
     <div
       className={cn(
-        'p-5 rounded-[16px] bg-surface border border-border space-y-4 shadow-xs',
+        'p-4 sm:p-6 rounded-[16px] bg-surface border border-border space-y-4 shadow-xs',
         className,
       )}
     >
