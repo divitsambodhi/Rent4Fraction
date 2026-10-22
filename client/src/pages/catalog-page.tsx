@@ -1,21 +1,19 @@
 import { useEffect, useState, useRef, useCallback } from 'react'
 import { Icon } from '@/components/ui/icon'
-import { AppLink } from '@/components/shared/app-link'
 import { PageContainer } from '@/components/shared/page-container'
 import { EquipmentCard } from '@/components/shared/equipment-card'
 import { EquipmentCardSkeleton } from '@/components/shared/loading-skeleton'
 import { ErrorState } from '@/components/shared/error-state'
 import { Button } from '@/components/ui/button'
 
-import { CatalogSearchBar } from '@/components/catalog/catalog-search-bar'
 import { FilterPanel } from '@/components/catalog/filter-panel'
 import { FilterSheet } from '@/components/catalog/filter-sheet'
 import { ResultsHeader } from '@/components/catalog/results-header'
 import { ActiveFilterChips } from '@/components/catalog/active-filter-chips'
-import { CategoryBanner } from '@/components/catalog/category-banner'
 import { VendorHeader } from '@/components/catalog/vendor-header'
 import { CatalogPagination } from '@/components/catalog/catalog-pagination'
 import { EmptyResults } from '@/components/catalog/empty-results'
+import { EventDatesButton } from '@/components/shared/event-dates-button'
 
 import { useCatalogParams } from '@/hooks/use-catalog-params'
 import { usePageTitle } from '@/hooks/use-page-title'
@@ -131,122 +129,46 @@ export function CatalogPage() {
 
   return (
     <PageContainer size="wide" className="py-6 sm:py-10">
-      {/* Breadcrumb Navigation */}
-      <nav
-        aria-label="Breadcrumbs"
-        className="flex items-center gap-1.5 text-xs text-muted-foreground mb-6 overflow-x-auto whitespace-nowrap scrollbar-none"
-      >
-        <AppLink to="/" className="hover:text-brand transition-colors">
-          Home
-        </AppLink>
-        <Icon name="chevron-right" size={14} className="text-muted-foreground/60 shrink-0" />
-        <AppLink
-          to="/equipment"
-          className={
-            !activeCategory && !activeGroup && !activeVendor
-              ? 'text-foreground font-semibold'
-              : 'hover:text-brand transition-colors'
-          }
-        >
-          Equipment
-        </AppLink>
-
-        {(activeCategory || activeGroup) && (
-          <>
-            <Icon name="chevron-right" size={14} className="text-muted-foreground/60 shrink-0" />
-            <span className="text-foreground font-semibold">
-              {activeCategory?.name || activeGroup?.name}
-            </span>
-          </>
-        )}
-
-        {activeVendor && (
-          <>
-            <Icon name="chevron-right" size={14} className="text-muted-foreground/60 shrink-0" />
-            <span className="text-foreground font-semibold">
-              {activeVendor.name}
-            </span>
-          </>
-        )}
-      </nav>
-
-      {/* Mode Header 1: Default Hero Header (When no specific category/vendor selected) */}
-      {!params.category && !params.vendor && (
-        <div className="mb-6 max-w-3xl">
-          <h1 className="text-headline-md font-semibold text-foreground">
-            Event equipment catalog
-          </h1>
-          <p className="text-body-sm text-text-secondary mt-1">
-            Sound systems, lighting fixtures, staging, and seating available for rent from local equipment owners.
-          </p>
-        </div>
-      )}
-
-      {/* Mode Header 2: Category Banner Mode */}
-      {activeCategory && (
-        <CategoryBanner
-          category={activeCategory}
-          tree={categoryTree}
-          onSelectCategory={(catId) => setParams({ category: catId })}
-        />
-      )}
-
-      {/* Mode Header 2b: Category Group Banner (e.g. Sound, Lighting) */}
-      {activeGroup && (
-        <div className="rounded-md border border-border bg-surface p-6 mb-6">
-          <h1 className="text-headline-md font-semibold text-foreground">
-            {activeGroup.name} equipment
-          </h1>
-          <p className="text-body-sm text-text-secondary mt-1 max-w-2xl">
-            Browse all items under {activeGroup.name}. Select a category in the filter panel to narrow down specific equipment.
-          </p>
-        </div>
-      )}
-
       {/* Mode Header 3: Vendor Storefront Mode */}
       {activeVendor && <VendorHeader vendor={activeVendor} />}
 
-      {/* In-page Not Found Block for Unknown Category or Vendor */}
-      {(isUnknownCategory || isUnknownVendor) && (
-        <div className="rounded-md border border-border bg-surface p-5 mb-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-          <div className="flex items-start gap-3">
-            <Icon name="help" size={20} className="text-warning shrink-0 mt-0.5" />
-            <div>
-              <h2 className="text-body-md font-semibold text-foreground">
-                {isUnknownCategory
-                  ? `Category "${params.category}" not found`
-                  : `Vendor "${params.vendor}" not found`}
-              </h2>
-              <p className="text-body-sm text-text-secondary mt-0.5">
-                The requested {isUnknownCategory ? 'category' : 'vendor'} could not be found. Showing all equipment instead.
-              </p>
+        {/* In-page Not Found Block for Unknown Category or Vendor */}
+        {(isUnknownCategory || isUnknownVendor) && (
+          <div className="rounded-md border border-border bg-surface p-5 mb-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+            <div className="flex items-start gap-3">
+              <Icon name="help" size={20} className="text-warning shrink-0 mt-0.5" />
+              <div>
+                <h2 className="text-body-md font-semibold text-foreground">
+                  {isUnknownCategory
+                    ? `Category "${params.category}" not found`
+                    : `Vendor "${params.vendor}" not found`}
+                </h2>
+                <p className="text-body-sm text-text-secondary mt-0.5">
+                  The requested {isUnknownCategory ? 'category' : 'vendor'} could not be found. Showing all equipment instead.
+                </p>
+              </div>
             </div>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => setParams({ category: undefined, vendor: undefined })}
+              className="text-xs font-semibold shrink-0"
+            >
+              View all equipment
+            </Button>
           </div>
-          <Button
-            type="button"
-            variant="outline"
-            onClick={() => setParams({ category: undefined, vendor: undefined })}
-            className="text-xs font-semibold shrink-0"
-          >
-            View all equipment
-          </Button>
+        )}
+
+        {/* Catalog Toolbar: Event dates button */}
+        <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
+          <div className="flex items-center gap-2">
+            <span className="text-xs font-semibold text-muted-foreground">Rental dates:</span>
+            <EventDatesButton />
+          </div>
         </div>
-      )}
 
-      {/* Main Search Bar Row */}
-      <div className="mb-8">
-        <CatalogSearchBar
-          initialQuery={params.q}
-          from={params.from}
-          to={params.to}
-          rentalDays={params.rentalDays}
-          onSearch={(q) => setParams({ q })}
-          onDateChange={({ from, to }) => setParams({ from, to })}
-        />
-      </div>
-
-      {/* Results Anchor for smooth scrolling */}
-      <div ref={resultsTopRef} />
+        {/* Results Anchor for smooth scrolling */}
+        <div ref={resultsTopRef} />
 
       {/* 2-Column Catalog Layout: Sticky 280px Sidebar + Results Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-[280px_1fr] gap-6 lg:gap-8 items-start">

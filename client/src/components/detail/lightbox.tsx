@@ -1,11 +1,11 @@
-import { useEffect } from 'react'
+import { useEffect, useState, useRef } from 'react'
 import { ArrowLeft, ArrowRight, X } from 'lucide-react'
 import * as DialogPrimitive from '@radix-ui/react-dialog'
 import { ProductImage } from '@/components/shared/product-image'
 import type { EquipmentImage } from '@/types'
 import { cn } from '@/lib/utils'
 
-interface LightboxProps {
+export interface LightboxProps {
   open: boolean
   onOpenChange: (open: boolean) => void
   images: EquipmentImage[]
@@ -26,102 +26,245 @@ export function Lightbox({
 }: LightboxProps) {
   const currentImg = images[activeIndex] || images[0]
 
+  // Zoom & Pan state (task C3)
+  const [isZoomed, setIsZoomed] = useState(false)
+  const [pan, setPan] = useState({ x: 0, y: 0 })
+  const isDragging = useRef(false)
+  const dragStart = useRef({ x: 0, y: 0 })
+  const initialPan = useRef({ x: 0, y: 0 })
+
+  // Touch swipe support on unzoomed stage
+  const touchStartX = useRef<number | null>(null)
+  const touchEndX = useRef<number | null>(null)
+
+  // Reset zoom & pan when active image changes or lightbox opens/closes
+  const resetZoom = () => {
+    setIsZoomed(false)
+    setPan({ x: 0, y: 0 })
+  }
+
+  useEffect(() => {
+    resetZoom()
+  }, [activeIndex, open])
+
+  // Keyboard navigation & Esc handling
   useEffect(() => {
     if (!open) return
 
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'ArrowLeft') {
         e.preventDefault()
+        resetZoom()
         onIndexChange((activeIndex + images.length - 1) % images.length)
       } else if (e.key === 'ArrowRight') {
         e.preventDefault()
+        resetZoom()
         onIndexChange((activeIndex + 1) % images.length)
+      } else if (e.key === 'Escape') {
+        onOpenChange(false)
       }
     }
 
     window.addEventListener('keydown', handleKeyDown)
     return () => window.removeEventListener('keydown', handleKeyDown)
-  }, [open, activeIndex, images.length, onIndexChange])
+  }, [open, activeIndex, images.length, onIndexChange, onOpenChange])
+
+  // Navigation handlers that guarantee zoom reset
+  const handleGoTo = (index: number) => {
+    resetZoom()
+    onIndexChange(index)
+  }
+
+  // Toggle 2x zoom on click/tap
+  const handleImageClick = () => {
+    // If the click was part of a drag movement, don't toggle zoom
+    if (Math.abs(pan.x - initialPan.current.x) > 5 || Math.abs(pan.y - initialPan.current.y) > 5) {
+      return
+    }
+    if (isZoomed) {
+      resetZoom()
+    } else {
+      setIsZoomed(true)
+      setPan({ x: 0, y: 0 })
+    }
+  }
+
+  // Drag to pan mouse handlers
+  const handleMouseDown = (e: React.MouseEvent) => {
+    if (!isZoomed) return
+    isDragging.current = true
+    dragStart.current = { x: e.clientX, y: e.clientY }
+    initialPan.current = { ...pan }
+  }
+
+  const handleMouseMove = (e: React.MouseEvent) => {
+    if (!isZoomed || !isDragging.current) return
+    const dx = e.clientX - dragStart.current.x
+    const dy = e.clientY - dragStart.current.y
+    setPan({
+      x: initialPan.current.x + dx,
+      y: initialPan.current.y + dy,
+    })
+  }
+
+  const handleMouseUp = () => {
+    isDragging.current = false
+  }
+
+  // Touch handlers for swipe (unzoomed) and pan (zoomed)
+  const handleTouchStart = (e: React.TouchEvent) => {
+    if (isZoomed) {
+      if (e.touches.length === 1) {
+        isDragging.current = true
+        dragStart.current = { x: e.touches[0].clientX, y: e.touches[0].clientY }
+        initialPan.current = { ...pan }
+      }
+    } else {
+      touchStartX.current = e.touches[0].clientX
+    }
+  }
+
+  const handleTouchMove = (e: React.TouchEvent) => {
+    if (isZoomed && isDragging.current && e.touches.length === 1) {
+      const dx = e.touches[0].clientX - dragStart.current.x
+      const dy = e.touches[0].clientY - dragStart.current.y
+      setPan({
+        x: initialPan.current.x + dx,
+        y: initialPan.current.y + dy,
+      })
+    } else if (!isZoomed) {
+      touchEndX.current = e.touches[0].clientX
+    }
+  }
+
+  const handleTouchEnd = () => {
+    if (isZoomed) {
+      isDragging.current = false
+    } else {
+      if (touchStartX.current !== null && touchEndX.current !== null) {
+        const diff = touchStartX.current - touchEndX.current
+        if (diff > 40) {
+          handleGoTo((activeIndex + 1) % images.length)
+        } else if (diff < -40) {
+          handleGoTo((activeIndex + images.length - 1) % images.length)
+        }
+      }
+      touchStartX.current = null
+      touchEndX.current = null
+    }
+  }
 
   return (
     <DialogPrimitive.Root open={open} onOpenChange={onOpenChange}>
       <DialogPrimitive.Portal>
-        <DialogPrimitive.Overlay className="fixed inset-0 z-50 bg-black/90 backdrop-blur-md data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0" />
+        {/* Dark neutral backdrop WITHOUT blur per task C3 */}
+        <DialogPrimitive.Overlay className="fixed inset-0 z-50 bg-neutral-950/95 transition-opacity duration-150 motion-reduce:transition-none" />
+
         <DialogPrimitive.Content
-          className="fixed inset-0 z-50 flex flex-col items-center justify-between p-4 sm:p-6 text-white focus:outline-none"
-          aria-label={`${equipmentName} lightbox gallery`}
+          className="fixed inset-0 z-50 flex flex-col items-center justify-between p-2 sm:p-4 text-white focus:outline-none select-none"
+          aria-label={`${equipmentName} image gallery`}
         >
-          {/* Top Bar */}
-          <div className="w-full max-w-6xl flex items-center justify-between z-10 py-2">
-            <div className="flex items-center gap-3">
-              <span className="font-serif text-lg font-bold text-white/90 truncate max-w-xs sm:max-w-md">
+          {/* Top Bar: Title, Counter, 44px Close button */}
+          <div className="w-full max-w-7xl flex items-center justify-between z-20 py-2 px-2 sm:px-4">
+            <div className="flex items-center gap-3 truncate mr-2">
+              <span className="font-semibold text-sm sm:text-base text-white/95 truncate">
                 {equipmentName}
               </span>
-              <span className="text-xs px-2.5 py-1 rounded-full bg-white/10 text-white/80 tabular-nums">
+              <span className="text-xs px-2.5 py-1 rounded-full bg-white/10 text-white/90 tabular-nums shrink-0">
                 {activeIndex + 1} / {images.length}
               </span>
             </div>
 
             <DialogPrimitive.Close
-              className="size-10 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white transition-colors focus:outline-none focus:ring-2 focus:ring-brand cursor-pointer"
+              className="min-w-[44px] min-h-[44px] rounded-full bg-white/10 hover:bg-white/20 active:scale-95 flex items-center justify-center text-white transition-colors focus:outline-none focus:ring-2 focus:ring-brand cursor-pointer shrink-0"
               aria-label="Close lightbox"
             >
               <X className="size-5" />
             </DialogPrimitive.Close>
           </div>
 
-          {/* Center Main Stage */}
-          <div className="relative flex-1 w-full max-w-5xl flex items-center justify-center my-2 select-none">
+          {/* Center Main Stage (at least 92vw by 80dvh on mobile, 80vw by 86dvh on desktop) */}
+          <div
+            className="relative flex-1 w-full flex items-center justify-center overflow-hidden my-1"
+            onMouseUp={handleMouseUp}
+            onMouseLeave={handleMouseUp}
+          >
+            {/* Previous Button (44px hit area) */}
             {images.length > 1 && (
               <button
                 type="button"
-                onClick={() =>
-                  onIndexChange((activeIndex + images.length - 1) % images.length)
-                }
-                className="absolute left-2 sm:left-4 z-10 size-12 rounded-full bg-black/50 hover:bg-black/80 text-white border border-white/10 flex items-center justify-center transition-transform hover:scale-105 active:scale-95 focus:outline-none focus:ring-2 focus:ring-brand cursor-pointer"
+                onClick={() => handleGoTo((activeIndex + images.length - 1) % images.length)}
+                className="absolute left-2 sm:left-6 z-20 min-w-[44px] min-h-[44px] size-11 rounded-full bg-black/60 hover:bg-black/90 active:scale-95 text-white border border-white/15 flex items-center justify-center transition-all focus:outline-none focus:ring-2 focus:ring-brand cursor-pointer"
                 aria-label="Previous image"
               >
-                <ArrowLeft className="size-5 stroke-[2]" />
+                <ArrowLeft className="size-5" />
               </button>
             )}
 
-            <div className="max-h-[70vh] max-w-full rounded-[16px] overflow-hidden shadow-2xl border border-white/10 bg-black/30 flex items-center justify-center">
-              <ProductImage
-                src={currentImg?.url || undefined}
-                alt={`${equipmentName} full photo ${activeIndex + 1}`}
-                category={category}
-                aspectRatio="4/3"
-                className="max-h-[70vh] w-auto object-contain"
-              />
+            {/* Viewport container sized per C3 specification */}
+            <div
+              className="w-[92vw] h-[80dvh] md:w-[80vw] md:h-[86dvh] rounded-md overflow-hidden bg-neutral-900 border border-white/10 flex items-center justify-center relative touch-none"
+              onMouseDown={handleMouseDown}
+              onMouseMove={handleMouseMove}
+              onTouchStart={handleTouchStart}
+              onTouchMove={handleTouchMove}
+              onTouchEnd={handleTouchEnd}
+            >
+              <div
+                onClick={handleImageClick}
+                style={{
+                  transform: isZoomed
+                    ? `scale(2) translate(${pan.x / 2}px, ${pan.y / 2}px)`
+                    : 'scale(1) translate(0px, 0px)',
+                  transition: isDragging.current ? 'none' : 'transform 150ms ease-out',
+                }}
+                className={cn(
+                  'w-full h-full flex items-center justify-center select-none',
+                  isZoomed ? 'cursor-grab active:cursor-grabbing' : 'cursor-zoom-in',
+                )}
+                title={isZoomed ? 'Click to zoom out' : 'Click to zoom 2x'}
+              >
+                <ProductImage
+                  src={currentImg?.url || undefined}
+                  alt={`${equipmentName} view ${activeIndex + 1}`}
+                  category={category}
+                  aspectRatio="4/3"
+                  className="w-full h-full object-contain max-h-full max-w-full"
+                />
+              </div>
+
+              {/* Zoom hint badge */}
+              <div className="absolute bottom-3 left-3 pointer-events-none bg-black/60 text-white/80 text-[11px] px-2 py-0.5 rounded-sm">
+                {isZoomed ? '2× Zoom (Drag to pan · Tap to reset)' : 'Tap image to zoom 2×'}
+              </div>
             </div>
 
+            {/* Next Button (44px hit area) */}
             {images.length > 1 && (
               <button
                 type="button"
-                onClick={() =>
-                  onIndexChange((activeIndex + 1) % images.length)
-                }
-                className="absolute right-2 sm:right-4 z-10 size-12 rounded-full bg-black/50 hover:bg-black/80 text-white border border-white/10 flex items-center justify-center transition-transform hover:scale-105 active:scale-95 focus:outline-none focus:ring-2 focus:ring-brand cursor-pointer"
+                onClick={() => handleGoTo((activeIndex + 1) % images.length)}
+                className="absolute right-2 sm:right-6 z-20 min-w-[44px] min-h-[44px] size-11 rounded-full bg-black/60 hover:bg-black/90 active:scale-95 text-white border border-white/15 flex items-center justify-center transition-all focus:outline-none focus:ring-2 focus:ring-brand cursor-pointer"
                 aria-label="Next image"
               >
-                <ArrowRight className="size-5 stroke-[2]" />
+                <ArrowRight className="size-5" />
               </button>
             )}
           </div>
 
-          {/* Bottom Thumbnails Row */}
+          {/* Bottom Thumbnail Strip */}
           {images.length > 1 && (
-            <div className="w-full max-w-3xl flex items-center justify-center gap-2 overflow-x-auto py-2 px-4 scrollbar-none">
+            <div className="w-full max-w-4xl flex items-center justify-center gap-2 overflow-x-auto py-2 px-4 scrollbar-none z-20">
               {images.map((img, idx) => (
                 <button
                   key={img.image_id || idx}
                   type="button"
-                  onClick={() => onIndexChange(idx)}
+                  onClick={() => handleGoTo(idx)}
                   className={cn(
-                    'size-16 sm:size-18 rounded-[10px] overflow-hidden border-2 transition-all shrink-0 cursor-pointer',
+                    'size-14 sm:size-16 rounded-[6px] overflow-hidden border-2 transition-all shrink-0 cursor-pointer',
                     activeIndex === idx
                       ? 'border-brand ring-2 ring-brand/50 scale-105'
-                      : 'border-white/20 opacity-60 hover:opacity-100 hover:border-white/50',
+                      : 'border-white/20 opacity-60 hover:opacity-100 hover:border-white/60',
                   )}
                   aria-label={`View photo ${idx + 1}`}
                   aria-current={activeIndex === idx ? 'true' : undefined}

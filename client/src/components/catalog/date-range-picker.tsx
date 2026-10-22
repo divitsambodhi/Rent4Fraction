@@ -20,6 +20,35 @@ export interface DateRangePickerProps {
   placeholder?: string
   className?: string
   align?: 'start' | 'center' | 'end'
+  compact?: boolean
+}
+
+// Clean 2-step selection: 1st click = start date (stays open), 2nd click = end date (completes range)
+export function stepRange(
+  current: DateRange | undefined,
+  clickedDate: Date,
+): { next: DateRange; isComplete: boolean } {
+  // If no start date or already a completed range: start fresh with start date
+  if (!current?.from || (current.from && current.to)) {
+    return {
+      next: { from: clickedDate, to: undefined },
+      isComplete: false,
+    }
+  }
+
+  // If clicked date is earlier than start date: shift start date
+  if (isBefore(clickedDate, current.from)) {
+    return {
+      next: { from: clickedDate, to: undefined },
+      isComplete: false,
+    }
+  }
+
+  // Clicked date is same or after start date: range complete!
+  return {
+    next: { from: current.from, to: clickedDate },
+    isComplete: true,
+  }
 }
 
 export function DateRangePicker({
@@ -29,10 +58,14 @@ export function DateRangePicker({
   placeholder = 'Event dates',
   className,
   align = 'center',
+  compact = false,
 }: DateRangePickerProps) {
   const [open, setOpen] = useState(false)
   const isDesktop = useMediaQuery('(min-width: 768px)')
   const today = startOfToday()
+
+  // Track draft selection on desktop before both start & end dates are chosen
+  const [desktopDraft, setDesktopDraft] = useState<DateRange | undefined>(undefined)
 
   // Track draft selection on mobile before clicking "Apply"
   const [mobileDraft, setMobileDraft] = useState<DateRange | undefined>(undefined)
@@ -55,6 +88,15 @@ export function DateRangePicker({
     }
   }, [from, to])
 
+  const handleOpenDesktopChange = (isOpen: boolean) => {
+    setOpen(isOpen)
+    if (isOpen) {
+      setDesktopDraft(selectedRange)
+    } else {
+      setDesktopDraft(selectedRange)
+    }
+  }
+
   // Sync draft when opened
   const handleOpenMobile = () => {
     setMobileDraft(selectedRange)
@@ -67,21 +109,25 @@ export function DateRangePicker({
       return `From ${format(selectedRange.from, 'd MMM yyyy')}`
     }
 
+    const fromFormatted = format(selectedRange.from, 'd MMM')
+    const toFormatted = format(selectedRange.to, 'd MMM')
+
+    if (compact) {
+      return `${fromFormatted} to ${toFormatted}`
+    }
+
     const days =
       Math.round(
         (selectedRange.to.getTime() - selectedRange.from.getTime()) / 86400000,
       ) + 1
 
-    const fromFormatted = format(selectedRange.from, 'd MMM')
-    const toFormatted = format(selectedRange.to, 'd MMM')
-
     return `${fromFormatted} to ${toFormatted} · ${days} ${days === 1 ? 'day' : 'days'}`
-  }, [selectedRange, placeholder])
+  }, [selectedRange, placeholder, compact])
 
   const mobileSummaryText = useMemo(() => {
     const range = mobileDraft || selectedRange
     if (!range?.from) return 'Choose start and end dates'
-    if (!range.to) return `From ${format(range.from, 'd MMM yyyy')}`
+    if (!range.to) return `From ${format(range.from, 'd MMM yyyy')} · Select end date`
 
     const days =
       Math.round((range.to.getTime() - range.from.getTime()) / 86400000) + 1
@@ -91,26 +137,66 @@ export function DateRangePicker({
     return `${fromFormatted} to ${toFormatted} · ${days} ${days === 1 ? 'day' : 'days'}`
   }, [mobileDraft, selectedRange])
 
-  const handleSelectDesktop = (range: DateRange | undefined) => {
-    if (!range?.from) {
+  const handleSelectDesktop = (
+    _range: DateRange | undefined,
+    triggerDate?: Date,
+  ) => {
+    const clickedDate =
+      triggerDate ??
+      (!desktopDraft?.from
+        ? _range?.from
+        : (_range?.to ?? _range?.from))
+
+    if (!clickedDate) {
+      setDesktopDraft(undefined)
       onChange({ from: undefined, to: undefined })
       return
     }
 
-    const fromStr = format(range.from, 'yyyy-MM-dd')
-    const toStr = range.to ? format(range.to, 'yyyy-MM-dd') : undefined
+    const { next, isComplete } = stepRange(desktopDraft, clickedDate)
+    setDesktopDraft(next)
 
-    onChange({ from: fromStr, to: toStr })
-
-    if (range.from && range.to) {
+    // Only close and commit when BOTH start and end date are selected
+    if (isComplete && next.from && next.to) {
+      const fromStr = format(next.from, 'yyyy-MM-dd')
+      const toStr = format(next.to, 'yyyy-MM-dd')
+      onChange({ from: fromStr, to: toStr })
       setOpen(false)
     }
+  }
+
+  const handleSelectMobile = (
+    _range: DateRange | undefined,
+    triggerDate?: Date,
+  ) => {
+    const clickedDate =
+      triggerDate ??
+      (!mobileDraft?.from
+        ? _range?.from
+        : (_range?.to ?? _range?.from))
+
+    if (!clickedDate) {
+      setMobileDraft(undefined)
+      return
+    }
+
+    const { next } = stepRange(mobileDraft, clickedDate)
+    setMobileDraft(next)
+  }
+
+  const handleApplyDesktop = () => {
+    if (desktopDraft?.from) {
+      const fromStr = format(desktopDraft.from, 'yyyy-MM-dd')
+      const toStr = desktopDraft.to ? format(desktopDraft.to, 'yyyy-MM-dd') : fromStr
+      onChange({ from: fromStr, to: toStr })
+    }
+    setOpen(false)
   }
 
   const handleApplyMobile = () => {
     if (mobileDraft?.from) {
       const fromStr = format(mobileDraft.from, 'yyyy-MM-dd')
-      const toStr = mobileDraft.to ? format(mobileDraft.to, 'yyyy-MM-dd') : undefined
+      const toStr = mobileDraft.to ? format(mobileDraft.to, 'yyyy-MM-dd') : fromStr
       onChange({ from: fromStr, to: toStr })
     } else {
       onChange({ from: undefined, to: undefined })
@@ -118,10 +204,11 @@ export function DateRangePicker({
     setOpen(false)
   }
 
-  const handleClear = (e: React.MouseEvent) => {
-    e.stopPropagation()
+  const handleClear = (e?: React.MouseEvent) => {
+    e?.stopPropagation()
     onChange({ from: undefined, to: undefined })
     setMobileDraft(undefined)
+    setDesktopDraft(undefined)
   }
 
   // Trigger button shared across desktop and mobile
@@ -164,18 +251,40 @@ export function DateRangePicker({
   // Desktop Popover
   if (isDesktop) {
     return (
-      <Popover open={open} onOpenChange={setOpen}>
+      <Popover open={open} onOpenChange={handleOpenDesktopChange}>
         <PopoverTrigger asChild>{TriggerButton}</PopoverTrigger>
         <PopoverContent
           align={align}
+          onFocusOutside={(e) => e.preventDefault()}
+          onPointerDownOutside={(e) => {
+            // Only close if the interaction genuinely occurred outside our popover
+            const target = e.target as HTMLElement | null
+            if (!target || !target.isConnected || target.closest('[data-radix-popover-content]') || target.closest('.rdp')) {
+              e.preventDefault()
+            }
+          }}
+          onInteractOutside={(e) => {
+            const target = e.target as HTMLElement | null
+            if (!target || !target.isConnected || target.closest('[data-radix-popover-content]') || target.closest('.rdp')) {
+              e.preventDefault()
+            }
+          }}
           className="w-auto p-0 bg-surface border-border shadow-xl rounded-[16px] z-dialog"
         >
           <div className="p-3 border-b border-border text-xs font-semibold text-foreground flex items-center justify-between">
-            <span>Event Rental Duration</span>
-            {from && (
+            <div>
+              <span>Event Rental Duration</span>
+              <p className="text-[11px] font-normal text-muted-foreground">
+                {desktopDraft?.from && !desktopDraft?.to
+                  ? 'Select end date to complete range'
+                  : 'Select start date and end date'}
+              </p>
+            </div>
+            {(from || desktopDraft?.from) && (
               <button
                 type="button"
                 onClick={() => {
+                  setDesktopDraft(undefined)
                   onChange({ from: undefined, to: undefined })
                 }}
                 className="text-xs text-brand hover:underline font-medium cursor-pointer"
@@ -187,12 +296,29 @@ export function DateRangePicker({
           <Calendar
             initialFocus
             mode="range"
-            defaultMonth={selectedRange?.from || today}
-            selected={selectedRange}
+            defaultMonth={desktopDraft?.from || selectedRange?.from || today}
+            selected={desktopDraft}
             onSelect={handleSelectDesktop}
             numberOfMonths={1}
             disabled={(date) => isBefore(date, today)}
           />
+          {desktopDraft?.from && (
+            <div className="p-2.5 border-t border-border flex items-center justify-between gap-2 bg-muted/20">
+              <span className="text-xs text-muted-foreground font-medium truncate">
+                {desktopDraft.to
+                  ? `${format(desktopDraft.from, 'd MMM')} to ${format(desktopDraft.to, 'd MMM')}`
+                  : `Start: ${format(desktopDraft.from, 'd MMM')} · Select end date`}
+              </span>
+              <Button
+                type="button"
+                size="sm"
+                onClick={handleApplyDesktop}
+                className="h-7 px-3 text-xs font-semibold bg-brand text-white hover:bg-brand-hover cursor-pointer"
+              >
+                Apply
+              </Button>
+            </div>
+          )}
         </PopoverContent>
       </Popover>
     )
@@ -231,7 +357,7 @@ export function DateRangePicker({
               mode="range"
               defaultMonth={today}
               selected={mobileDraft}
-              onSelect={setMobileDraft}
+              onSelect={handleSelectMobile}
               numberOfMonths={3}
               disabled={(date) => isBefore(date, today)}
               className="w-full max-w-sm"

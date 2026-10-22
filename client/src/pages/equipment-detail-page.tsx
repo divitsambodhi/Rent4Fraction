@@ -56,6 +56,7 @@ export function EquipmentDetailPage() {
   const [messageDialogOpen, setMessageDialogOpen] = useState(false)
 
   // URL State values
+  const isPreview = searchParams.get('preview') === '1'
   const urlFrom = searchParams.get('from') || undefined
   const urlTo = searchParams.get('to') || undefined
   const urlQty = parseInt(searchParams.get('qty') || '1', 10)
@@ -250,6 +251,7 @@ export function EquipmentDetailPage() {
             equipmentName={equipment.name}
             images={equipment.images}
             category={equipment.category_id}
+            readOnly={isPreview}
           />
 
           {/* 2. Equipment Header Title Block */}
@@ -303,7 +305,8 @@ export function EquipmentDetailPage() {
           {/* 8. Section: Vendor Profile (#vendor) */}
           <VendorInfoCard
             vendor={equipment.vendor}
-            onOpenMessage={() => setMessageDialogOpen(true)}
+            onOpenMessage={isPreview ? undefined : () => setMessageDialogOpen(true)}
+            preview={isPreview}
           />
 
           {/* 9. Recommendations: "You might also like" + "More from this vendor" */}
@@ -316,50 +319,65 @@ export function EquipmentDetailPage() {
 
         {/* Right Sticky Column (>=1024px Desktop: Top Offset 88px, width ~380px) */}
         <div className="hidden lg:block lg:col-span-4 sticky top-[88px] z-20">
-          <BookingCard
-            equipment={equipment}
-            from={urlFrom}
-            to={urlTo}
-            quantity={quantity}
-            availableQuantity={availability?.available_quantity}
-            onDatesChange={handleDatesChange}
-            onQuantityChange={handleQuantityChange}
-            onOpenMessageVendor={() => setMessageDialogOpen(true)}
-          />
+          {isPreview ? (
+            <div className="rounded-[16px] border border-border bg-surface p-6 space-y-3">
+              <h3 className="text-sm font-semibold text-foreground">Listing preview</h3>
+              <p className="text-xs text-muted-foreground leading-relaxed">
+                This is a read-only preview of the customer view. Booking, cart, messaging, and wishlist actions are disabled.
+              </p>
+            </div>
+          ) : (
+            <BookingCard
+              equipment={equipment}
+              from={urlFrom}
+              to={urlTo}
+              quantity={quantity}
+              availableQuantity={availability?.available_quantity}
+              onDatesChange={handleDatesChange}
+              onQuantityChange={handleQuantityChange}
+              onOpenMessageVendor={() => setMessageDialogOpen(true)}
+            />
+          )}
         </div>
       </div>
 
       {/* Mobile Sticky Booking Bar (<1024px) */}
-      <MobileBookingBar
-        equipment={equipment}
-        from={urlFrom}
-        to={urlTo}
-        onOpenSheet={() => setMobileSheetOpen(true)}
-      />
+      {!isPreview && (
+        <MobileBookingBar
+          equipment={equipment}
+          from={urlFrom}
+          to={urlTo}
+          onOpenSheet={() => setMobileSheetOpen(true)}
+        />
+      )}
 
       {/* Mobile Booking Sheet Bottom Drawer */}
-      <BookingSheet
-        open={mobileSheetOpen}
-        onOpenChange={setMobileSheetOpen}
-        equipment={equipment}
-        from={urlFrom}
-        to={urlTo}
-        quantity={quantity}
-        availableQuantity={availability?.available_quantity}
-        onDatesChange={handleDatesChange}
-        onQuantityChange={handleQuantityChange}
-        onOpenMessageVendor={() => setMessageDialogOpen(true)}
-      />
+      {!isPreview && (
+        <BookingSheet
+          open={mobileSheetOpen}
+          onOpenChange={setMobileSheetOpen}
+          equipment={equipment}
+          from={urlFrom}
+          to={urlTo}
+          quantity={quantity}
+          availableQuantity={availability?.available_quantity}
+          onDatesChange={handleDatesChange}
+          onQuantityChange={handleQuantityChange}
+          onOpenMessageVendor={() => setMessageDialogOpen(true)}
+        />
+      )}
 
       {/* Direct Message Vendor Dialog */}
-      <MessageVendorDialog
-        open={messageDialogOpen}
-        onOpenChange={setMessageDialogOpen}
-        vendorId={equipment.vendor_id}
-        vendorName={equipment.vendor_name}
-        equipmentId={equipment.equipment_id}
-        equipmentName={equipment.name}
-      />
+      {!isPreview && (
+        <MessageVendorDialog
+          open={messageDialogOpen}
+          onOpenChange={setMessageDialogOpen}
+          vendorId={equipment.vendor_id}
+          vendorName={equipment.vendor_name}
+          equipmentId={equipment.equipment_id}
+          equipmentName={equipment.name}
+        />
+      )}
     </PageContainer>
   )
 }

@@ -1,10 +1,13 @@
 import { lazy, Suspense } from 'react'
 import { createBrowserRouter, Outlet } from 'react-router-dom'
-import { PublicLayout } from '@/components/layout/public-layout'
+import { PublicShell } from '@/components/layout/public-shell'
+import { VendorShell } from '@/components/layout/vendor-shell'
+import { AdminShell } from '@/components/layout/admin-shell'
+import { RoleAwareHelpPage } from '@/components/layout/role-aware-help'
 import { ScrollManager } from '@/components/shared/scroll-manager'
 import { RequireRole } from '@/components/auth/require-role'
 
-// Lazy loaded page components
+// Lazy loaded page components (Chunk isolation per Task D1)
 const HomePage = lazy(() => import('@/pages/home-page').then((m) => ({ default: m.HomePage })))
 const CatalogPage = lazy(() => import('@/pages/catalog-page').then((m) => ({ default: m.CatalogPage })))
 const EquipmentDetailPage = lazy(() =>
@@ -12,7 +15,6 @@ const EquipmentDetailPage = lazy(() =>
 )
 const CheckoutPage = lazy(() => import('@/pages/checkout-page').then((m) => ({ default: m.CheckoutPage })))
 const AccountPage = lazy(() => import('@/pages/account-page').then((m) => ({ default: m.AccountPage })))
-const HelpPage = lazy(() => import('@/pages/help-page').then((m) => ({ default: m.HelpPage })))
 const VendorPage = lazy(() => import('@/pages/vendor-page').then((m) => ({ default: m.VendorPage })))
 const InventoryPage = lazy(() => import('@/pages/inventory-page').then((m) => ({ default: m.InventoryPage })))
 const VendorOrdersPage = lazy(() =>
@@ -28,7 +30,7 @@ const AdminDashboardPreview = lazy(() =>
   import('@/pages/preview/admin-dashboard-preview').then((m) => ({ default: m.AdminDashboardPreview }))
 )
 
-// Prefetch triggers for next likely route chunk
+// Prefetch triggers for next likely route chunk (Task D4)
 export function prefetchCatalog() {
   import('@/pages/catalog-page')
 }
@@ -49,15 +51,33 @@ function PageFallback() {
   )
 }
 
-function RootLayout() {
+function PublicRootLayout() {
   return (
     <>
       <ScrollManager />
-      <PublicLayout>
-        <Suspense fallback={<PageFallback />}>
-          <Outlet />
-        </Suspense>
-      </PublicLayout>
+      <PublicShell />
+    </>
+  )
+}
+
+function VendorRootLayout() {
+  return (
+    <>
+      <ScrollManager />
+      <Suspense fallback={<PageFallback />}>
+        <VendorShell />
+      </Suspense>
+    </>
+  )
+}
+
+function AdminRootLayout() {
+  return (
+    <>
+      <ScrollManager />
+      <Suspense fallback={<PageFallback />}>
+        <AdminShell />
+      </Suspense>
     </>
   )
 }
@@ -85,27 +105,95 @@ export const router = createBrowserRouter([
       </>
     ),
   },
+
+  // Vendor Shell Routes
   {
-    path: '/',
-    element: <RootLayout />,
+    path: '/vendor',
+    element: <VendorRootLayout />,
     children: [
       {
         index: true,
-        element: <HomePage />,
+        element: (
+          <Suspense fallback={<PageFallback />}>
+            <VendorPage />
+          </Suspense>
+        ),
+      },
+      {
+        path: 'inventory',
+        element: (
+          <RequireRole roles={['vendor']} requireApprovedVendor>
+            <Suspense fallback={<PageFallback />}>
+              <InventoryPage />
+            </Suspense>
+          </RequireRole>
+        ),
+      },
+      {
+        path: 'orders',
+        element: (
+          <RequireRole roles={['vendor']} requireApprovedVendor>
+            <Suspense fallback={<PageFallback />}>
+              <VendorOrdersPage />
+            </Suspense>
+          </RequireRole>
+        ),
+      },
+    ],
+  },
+
+  // Admin Shell Routes
+  {
+    path: '/admin',
+    element: <AdminRootLayout />,
+    children: [
+      {
+        index: true,
+        element: (
+          <Suspense fallback={<PageFallback />}>
+            <AdminPage />
+          </Suspense>
+        ),
+      },
+    ],
+  },
+
+  // Public & Customer Shell Routes
+  {
+    path: '/',
+    element: <PublicRootLayout />,
+    children: [
+      {
+        index: true,
+        element: (
+          <Suspense fallback={<PageFallback />}>
+            <HomePage />
+          </Suspense>
+        ),
       },
       {
         path: 'equipment',
-        element: <CatalogPage />,
+        element: (
+          <Suspense fallback={<PageFallback />}>
+            <CatalogPage />
+          </Suspense>
+        ),
       },
       {
         path: 'equipment/:id',
-        element: <EquipmentDetailPage />,
+        element: (
+          <Suspense fallback={<PageFallback />}>
+            <EquipmentDetailPage />
+          </Suspense>
+        ),
       },
       {
         path: 'checkout',
         element: (
           <RequireRole roles={['customer']}>
-            <CheckoutPage />
+            <Suspense fallback={<PageFallback />}>
+              <CheckoutPage />
+            </Suspense>
           </RequireRole>
         ),
       },
@@ -113,52 +201,32 @@ export const router = createBrowserRouter([
         path: 'account',
         element: (
           <RequireRole roles={['customer']}>
-            <AccountPage />
+            <Suspense fallback={<PageFallback />}>
+              <AccountPage />
+            </Suspense>
           </RequireRole>
         ),
       },
       {
         path: 'help',
-        element: <HelpPage />,
-      },
-      {
-        path: 'vendor',
         element: (
-          <RequireRole roles={['vendor']}>
-            <VendorPage />
-          </RequireRole>
-        ),
-      },
-      {
-        path: 'vendor/inventory',
-        element: (
-          <RequireRole roles={['vendor']} requireApprovedVendor>
-            <InventoryPage />
-          </RequireRole>
-        ),
-      },
-      {
-        path: 'vendor/orders',
-        element: (
-          <RequireRole roles={['vendor']} requireApprovedVendor>
-            <VendorOrdersPage />
-          </RequireRole>
-        ),
-      },
-      {
-        path: 'admin',
-        element: (
-          <RequireRole roles={['admin']}>
-            <AdminPage />
-          </RequireRole>
+          <Suspense fallback={<PageFallback />}>
+            <RoleAwareHelpPage />
+          </Suspense>
         ),
       },
       {
         path: '*',
-        element: <NotFoundPage />,
+        element: (
+          <Suspense fallback={<PageFallback />}>
+            <NotFoundPage />
+          </Suspense>
+        ),
       },
     ],
   },
+
+  // Preview Layout Routes
   {
     path: '_preview',
     element: <PreviewLayout />,

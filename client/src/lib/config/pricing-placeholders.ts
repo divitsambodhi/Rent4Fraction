@@ -2,6 +2,9 @@
 
 import type { Coupon } from '@/types/checkout'
 
+/** Default platform commission rate (percent) when no specific rate is configured */
+export const DEFAULT_PLATFORM_COMMISSION_RATE = 10 // MOCK PLACEHOLDER
+
 /** Estimated Goods & Services Tax (GST) rate applied to (subtotal - discount) */
 export const MOCK_TAX_RATE = 0.18
 

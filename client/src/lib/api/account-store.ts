@@ -152,6 +152,8 @@ export function createInitialAccountState(): AccountStoreState {
           quantity: 2,
           days: 3,
           total_price: 15000,
+          commission_rate: 10,
+          commission_amount: 1500,
           status: 'confirmed',
           vendor_id: 'v_sargam',
           vendor_name: 'Sargam Sound Systems',
@@ -167,6 +169,8 @@ export function createInitialAccountState(): AccountStoreState {
           quantity: 1,
           days: 3,
           total_price: 8400,
+          commission_rate: 10,
+          commission_amount: 840,
           status: 'cancelled',
           vendor_id: 'v_lumina',
           vendor_name: 'Lumina Lighting Co.',
@@ -273,6 +277,8 @@ export function createInitialAccountState(): AccountStoreState {
           quantity: 1,
           days: 2,
           total_price: 7000,
+          commission_rate: 10,
+          commission_amount: 700,
           status: 'confirmed',
           vendor_id: 'v_sargam',
           vendor_name: 'Sargam Sound Systems',
@@ -400,6 +406,8 @@ export function createInitialAccountState(): AccountStoreState {
           quantity: 4,
           days: 2,
           total_price: 5600,
+          commission_rate: 10,
+          commission_amount: 560,
           status: 'confirmed',
           vendor_id: 'v_sargam',
           vendor_name: 'Sargam Sound Systems',
@@ -415,6 +423,8 @@ export function createInitialAccountState(): AccountStoreState {
           quantity: 2,
           days: 2,
           total_price: 7200,
+          commission_rate: 10,
+          commission_amount: 720,
           status: 'delivered',
           vendor_id: 'v_lumina',
           vendor_name: 'Lumina Lighting Co.',
@@ -528,6 +538,8 @@ export function createInitialAccountState(): AccountStoreState {
           quantity: 1,
           days: 1,
           total_price: 1500,
+          commission_rate: 10,
+          commission_amount: 150,
           status: 'returned',
           vendor_id: 'v_royalseat',
           vendor_name: 'RoyalSeat Furniture',
@@ -552,6 +564,8 @@ export function createInitialAccountState(): AccountStoreState {
           quantity: 1,
           days: 1,
           total_price: 1200,
+          commission_rate: 10,
+          commission_amount: 120,
           status: 'returned',
           vendor_id: 'v_royalseat',
           vendor_name: 'RoyalSeat Furniture',
@@ -677,6 +691,8 @@ export function createInitialAccountState(): AccountStoreState {
           quantity: 1,
           days: 1,
           total_price: 2500,
+          commission_rate: 10,
+          commission_amount: 250,
           status: 'returned',
           vendor_id: 'v_sargam',
           vendor_name: 'Sargam Sound Systems',
@@ -799,6 +815,8 @@ export function createInitialAccountState(): AccountStoreState {
           quantity: 2,
           days: 2,
           total_price: 2400,
+          commission_rate: 10,
+          commission_amount: 240,
           status: 'returned',
           vendor_id: 'v_lumina',
           vendor_name: 'Lumina Lighting Co.',
@@ -911,6 +929,8 @@ export function createInitialAccountState(): AccountStoreState {
           quantity: 1,
           days: 2,
           total_price: 4400,
+          commission_rate: 10,
+          commission_amount: 440,
           status: 'cancelled',
           vendor_id: 'v_shamiyana',
           vendor_name: 'Shamiyana Tents & Decor',
@@ -1335,6 +1355,18 @@ export function createInitialAccountState(): AccountStoreState {
     'eq_tent_pagoda_12',
   ]
 
+  bookings.forEach((b) => {
+    b.items.forEach((item) => {
+      if (item.commission_rate === undefined || item.commission_rate === null) {
+        item.commission_rate = 10
+      }
+      if (item.commission_amount === undefined || item.commission_amount === null) {
+        const totalPaise = Math.round(item.total_price * 100)
+        item.commission_amount = Math.round(totalPaise * (item.commission_rate / 100)) / 100
+      }
+    })
+  })
+
   return {
     version: STORE_VERSION,
     bookings,
@@ -1424,10 +1456,15 @@ export function runDevInvariantChecks(state: AccountStoreState): void {
   }
 }
 
+let memoryAccountState: AccountStoreState | null = null
+
 // Storage helpers
 export function loadAccountState(): AccountStoreState {
   if (typeof window === 'undefined') {
-    return createInitialAccountState()
+    if (!memoryAccountState) {
+      memoryAccountState = createInitialAccountState()
+    }
+    return memoryAccountState
   }
 
   try {
@@ -1447,6 +1484,18 @@ export function loadAccountState(): AccountStoreState {
       return fresh
     }
 
+    parsed.bookings?.forEach((b) => {
+      b.items?.forEach((item) => {
+        if (item.commission_rate === undefined || item.commission_rate === null) {
+          item.commission_rate = 10
+        }
+        if (item.commission_amount === undefined || item.commission_amount === null) {
+          const totalPaise = Math.round(item.total_price * 100)
+          item.commission_amount = Math.round(totalPaise * (item.commission_rate / 100)) / 100
+        }
+      })
+    })
+
     runDevInvariantChecks(parsed)
     return parsed
   } catch (err) {
@@ -1458,7 +1507,10 @@ export function loadAccountState(): AccountStoreState {
 }
 
 export function saveAccountState(state: AccountStoreState): void {
-  if (typeof window === 'undefined') return
+  if (typeof window === 'undefined') {
+    memoryAccountState = state
+    return
+  }
   try {
     localStorage.setItem(STORE_KEY, JSON.stringify(state))
     // Dispatch custom event for reactive multi-tab and multi-component synchronization

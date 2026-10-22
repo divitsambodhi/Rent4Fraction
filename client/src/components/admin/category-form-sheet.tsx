@@ -25,6 +25,11 @@ export function CategoryFormSheet({
   const [name, setName] = useState(category?.name || '')
   const [description, setDescription] = useState(category?.description || '')
   const [startingPrice, setStartingPrice] = useState(String(category?.starting_price || 1000))
+  const [defaultCommission, setDefaultCommission] = useState(
+    category?.default_commission_rate !== undefined && category?.default_commission_rate !== null
+      ? String(category.default_commission_rate)
+      : ''
+  )
   const [error, setError] = useState<string | null>(null)
   const [isSubmitting, setIsSubmitting] = useState(false)
 
@@ -33,10 +38,16 @@ export function CategoryFormSheet({
       setName(category.name)
       setDescription(category.description || '')
       setStartingPrice(String(category.starting_price || 1000))
+      setDefaultCommission(
+        category.default_commission_rate !== undefined && category.default_commission_rate !== null
+          ? String(category.default_commission_rate)
+          : ''
+      )
     } else {
       setName('')
       setDescription('')
       setStartingPrice('1000')
+      setDefaultCommission('')
     }
     setError(null)
   }, [category, open])
@@ -61,11 +72,17 @@ export function CategoryFormSheet({
     setIsSubmitting(true)
     setError(null)
     try {
+      const cleanComm = defaultCommission.trim()
+      const commRate = cleanComm !== '' && !isNaN(Number(cleanComm))
+        ? Math.round(Math.max(0, Math.min(100, parseFloat(cleanComm))) * 100) / 100
+        : null
+
       await onSave({
         id: category?.id,
         name: cleanName,
         description: description.trim(),
         starting_price: parseFloat(startingPrice) || 1000,
+        default_commission_rate: commRate,
         icon: category?.icon || 'Package',
       })
       onOpenChange(false)
@@ -98,6 +115,25 @@ export function CategoryFormSheet({
             className="h-9 text-xs"
             required
           />
+        </div>
+
+        <div className="space-y-1.5">
+          <label className="text-xs font-semibold text-foreground">
+            Default Commission (%)
+          </label>
+          <Input
+            type="number"
+            min={0}
+            max={100}
+            step={0.1}
+            value={defaultCommission}
+            onChange={(e) => setDefaultCommission(e.target.value)}
+            placeholder="e.g. 12 (leave blank to inherit vendor/platform rate)"
+            className="h-9 text-xs"
+          />
+          <p className="text-[11px] text-muted-foreground">
+            Default rate for equipment in this category without a specific override.
+          </p>
         </div>
 
         <div className="space-y-1.5">

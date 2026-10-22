@@ -15,11 +15,14 @@ import type {
   VendorOrder,
   AppNotification,
 } from '@/types/account'
-import { rentalDays, lineTotal, quote } from '@/lib/pricing'
+import { rentalDays, lineTotal, quote, resolveCommission, calculateItemCommission } from '@/lib/pricing'
 import { MOCK_COUPONS } from '@/lib/config/pricing-placeholders'
 import { computeMockAvailability } from './index'
 import { MOCK_EQUIPMENT } from './mock-data'
 import { loadAccountState, saveAccountState } from './account-store'
+import { getAllStoredEquipment } from './equipment-store'
+import { getAdminCategories } from './admin-store'
+import { getVendorProfile } from './vendor-store'
 
 export const CART_STORAGE_KEY = 'r4f-cart-items-v1'
 
@@ -478,11 +481,20 @@ export async function placeOrder(input: PlaceOrderInput): Promise<PlaceOrderResu
     const vItemIds: string[] = []
     let vSubtotal = 0
 
+    const allEq = getAllStoredEquipment()
+    const categories = getAdminCategories()
+    const vendorProf = getVendorProfile(vId)
+
     vLines.forEach((l) => {
       const bItemId = `BI-${nextNum}-${globalItemIdx}`
       vItemIds.push(bItemId)
       const lineT = lineTotal(l)
       vSubtotal += lineT
+
+      const eq = allEq.find((e) => e.equipment_id === l.equipment_id)
+      const cat = categories.find((c) => c.id === l.category_id || c.name === l.category)
+      const { rate } = resolveCommission(eq, cat, vendorProf)
+      const { commission_amount } = calculateItemCommission(lineT, rate)
 
       bookingItemList.push({
         item_id: bItemId,
@@ -498,6 +510,8 @@ export async function placeOrder(input: PlaceOrderInput): Promise<PlaceOrderResu
         vendor_name: vName,
         review: null,
         damage_report: null,
+        commission_rate: rate,
+        commission_amount,
       })
 
       globalItemIdx++
@@ -620,6 +634,25 @@ export async function placeOrder(input: PlaceOrderInput): Promise<PlaceOrderResu
     created_at: nowIso,
   }
   state.notifications.unshift(notif)
+
+  // Append vendor notification for each vendor order
+  if (isSuccess) {
+    vendorOrderList.forEach((vo) => {
+      const vendorNotif: AppNotification = {
+        id: `NOTIF-VO-${vo.vendor_order_id}-${Date.now()}`,
+        type: 'new_order',
+        title: `New order ${vo.vendor_order_id}`,
+        message: `Booking ${bookingId} placed by customer. Action required to confirm.`,
+        target: {
+          tab: 'orders',
+          booking_id: bookingId,
+        },
+        read: false,
+        created_at: nowIso,
+      }
+      state.notifications.unshift(vendorNotif)
+    })
+  }
 
   // If coupon used and success, increment its used count
   if (isSuccess && input.coupon) {

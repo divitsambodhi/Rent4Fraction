@@ -1,117 +1,69 @@
-import { useState } from 'react'
-import { Icon } from '@/components/ui/icon'
 import { Button } from '@/components/ui/button'
-import { Badge } from '@/components/ui/badge'
 import { DateRangePicker } from '@/components/catalog/date-range-picker'
-import { useAppNavigate } from '@/components/shared/app-link'
+import { AppLink, useAppNavigate } from '@/components/shared/app-link'
+import { useEventDates } from '@/hooks/use-event-dates'
 
 interface HomeHeroProps {
-  dates: { from?: string; to?: string }
-  onDatesChange: (dates: { from?: string; to?: string }) => void
+  dates?: { from?: string; to?: string }
+  onDatesChange?: (dates: { from?: string; to?: string }) => void
 }
 
-const POPULAR_FILTER_CHIPS = [
-  { id: '1', label: 'Speakers & PA' },
-  { id: '4', label: 'Stage Lights' },
-  { id: '2', label: 'Microphones' },
-  { id: '6', label: 'Chairs & Seating' },
-  { id: '8', label: 'Tents & Canopies' },
-]
-
 /**
- * HomeHero: Centered compact hero per section 5.
- * Display heading in specific words about renting event equipment and getting it delivered.
- * One body-lg supporting sentence.
- * Pill search bar with keyword, event dates, and Search button (40px).
- * 4-5 category filter chips below the search bar.
- * No carousel, no floating chips, no announcement bar.
+ * HomeHero: Restrained hero per task A2.
+ * One display heading, one supporting sentence, and two actions:
+ * a primary "Browse equipment" button and a secondary "Choose event dates" button
+ * (opens the picker, then goes to /equipment with the dates).
+ * No search field in the hero.
  */
-export function HomeHero({ dates, onDatesChange }: HomeHeroProps) {
+export function HomeHero({ dates: propDates, onDatesChange }: HomeHeroProps) {
   const navigate = useAppNavigate()
-  const [query, setQuery] = useState('')
+  const { from: hookFrom, to: hookTo, setDates } = useEventDates()
 
-  const handleSearch = (e: React.FormEvent) => {
-    e.preventDefault()
-    const params = new URLSearchParams()
-    if (query.trim()) params.set('q', query.trim())
-    if (dates.from) params.set('from', dates.from)
-    if (dates.to) params.set('to', dates.to)
-    const queryString = params.toString()
-    navigate(`/equipment${queryString ? `?${queryString}` : ''}`)
+  const currentFrom = propDates?.from ?? hookFrom
+  const currentTo = propDates?.to ?? hookTo
+
+  const handleDateChange = (range: { from?: string; to?: string }) => {
+    setDates(range)
+    onDatesChange?.(range)
+    if (range.from && range.to) {
+      navigate(`/equipment?from=${range.from}&to=${range.to}`)
+    }
   }
 
-  const handleChipClick = (categoryId: string) => {
-    const params = new URLSearchParams()
-    params.set('category', categoryId)
-    if (dates.from) params.set('from', dates.from)
-    if (dates.to) params.set('to', dates.to)
-    navigate(`/equipment?${params.toString()}`)
-  }
+  const browseUrl = currentFrom && currentTo
+    ? `/equipment?from=${currentFrom}&to=${currentTo}`
+    : '/equipment'
 
   return (
-    <section className="pt-10 pb-8 md:pt-16 md:pb-12 text-center max-w-4xl mx-auto px-4">
+    <section className="pt-12 pb-10 md:pt-20 md:pb-16 text-center max-w-4xl mx-auto px-4">
       <h1 className="text-display text-foreground font-display max-w-3xl mx-auto">
         Rent event equipment from local vendors and get it delivered
       </h1>
-      <p className="text-body-lg text-text-secondary mt-3 max-w-2xl mx-auto">
+      <p className="text-body-lg text-text-secondary mt-4 max-w-2xl mx-auto">
         Find sound systems, stage lighting, furniture, and canopies for weddings, birthdays, and corporate events in one booking.
       </p>
 
-      {/* Search Bar - Stacked full-width on mobile, pill on desktop */}
-      <form
-        onSubmit={handleSearch}
-        className="mt-6 md:mt-8 p-2 md:p-2 rounded-2xl md:rounded-full border border-border bg-surface flex flex-col md:flex-row items-stretch md:items-center gap-2 max-w-3xl mx-auto shadow-xs"
-      >
-        <div className="flex-1 flex items-center px-3.5 h-12 md:h-10 rounded-xl md:rounded-none bg-background md:bg-transparent border border-border md:border-none">
-          <Icon name="search" size={18} className="text-muted-foreground mr-2.5 shrink-0" />
-          <input
-            type="text"
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            placeholder="Search sound, lights, furniture..."
-            aria-label="Search sound, lights, furniture"
-            className="w-full h-full bg-transparent text-base md:text-sm text-foreground placeholder:text-muted-foreground focus:outline-none"
-            enterKeyHint="search"
-            autoCapitalize="none"
-            autoCorrect="off"
-          />
-        </div>
-
-        <div className="w-full md:w-auto">
-          <DateRangePicker
-            from={dates.from}
-            to={dates.to}
-            onChange={onDatesChange}
-            placeholder="Select event dates"
-            className="w-full md:w-60 h-12 md:h-10 rounded-xl md:rounded-full border-border bg-background text-sm"
-          />
-        </div>
-
-        <div className="w-full md:w-auto">
+      {/* Two hero actions */}
+      <div className="mt-8 flex flex-col sm:flex-row items-center justify-center gap-3">
+        <AppLink to={browseUrl} className="w-full sm:w-auto">
           <Button
-            type="submit"
-            className="w-full md:w-auto h-12 md:h-10 px-6 rounded-xl md:rounded-full font-bold bg-brand hover:bg-brand-hover text-brand-foreground cursor-pointer"
+            size="lg"
+            className="w-full sm:w-auto min-h-[44px] px-8 rounded-full font-bold bg-brand hover:bg-brand-hover text-brand-foreground cursor-pointer"
           >
-            Search
+            Browse equipment
           </Button>
-        </div>
-      </form>
+        </AppLink>
 
-      {/* Category filter chips */}
-      <div className="mt-4 flex flex-wrap items-center justify-center gap-2">
-        <span className="text-label-sm text-text-secondary mr-1">Popular:</span>
-        {POPULAR_FILTER_CHIPS.map((chip) => (
-          <button
-            key={chip.id}
-            type="button"
-            onClick={() => handleChipClick(chip.id)}
-            className="focus:outline-none focus-visible:ring-2 focus-visible:ring-brand rounded-full cursor-pointer"
-          >
-            <Badge variant="chip" className="min-h-[36px] py-1.5 px-3.5 text-xs">
-              {chip.label}
-            </Badge>
-          </button>
-        ))}
+        <div className="w-full sm:w-auto">
+          <DateRangePicker
+            from={currentFrom}
+            to={currentTo}
+            onChange={handleDateChange}
+            placeholder="Choose event dates"
+            compact={true}
+            className="w-full sm:w-auto min-h-[44px] px-6 rounded-full border-border bg-surface hover:bg-muted/30 text-sm font-semibold"
+          />
+        </div>
       </div>
     </section>
   )

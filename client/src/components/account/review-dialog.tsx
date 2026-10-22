@@ -40,7 +40,7 @@ export function ReviewDialog({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (rating < 1 || !comment.trim() || submitting) return
+    if (rating < 1 || submitting) return
 
     setSubmitting(true)
     try {
@@ -87,7 +87,7 @@ export function ReviewDialog({
           {/* Comment with 500 char counter */}
           <div className="space-y-1.5">
             <div className="flex items-center justify-between text-xs font-semibold text-foreground">
-              <label htmlFor="review-comment">Your review</label>
+              <label htmlFor="review-comment">Your review (optional)</label>
               <span className={charRemaining < 0 ? 'text-danger' : 'text-muted-foreground'}>
                 {charRemaining} left
               </span>
@@ -96,7 +96,6 @@ export function ReviewDialog({
               id="review-comment"
               rows={4}
               maxLength={charLimit}
-              required
               value={comment}
               onChange={(e) => setComment(e.target.value)}
               placeholder="How did the equipment perform at your event? Was the condition as expected?"

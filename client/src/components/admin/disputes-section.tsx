@@ -30,6 +30,7 @@ export function DisputesSection({
 
   const allDisputes = useMemo(() => {
     return getAdminDisputes()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [version])
 
   const counts = useMemo(() => {

@@ -30,6 +30,7 @@ export function BookingsSection({
 
   const accountState = useMemo(() => {
     return loadAccountState()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [version])
 
   const allBookings = accountState.bookings

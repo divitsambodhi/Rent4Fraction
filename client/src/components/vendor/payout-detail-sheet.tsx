@@ -117,18 +117,25 @@ export function PayoutDetailSheet({
             </h4>
             <div className="rounded-xl border border-border divide-y divide-border/60 overflow-hidden text-xs">
               {payout.items.map((item, idx) => (
-                <div key={idx} className="p-3 bg-surface/50 flex items-center justify-between gap-2">
-                  <div>
+                <div key={idx} className="p-3 bg-surface/50 space-y-1">
+                  <div className="flex items-center justify-between gap-2">
                     <span className="font-semibold text-foreground block truncate">
                       {item.equipment_name}
                     </span>
-                    <span className="text-[11px] text-muted-foreground">
-                      {item.quantity} unit(s) · ₹{item.daily_rate}/day × {item.days} days
+                    <span className="font-bold text-foreground tabular-nums">
+                      ₹{item.subtotal.toLocaleString('en-IN')}
                     </span>
                   </div>
-                  <span className="font-bold text-foreground tabular-nums">
-                    ₹{item.subtotal.toLocaleString('en-IN')}
-                  </span>
+                  <div className="flex items-center justify-between text-[11px] text-muted-foreground">
+                    <span>
+                      {item.quantity} unit(s) · ₹{item.daily_rate}/day × {item.days} days
+                    </span>
+                    {item.commission_amount !== undefined && (
+                      <span className="text-danger font-medium">
+                        Commission ({item.commission_rate ?? payout.commission_rate}%): -₹{item.commission_amount.toLocaleString('en-IN')}
+                      </span>
+                    )}
+                  </div>
                 </div>
               ))}
             </div>

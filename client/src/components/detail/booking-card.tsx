@@ -12,6 +12,7 @@ import { PriceText } from '@/components/shared/price-text'
 import { StarRating } from '@/components/shared/star-rating'
 import { QuantityStepper } from './quantity-stepper'
 import { PriceBreakdown } from './price-breakdown'
+import { DateRangePicker } from '@/components/catalog/date-range-picker'
 import { Button } from '@/components/ui/button'
 import { useAuth } from '@/providers/auth-provider'
 import { useCart } from '@/providers/cart-provider'
@@ -174,7 +175,7 @@ export function BookingCard({
       {/* Date Range Selection Box */}
       <div className="space-y-1.5">
         <div className="flex items-center justify-between text-xs font-semibold text-foreground">
-          <label htmlFor="booking-from-date">Event dates</label>
+          <span>Event dates</span>
           {days > 0 && (
             <span className="text-brand font-medium tabular-nums">
               {formatDatesLabel(from, to)} · {days} {days === 1 ? 'day' : 'days'}
@@ -182,35 +183,14 @@ export function BookingCard({
           )}
         </div>
 
-        <div className="grid grid-cols-2 gap-2">
-          <div className="relative">
-            <input
-              id="booking-from-date"
-              type="date"
-              value={from || ''}
-              min={new Date().toISOString().split('T')[0]}
-              disabled={!isListingActive}
-              onChange={(e) => onDatesChange(e.target.value, to)}
-              className="w-full h-11 px-3 py-2 rounded-[10px] border border-border bg-surface text-xs text-foreground focus:outline-none focus:ring-2 focus:ring-brand disabled:opacity-50"
-              aria-label="Rental start date"
-              aria-describedby={errorId}
-            />
-          </div>
-
-          <div className="relative">
-            <input
-              id="booking-to-date"
-              type="date"
-              value={to || ''}
-              min={from || new Date().toISOString().split('T')[0]}
-              disabled={!isListingActive}
-              onChange={(e) => onDatesChange(from, e.target.value)}
-              className="w-full h-11 px-3 py-2 rounded-[10px] border border-border bg-surface text-xs text-foreground focus:outline-none focus:ring-2 focus:ring-brand disabled:opacity-50"
-              aria-label="Rental end date"
-              aria-describedby={errorId}
-            />
-          </div>
-        </div>
+        <DateRangePicker
+          from={from}
+          to={to}
+          onChange={({ from: newFrom, to: newTo }) => onDatesChange(newFrom, newTo)}
+          placeholder="Select event dates"
+          compact={true}
+          className="w-full h-11"
+        />
       </div>
 
       {/* Inline Validation Banner with aria-live */}

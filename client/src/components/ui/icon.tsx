@@ -59,6 +59,14 @@ import {
   IconInbox,
   IconMaximize,
   IconCamera,
+  IconDeviceSpeaker,
+  IconMicrophone,
+  IconDisc,
+  IconSparkles,
+  IconBulb,
+  IconArmchair,
+  IconTable,
+  IconTent,
 } from '@tabler/icons-react'
 import { cn } from '@/lib/utils'
 
@@ -124,6 +132,15 @@ export type IconName =
   | 'camera'
   | 'adjustments'
   | 'layout'
+  | 'speaker'
+  | 'microphone'
+  | 'mic'
+  | 'disc'
+  | 'sparkles'
+  | 'bulb'
+  | 'armchair'
+  | 'table'
+  | 'tent'
 
 interface IconProps extends Omit<React.SVGProps<SVGSVGElement>, 'stroke'> {
   name: IconName
@@ -194,6 +211,15 @@ const iconMap: Record<IconName, React.ComponentType<Record<string, unknown>>> = 
   inbox: IconInbox,
   maximize: IconMaximize,
   camera: IconCamera,
+  speaker: IconDeviceSpeaker,
+  microphone: IconMicrophone,
+  mic: IconMicrophone,
+  disc: IconDisc,
+  sparkles: IconSparkles,
+  bulb: IconBulb,
+  armchair: IconArmchair,
+  table: IconTable,
+  tent: IconTent,
 }
 
 export function Icon({

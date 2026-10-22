@@ -28,6 +28,7 @@ export function UsersSection({
 
   const allUsers: AdminUser[] = useMemo(() => {
     return getAllMockUsers()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [version])
 
   const counts = useMemo(() => {

@@ -24,7 +24,7 @@ export function AuthLayout({ mode, children }: AuthLayoutProps) {
             aria-label="Rent4Fraction Home"
           >
             <span className="text-headline-sm font-bold tracking-tight text-foreground select-none">
-              rent<span className="text-brand">4</span>fraction
+              Rent4Fraction
             </span>
           </AppLink>
 

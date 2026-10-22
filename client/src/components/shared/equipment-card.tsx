@@ -1,11 +1,9 @@
-import React from 'react'
-import { Icon } from '@/components/ui/icon'
 import { AppLink } from './app-link'
 import { PriceText } from './price-text'
 import { ProductImage } from './product-image'
 import { StarRating } from './star-rating'
 import { StatusBadge } from './status-badge'
-import { useWishlist } from '@/providers/wishlist-provider'
+import { WishlistButton } from './wishlist-button'
 import { formatINR } from '@/lib/format'
 import type { EquipmentListingView } from '@/types'
 import { cn } from '@/lib/utils'
@@ -28,19 +26,11 @@ export function EquipmentCard({
   availableQuantity,
   rentalDays,
 }: EquipmentCardProps) {
-  const { isWishlisted, toggleWishlist } = useWishlist()
-  const wishlisted = isWishlisted(equipment.equipment_id)
   const isUnavailable = availableQuantity === 0
   const isLowStock =
     availableQuantity !== undefined && availableQuantity >= 1 && availableQuantity <= 3
   const isBelowMinDays =
     Boolean(rentalDays && rentalDays > 0 && equipment.min_rental_days && rentalDays < equipment.min_rental_days)
-
-  const handleHeartClick = (e: React.MouseEvent) => {
-    e.preventDefault()
-    e.stopPropagation()
-    toggleWishlist(equipment.equipment_id)
-  }
 
   return (
     <article
@@ -91,35 +81,13 @@ export function EquipmentCard({
             </div>
           )}
 
-          {/* Wishlist Button: 44px tap target */}
-          <button
-            type="button"
-            onClick={handleHeartClick}
-            aria-label={
-              wishlisted
-                ? `Remove ${equipment.name} from saved items`
-                : `Save ${equipment.name}`
-            }
-            aria-pressed={wishlisted}
-            className={cn(
-              'absolute top-1 right-1 z-10 min-w-[44px] min-h-[44px] rounded-full flex items-center justify-center transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-brand cursor-pointer',
-            )}
-          >
-            <div
-              className={cn(
-                'size-8 rounded-full flex items-center justify-center border transition-colors shadow-xs',
-                wishlisted
-                  ? 'bg-brand text-white border-brand'
-                  : 'bg-surface/90 backdrop-blur-xs text-foreground border-border hover:text-brand',
-              )}
-            >
-              <Icon
-                name={wishlisted ? 'heart-filled' : 'heart'}
-                size={16}
-                className={wishlisted ? 'text-white' : 'text-foreground'}
-              />
-            </div>
-          </button>
+          {/* Wishlist Button: 44px tap target with 8px inset */}
+          <div className="absolute top-2 right-2 z-10">
+            <WishlistButton
+              equipmentId={equipment.equipment_id}
+              equipmentName={equipment.name}
+            />
+          </div>
         </div>
 
         <div className="p-3 sm:p-4 flex flex-col flex-1 gap-1">

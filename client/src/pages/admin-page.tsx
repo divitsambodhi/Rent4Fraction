@@ -7,6 +7,7 @@ import { VendorsSection } from '@/components/admin/vendors-section'
 import { DisputesSection } from '@/components/admin/disputes-section'
 import { PayoutsSection } from '@/components/admin/payouts-section'
 import { CategoriesSection } from '@/components/admin/categories-section'
+import { EquipmentSection } from '@/components/admin/equipment-section'
 import { CouponsSection } from '@/components/admin/coupons-section'
 import { UsersSection } from '@/components/admin/users-section'
 import { BookingsSection } from '@/components/admin/bookings-section'
@@ -15,6 +16,7 @@ import type { AdminSection } from '@/types/admin'
 const VALID_SECTIONS: AdminSection[] = [
   'overview',
   'vendors',
+  'equipment',
   'disputes',
   'payouts',
   'categories',
@@ -34,6 +36,7 @@ export function AdminPage() {
   const titles: Record<AdminSection, string> = {
     overview: 'Overview · Platform Health',
     vendors: 'Vendor Partners & Applications',
+    equipment: 'Equipment Listings & Commission Governance',
     disputes: 'Dispute Cases & Claims',
     payouts: 'Vendor Payouts & Settlements',
     categories: 'Catalogue Taxonomy & Categories',
@@ -83,6 +86,8 @@ export function AdminPage() {
           />
         )}
 
+        {activeSection === 'equipment' && <EquipmentSection />}
+
         {activeSection === 'disputes' && (
           <DisputesSection
             statusFilter={searchParams.get('status') || 'open'}
@@ -107,6 +112,10 @@ export function AdminPage() {
           <CategoriesSection
             selectedCategoryId={searchParams.get('category')}
             onSelectCategory={(id) => updateParam('category', id, true)}
+            statusFilter={searchParams.get('status') || 'all'}
+            searchQuery={searchParams.get('q') || ''}
+            onStatusChange={(status) => updateParam('status', status)}
+            onSearchChange={(q) => updateParam('q', q)}
           />
         )}
 

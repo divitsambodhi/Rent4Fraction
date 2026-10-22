@@ -3,7 +3,7 @@ import { Icon } from '@/components/ui/icon'
 import { ProductImage } from '@/components/shared/product-image'
 import { ShareButton } from './share-button'
 import { Lightbox } from './lightbox'
-import { useWishlist } from '@/providers/wishlist-provider'
+import { WishlistButton } from '@/components/shared/wishlist-button'
 import type { EquipmentImage } from '@/types'
 import { cn } from '@/lib/utils'
 
@@ -12,6 +12,7 @@ interface ImageGalleryProps {
   equipmentName: string
   images: EquipmentImage[]
   category?: string
+  readOnly?: boolean
 }
 
 export function ImageGallery({
@@ -19,15 +20,14 @@ export function ImageGallery({
   equipmentName,
   images,
   category,
+  readOnly = false,
 }: ImageGalleryProps) {
   const [activeIndex, setActiveIndex] = useState(0)
   const [lightboxOpen, setLightboxOpen] = useState(false)
-  const { isWishlisted, toggleWishlist } = useWishlist()
   const touchStartX = useRef<number | null>(null)
   const touchEndX = useRef<number | null>(null)
 
   const active = images[activeIndex] || images[0]
-  const wished = isWishlisted(equipmentId)
 
   const goToPrev = () => {
     setActiveIndex((prev) => (prev + images.length - 1) % images.length)
@@ -118,28 +118,7 @@ export function ImageGallery({
         {/* Overlays: Heart and Share (44px hit areas) */}
         <div className="absolute top-2.5 right-2.5 sm:top-3 sm:right-3 flex items-center gap-2 z-10">
           <ShareButton title={equipmentName} />
-
-          <button
-            type="button"
-            onClick={(e) => {
-              e.stopPropagation()
-              toggleWishlist(equipmentId)
-            }}
-            aria-label={wished ? 'Remove from wishlist' : 'Save to wishlist'}
-            aria-pressed={wished}
-            className={cn(
-              'min-w-[44px] min-h-[44px] rounded-full border shadow-xs flex items-center justify-center transition-all cursor-pointer backdrop-blur-xs',
-              wished
-                ? 'bg-brand text-white border-brand'
-                : 'bg-surface/90 text-foreground/80 border-border/80 hover:bg-surface hover:text-brand hover:border-brand/40',
-            )}
-          >
-            <Icon
-              name={wished ? 'heart-filled' : 'heart'}
-              size={18}
-              className={wished ? 'text-white' : 'text-foreground'}
-            />
-          </button>
+          {!readOnly && <WishlistButton equipmentId={equipmentId} equipmentName={equipmentName} />}
         </div>
 
         {/* Expand / Lightbox Trigger Button */}

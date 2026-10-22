@@ -27,6 +27,7 @@ export interface EquipmentListingView {
   parent_category_id: string | null
   parent_category_name: string | null
   primary_image_url: string
+  commission_rate?: number | null
 }
 
 export type EquipmentStatus = 'active' | 'inactive' | 'out_of_stock' | 'archived'
@@ -109,6 +110,7 @@ export interface Category {
   starting_price: number
   icon: string
   description: string
+  default_commission_rate?: number | null
 }
 
 export interface NotificationItem {

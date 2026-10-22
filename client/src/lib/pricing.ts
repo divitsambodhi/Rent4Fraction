@@ -10,10 +10,133 @@ import {
   MOCK_TAX_RATE,
   MOCK_DELIVERY_FEE_PER_VENDOR,
   MOCK_PICKUP_FEE,
+  DEFAULT_PLATFORM_COMMISSION_RATE,
 } from './config/pricing-placeholders'
 import { formatINR } from './format'
 
 export const formatRupees = formatINR
+
+export type CommissionSource = 'Equipment' | 'Category' | 'Vendor' | 'Platform'
+
+export interface ResolvedCommission {
+  rate: number
+  source: CommissionSource
+}
+
+function clampAndRoundRate(rate: number): number {
+  const clamped = Math.max(0, Math.min(100, rate))
+  return Math.round(clamped * 100) / 100
+}
+
+/**
+ * Precedence: equipment override -> category default -> vendor default -> platform default.
+ * Rates are 0 to 100 with at most 2 decimals.
+ */
+export function resolveCommission(
+  equipment?: { commission_rate?: number | null } | null,
+  category?: { default_commission_rate?: number | null } | null,
+  vendor?: { commission_rate?: number | null } | null
+): ResolvedCommission {
+  if (
+    equipment?.commission_rate !== undefined &&
+    equipment?.commission_rate !== null &&
+    !isNaN(Number(equipment.commission_rate))
+  ) {
+    return {
+      rate: clampAndRoundRate(Number(equipment.commission_rate)),
+      source: 'Equipment',
+    }
+  }
+
+  if (
+    category?.default_commission_rate !== undefined &&
+    category?.default_commission_rate !== null &&
+    !isNaN(Number(category.default_commission_rate))
+  ) {
+    return {
+      rate: clampAndRoundRate(Number(category.default_commission_rate)),
+      source: 'Category',
+    }
+  }
+
+  if (
+    vendor?.commission_rate !== undefined &&
+    vendor?.commission_rate !== null &&
+    !isNaN(Number(vendor.commission_rate))
+  ) {
+    return {
+      rate: clampAndRoundRate(Number(vendor.commission_rate)),
+      source: 'Vendor',
+    }
+  }
+
+  return {
+    rate: clampAndRoundRate(DEFAULT_PLATFORM_COMMISSION_RATE),
+    source: 'Platform',
+  }
+}
+
+/**
+ * Calculates item commission amount and net amount with paise-safe integer arithmetic.
+ */
+export function calculateItemCommission(
+  itemTotal: number,
+  rate: number
+): {
+  rate: number
+  commission_amount: number
+  commissionAmount: number
+  net_amount: number
+  netAmount: number
+} {
+  const totalPaise = Math.round(itemTotal * 100)
+  const commissionPaise = Math.round(totalPaise * (rate / 100))
+  const netPaise = totalPaise - commissionPaise
+  const commissionVal = commissionPaise / 100
+  const netVal = netPaise / 100
+  return {
+    rate,
+    commission_amount: commissionVal,
+    commissionAmount: commissionVal,
+    net_amount: netVal,
+    netAmount: netVal,
+  }
+}
+
+/**
+ * Derives payout from item snapshots:
+ * gross = sum of item totals,
+ * commission = sum of item commissions,
+ * net = gross minus commission.
+ */
+export function calculateOrderPayoutFromItems(
+  items: Array<{ total_price: number; commission_rate?: number; commission_amount?: number }>
+): { gross: number; commission: number; net: number; effective_rate: number } {
+  let grossPaise = 0
+  let commissionPaise = 0
+
+  for (const item of items) {
+    const itemTotalPaise = Math.round(item.total_price * 100)
+    grossPaise += itemTotalPaise
+
+    if (item.commission_amount !== undefined && item.commission_amount !== null) {
+      commissionPaise += Math.round(item.commission_amount * 100)
+    } else {
+      const rate = item.commission_rate ?? DEFAULT_PLATFORM_COMMISSION_RATE
+      commissionPaise += Math.round(itemTotalPaise * (rate / 100))
+    }
+  }
+
+  const netPaise = grossPaise - commissionPaise
+  const effectiveRate = grossPaise > 0 ? Number(((commissionPaise / grossPaise) * 100).toFixed(2)) : 0
+
+  return {
+    gross: grossPaise / 100,
+    commission: commissionPaise / 100,
+    net: netPaise / 100,
+    effective_rate: effectiveRate,
+  }
+}
 
 export function calculatePayoutAmounts(
   gross: number,

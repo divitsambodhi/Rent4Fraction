@@ -130,6 +130,8 @@ export interface PayoutLineItem {
   daily_rate: number
   days: number
   subtotal: number
+  commission_rate?: number
+  commission_amount?: number
 }
 
 export interface VendorPayout {
@@ -284,6 +286,7 @@ export interface InventoryItem {
   included?: string[]
   specifications: Record<string, string | number>
   blocked_ranges: AvailabilityBlock[]
+  commission_rate?: number | null
   updated_at: string
   updated: string
   created_at: string

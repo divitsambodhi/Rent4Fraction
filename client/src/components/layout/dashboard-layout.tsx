@@ -77,6 +77,7 @@ export const vendorNav: NavItem[] = vendorNavSections.flatMap((s) => s.items)
 export const adminNav: NavItem[] = [
   { title: 'Overview', href: '/admin?section=overview', tabKey: 'overview', icon: LayoutDashboard },
   { title: 'Vendors', href: '/admin?section=vendors', tabKey: 'vendors', icon: Building2, badge: '2' },
+  { title: 'Equipment', href: '/admin?section=equipment', tabKey: 'equipment', icon: Package },
   { title: 'Disputes', href: '/admin?section=disputes', tabKey: 'disputes', icon: Scale, badge: '2' },
   { title: 'Payouts', href: '/admin?section=payouts', tabKey: 'payouts', icon: Wallet, badge: '3' },
   { title: 'Categories', href: '/admin?section=categories', tabKey: 'categories', icon: Package },
@@ -298,15 +299,15 @@ export function DashboardLayout({
             </SheetContent>
           </Sheet>
 
-          {/* Desktop Logo & Title */}
-          <AppLink to="/" className="flex items-center gap-2 overflow-hidden group">
-            <div className="size-7 rounded-[6px] bg-brand text-white flex items-center justify-center shrink-0">
-              <Package className="size-3.5" />
-            </div>
-            <span className="font-serif font-bold text-sm tracking-tight text-foreground truncate">
+          {/* Desktop Typographic Wordmark & Title */}
+          <div className="flex items-center gap-2 overflow-hidden">
+            <span className="font-bold text-sm tracking-tight text-foreground select-none">
+              Rent4Fraction
+            </span>
+            <span className="text-xs text-muted-foreground border-l border-border/60 pl-2 ml-1">
               {title}
             </span>
-          </AppLink>
+          </div>
 
           {subtitle && (
             <span className="hidden md:inline-block text-xs text-muted-foreground border-l border-border/60 pl-2.5 ml-1">
@@ -317,12 +318,6 @@ export function DashboardLayout({
 
         {/* Right actions in 48px bar */}
         <div className="flex items-center gap-1.5 sm:gap-2">
-          <AppLink to="/">
-            <Button variant="outline" size="sm" className="h-7 text-xs px-2.5 font-medium">
-              Storefront
-            </Button>
-          </AppLink>
-
           <Button
             variant="ghost"
             size="icon-sm"

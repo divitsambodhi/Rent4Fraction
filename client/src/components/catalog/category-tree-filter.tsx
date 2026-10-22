@@ -38,13 +38,15 @@ export function CategoryTreeFilter({
   const isAllSelected = !selectedCategory || selectedCategory === 'all'
 
   return (
-    <div className={cn('space-y-1', className)}>
+    <div className={cn('space-y-1', className)} role="radiogroup" aria-label="Filter by category">
       {/* "All categories" Option */}
       <button
         type="button"
+        role="radio"
+        aria-checked={isAllSelected}
         onClick={() => onSelectCategory(undefined)}
         className={cn(
-          'w-full flex items-center justify-between px-2.5 py-2 rounded-[8px] text-xs transition-colors text-left',
+          'w-full flex items-center justify-between px-2.5 py-2 rounded-[8px] text-xs transition-colors text-left cursor-pointer',
           isAllSelected
             ? 'bg-brand/10 text-brand font-semibold'
             : 'text-foreground hover:bg-muted/50 font-medium',
@@ -80,8 +82,10 @@ export function CategoryTreeFilter({
             >
               <button
                 type="button"
+                role="radio"
+                aria-checked={isGroupSelected}
                 onClick={() => onSelectCategory(group.id)}
-                className="flex-1 text-left flex items-center gap-1.5 truncate"
+                className="flex-1 text-left flex items-center gap-1.5 truncate cursor-pointer"
               >
                 {isGroupSelected && <Check className="size-3.5 text-brand shrink-0" />}
                 <span className="truncate">{group.name}</span>
@@ -118,9 +122,11 @@ export function CategoryTreeFilter({
                     <button
                       key={cat.id}
                       type="button"
+                      role="radio"
+                      aria-checked={isSelected}
                       onClick={() => onSelectCategory(cat.id)}
                       className={cn(
-                        'w-full flex items-center justify-between px-2 py-1 rounded-[6px] text-xs transition-colors text-left',
+                        'w-full flex items-center justify-between px-2 py-1 rounded-[6px] text-xs transition-colors text-left cursor-pointer',
                         isSelected
                           ? 'bg-brand/10 text-brand font-semibold'
                           : 'text-muted-foreground hover:text-foreground hover:bg-muted/40 font-normal',

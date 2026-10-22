@@ -1,4 +1,5 @@
 import { useState, useMemo } from 'react'
+import { FilterBar } from '@/components/shared/filter-bar'
 import { Button } from '@/components/ui/button'
 import {
   getAdminCategories,
@@ -21,21 +22,52 @@ import { formatRupees } from '@/lib/pricing'
 interface CategoriesSectionProps {
   selectedCategoryId?: string | null
   onSelectCategory: (id: string | null) => void
+  statusFilter?: string
+  searchQuery?: string
+  onStatusChange?: (status: string) => void
+  onSearchChange?: (q: string) => void
 }
 
 export function CategoriesSection({
   selectedCategoryId,
   onSelectCategory,
+  statusFilter = 'all',
+  searchQuery = '',
+  onStatusChange,
+  onSearchChange,
 }: CategoriesSectionProps) {
   const [version, setVersion] = useState(0)
 
   const categories = useMemo(() => {
     return getAdminCategories()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [version])
+
+  const counts = useMemo(() => {
+    return {
+      all: categories.length,
+      active: categories.filter((c) => c.is_active).length,
+      inactive: categories.filter((c) => !c.is_active).length,
+    }
+  }, [categories])
+
+  const filteredCategories = useMemo(() => {
+    return categories.filter((cat) => {
+      if (statusFilter === 'active' && !cat.is_active) return false
+      if (statusFilter === 'inactive' && cat.is_active) return false
+      if (searchQuery.trim()) {
+        const q = searchQuery.toLowerCase()
+        const matchName = cat.name.toLowerCase().includes(q)
+        const matchGroup = cat.groupName?.toLowerCase().includes(q)
+        if (!matchName && !matchGroup) return false
+      }
+      return true
+    })
+  }, [categories, statusFilter, searchQuery])
 
   const groups = useMemo(() => {
     const map: Record<string, { groupId: string; groupName: string; items: ManagedCategory[] }> = {}
-    categories.forEach((cat) => {
+    filteredCategories.forEach((cat) => {
       const gId = cat.groupId || '101'
       const gName = cat.groupName || 'Sound'
       if (!map[gId]) {
@@ -44,7 +76,7 @@ export function CategoriesSection({
       map[gId].items.push(cat)
     })
     return Object.values(map)
-  }, [categories])
+  }, [filteredCategories])
 
   const handleToggleActive = (cat: ManagedCategory) => {
     const nextState = !cat.is_active
@@ -63,7 +95,7 @@ export function CategoriesSection({
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between gap-4">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h2 className="text-base font-serif font-bold text-foreground">Catalogue Taxonomy & Categories</h2>
           <p className="text-xs text-muted-foreground mt-0.5">
@@ -73,12 +105,25 @@ export function CategoriesSection({
 
         <Button
           onClick={() => onSelectCategory('new')}
-          className="h-9 text-xs font-semibold bg-brand text-brand-foreground hover:bg-brand-hover gap-1.5"
+          className="h-9 text-xs font-semibold bg-brand text-brand-foreground hover:bg-brand-hover gap-1.5 shrink-0"
         >
           <Plus className="size-4" />
           <span>Add Category</span>
         </Button>
       </div>
+
+      <FilterBar
+        searchPlaceholder="Search category name or group..."
+        searchQuery={searchQuery}
+        onSearchChange={onSearchChange}
+        activeStatus={statusFilter}
+        onStatusChange={onStatusChange}
+        statusPills={[
+          { id: 'all', label: 'All Categories', count: counts.all },
+          { id: 'active', label: 'Active', count: counts.active },
+          { id: 'inactive', label: 'Inactive', count: counts.inactive },
+        ]}
+      />
 
       <div className="space-y-4">
         {groups.map((group) => (

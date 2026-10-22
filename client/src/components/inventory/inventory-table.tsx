@@ -25,6 +25,9 @@ import { AppLink } from '@/components/shared/app-link'
 import { ProductImage } from '@/components/shared/product-image'
 import { StatusBadge } from '@/components/shared/status-badge'
 import { ConfirmDialog } from '@/components/account/confirm-dialog'
+import { resolveCommission } from '@/lib/pricing'
+import { getAdminCategories } from '@/lib/api/admin-store'
+import { getStoredVendorProfiles } from '@/lib/api/vendor-store'
 import type { InventoryItem } from '@/types/vendor'
 import { cn } from '@/lib/utils'
 
@@ -64,6 +67,8 @@ export function InventoryTable({
   const [itemToArchive, setItemToArchive] = useState<InventoryItem | null>(null)
   const totalPages = Math.max(1, Math.ceil(totalCount / pageSize))
   const allSelected = items.length > 0 && items.every((i) => selectedIds.includes(i.id))
+  const categories = getAdminCategories()
+  const vendorProfiles = getStoredVendorProfiles()
 
   const handleConfirmArchive = () => {
     if (itemToArchive) {
@@ -122,6 +127,7 @@ export function InventoryTable({
                     <th className="py-3 px-3">Equipment</th>
                     <th className="py-3 px-3 text-right">Price/day</th>
                     <th className="py-3 px-3 text-right">Deposit</th>
+                    <th className="py-3 px-3">Commission</th>
                     <th className="py-3 px-3">Stock</th>
                     <th className="py-3 px-3">Rating</th>
                     <th className="py-3 px-3">Status</th>
@@ -185,6 +191,24 @@ export function InventoryTable({
 
                         <td className="px-3 py-2 text-right text-muted-foreground tabular-nums">
                           ₹{item.deposit.toLocaleString('en-IN')}
+                        </td>
+
+                        <td className="px-3 py-2 whitespace-nowrap">
+                          {(() => {
+                            const cat = categories.find((c) => c.id === item.category_id || c.name === item.category)
+                            const vendor = vendorProfiles[item.vendor_id]
+                            const resolved = resolveCommission(item, cat, vendor)
+                            return (
+                              <div className="flex items-center gap-1.5">
+                                <span className="font-bold text-foreground tabular-nums text-xs">
+                                  {resolved.rate}%
+                                </span>
+                                <span className="px-1.5 py-0.5 rounded-full text-[10px] font-medium border border-border bg-muted/60 text-muted-foreground">
+                                  {resolved.source}
+                                </span>
+                              </div>
+                            )
+                          })()}
                         </td>
 
                         {/* Stock with Low / Out chips */}
@@ -280,7 +304,7 @@ export function InventoryTable({
 
                               <DropdownMenuItem asChild>
                                 <AppLink
-                                  to={`/equipment/${item.id}`}
+                                  to={`/equipment/${item.id}?preview=1`}
                                   className="gap-2 cursor-pointer w-full flex items-center"
                                 >
                                   <ExternalLink className="size-3.5" />
@@ -375,7 +399,7 @@ export function InventoryTable({
                           </DropdownMenuItem>
                           <DropdownMenuSeparator />
                           <DropdownMenuItem asChild>
-                            <AppLink to={`/equipment/${item.id}`} className="flex items-center">
+                            <AppLink to={`/equipment/${item.id}?preview=1`} className="flex items-center">
                               <ExternalLink className="size-3.5 mr-2" /> View page
                             </AppLink>
                           </DropdownMenuItem>
@@ -387,11 +411,22 @@ export function InventoryTable({
                     </div>
                   </div>
 
-                  <div className="grid grid-cols-3 gap-2 py-2 border-y border-border/50 text-xs">
+                  <div className="grid grid-cols-4 gap-2 py-2 border-y border-border/50 text-xs">
                     <div>
                       <span className="text-[10px] text-muted-foreground block">Rate</span>
                       <span className="font-bold text-foreground tabular-nums">
                         ₹{item.price.toLocaleString('en-IN')}/d
+                      </span>
+                    </div>
+
+                    <div>
+                      <span className="text-[10px] text-muted-foreground block">Commission</span>
+                      <span className="font-bold text-foreground tabular-nums">
+                        {(() => {
+                          const cat = categories.find((c) => c.id === item.category_id || c.name === item.category)
+                          const vendor = vendorProfiles[item.vendor_id]
+                          return resolveCommission(item, cat, vendor).rate
+                        })()}%
                       </span>
                     </div>
 

@@ -13,6 +13,8 @@ import {
   CANONICAL_VENDORS,
 } from './canonical-ids'
 import { MOCK_EQUIPMENT } from './mock-data'
+import { loadAccountState } from './account-store'
+import { format } from 'date-fns'
 
 const DEFAULT_DELAY = 120
 
@@ -521,8 +523,40 @@ export async function getEquipmentReviews(
     })
   }
 
+  // Integrate real reviews from the store
+  const accountState = loadAccountState()
+  const realReviews: Review[] = []
+  accountState.bookings.forEach((b) => {
+    b.items.forEach((it) => {
+      if ((it.equipment_id === id || it.name.toLowerCase() === id.toLowerCase()) && it.review) {
+        realReviews.push({
+          review_id: it.review.review_id,
+          user_name: b.delivery_address?.name || 'Customer',
+          rating: it.review.rating,
+          comment: it.review.comment,
+          vendor_reply: it.review.vendor_reply || null,
+          review_date: format(new Date(it.review.created_at), 'd MMM yyyy'),
+        })
+      }
+    })
+  })
+
+  // Prepend real reviews so customer's review is shown newest first
+  const combinedReviews = [...realReviews, ...allReviews]
+
+  // Recompute summary metrics to include real reviews
+  let ratingSum = 0
+  const combinedDistribution: Record<1 | 2 | 3 | 4 | 5, number> = { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 }
+  combinedReviews.forEach((r) => {
+    const star = Math.min(5, Math.max(1, Math.round(r.rating))) as 1 | 2 | 3 | 4 | 5
+    combinedDistribution[star] = (combinedDistribution[star] || 0) + 1
+    ratingSum += r.rating
+  })
+  const combinedCount = combinedReviews.length
+  const combinedAvg = combinedCount > 0 ? Number((ratingSum / combinedCount).toFixed(1)) : targetAvg
+
   // Filter by rating if requested
-  let filtered = allReviews
+  let filtered = combinedReviews
   if (options.rating && options.rating >= 1 && options.rating <= 5) {
     filtered = filtered.filter((r) => r.rating === options.rating)
   }
@@ -550,9 +584,9 @@ export async function getEquipmentReviews(
     items: paginated,
     total: filtered.length,
     summary: {
-      avg: targetAvg,
-      count: totalCount,
-      distribution,
+      avg: combinedAvg,
+      count: combinedCount,
+      distribution: combinedDistribution,
     },
   }
 }

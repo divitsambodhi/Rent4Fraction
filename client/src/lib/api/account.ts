@@ -2,6 +2,7 @@ import {
   loadAccountState,
   saveAccountState,
 } from './account-store'
+import { getStoredEquipmentState, saveStoredEquipmentState } from './equipment-store'
 import { MOCK_EQUIPMENT } from './mock-data'
 import { computeMockAvailability } from './index'
 import type {
@@ -281,7 +282,7 @@ export async function submitReview(
   bookingId: string,
   equipmentId: string,
   rating: number,
-  comment: string
+  comment: string = ''
 ): Promise<BookingDetail> {
   await delay(300)
   const state = loadAccountState()
@@ -299,8 +300,16 @@ export async function submitReview(
     throw new Error(`Item ${equipmentId} not found in booking ${bookingId}.`)
   }
 
+  if (item.status !== 'returned') {
+    throw new Error('Only returned equipment can be reviewed.')
+  }
+
   if (item.review) {
     throw new Error('This item has already been reviewed.')
+  }
+
+  if (!rating || rating < 1 || rating > 5) {
+    throw new Error('Please select a star rating between 1 and 5.')
   }
 
   const newReview = {
@@ -331,8 +340,60 @@ export async function submitReview(
     type: 'system',
   })
 
+  // Fan out vendor notification so it appears in vendor Reviews tab as needing reply
+  state.notifications.unshift({
+    id: `NOTIF-REV-${Date.now()}`,
+    type: 'review_reminder',
+    title: `New review on ${item.name}`,
+    message: `${rating} star review received from customer. Reply needed.`,
+    target: {
+      tab: 'reviews',
+      booking_id: booking.booking_id,
+    },
+    read: false,
+    created_at: new Date().toISOString(),
+  })
+
+  // Recalculate equipment rating and review count across all bookings
+  const eqState = getStoredEquipmentState()
+  const eqIndex = eqState.items.findIndex((e) => e.equipment_id === item.equipment_id)
+  if (eqIndex !== -1) {
+    let sum = 0
+    let count = 0
+    state.bookings.forEach((b) => {
+      b.items.forEach((it) => {
+        if (it.equipment_id === item.equipment_id && it.review) {
+          sum += it.review.rating
+          count++
+        }
+      })
+    })
+    const newAvg = count > 0 ? Number((sum / count).toFixed(1)) : 4.8
+    eqState.items[eqIndex].avg_rating = newAvg
+    eqState.items[eqIndex].rating = newAvg
+    eqState.items[eqIndex].review_count = count
+    eqState.items[eqIndex].reviews = count
+    saveStoredEquipmentState(eqState)
+  }
+
   saveAccountState(state)
   return JSON.parse(JSON.stringify(booking))
+}
+
+export async function replyToReview(reviewId: string, replyText: string): Promise<void> {
+  const state = loadAccountState()
+  let found = false
+  state.bookings.forEach((b) => {
+    b.items.forEach((it) => {
+      if (it.review && it.review.review_id === reviewId) {
+        it.review.vendor_reply = replyText
+        found = true
+      }
+    })
+  })
+  if (found) {
+    saveAccountState(state)
+  }
 }
 
 // -------------------------------------------------------------
@@ -773,20 +834,18 @@ export async function getReviewsToWrite(): Promise<ReviewToWrite[]> {
   const list: ReviewToWrite[] = []
 
   state.bookings.forEach((b) => {
-    if (b.status === 'completed') {
-      b.items.forEach((item) => {
-        if (item.status === 'returned' && item.review === null) {
-          list.push({
-            booking_id: b.booking_id,
-            equipment_id: item.equipment_id,
-            equipment_name: item.name,
-            equipment_image: item.image_url,
-            vendor_name: item.vendor_name,
-            returned_date: b.end_date,
-          })
-        }
-      })
-    }
+    b.items.forEach((item) => {
+      if (item.status === 'returned' && item.review === null) {
+        list.push({
+          booking_id: b.booking_id,
+          equipment_id: item.equipment_id,
+          equipment_name: item.name,
+          equipment_image: item.image_url,
+          vendor_name: item.vendor_name,
+          returned_date: b.end_date,
+        })
+      }
+    })
   })
 
   return list

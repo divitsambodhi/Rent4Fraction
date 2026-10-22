@@ -41,6 +41,7 @@ export function PayoutsSection({
 
   const allPayouts = useMemo(() => {
     return getAdminPayouts()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [version])
 
   const totals = useMemo(() => {

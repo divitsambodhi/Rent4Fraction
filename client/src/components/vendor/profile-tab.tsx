@@ -1,4 +1,4 @@
-import { HelpCircle, RefreshCw, ShieldCheck } from 'lucide-react'
+import { RefreshCw, ShieldCheck } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { StatusBadge } from '@/components/shared/status-badge'
 import { Skeleton } from '@/components/shared/loading-skeleton'
@@ -116,22 +116,19 @@ export function ProfileTab({
                 </span>
               </div>
 
-              <div className="flex items-center justify-between py-1">
-                <div className="flex items-center gap-1 text-muted-foreground">
-                  <span>Commission rate</span>
-                  <span
-                    title="Set by Rent4Fraction"
-                    className="cursor-help"
-                  >
-                    <HelpCircle className="size-3 text-muted-foreground hover:text-foreground" />
-                  </span>
+              <div className="py-1 space-y-1">
+                <div className="flex items-center justify-between">
+                  <span className="text-muted-foreground">Default commission rate</span>
+                  <div className="flex items-center gap-1.5">
+                    <span className="font-bold text-brand tabular-nums text-sm">
+                      {profile.commission_rate}%
+                    </span>
+                    <ShieldCheck className="size-3.5 text-brand" />
+                  </div>
                 </div>
-                <div className="flex items-center gap-1.5">
-                  <span className="font-bold text-brand tabular-nums text-sm">
-                    {profile.commission_rate}%
-                  </span>
-                  <ShieldCheck className="size-3.5 text-brand" />
-                </div>
+                <p className="text-[11px] text-muted-foreground">
+                  Commission can differ by equipment.
+                </p>
               </div>
             </div>
           </div>

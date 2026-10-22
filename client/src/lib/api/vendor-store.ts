@@ -28,6 +28,7 @@ import type {
   VendorOrderStatus,
 } from '@/types/account'
 import { getAllStoredEquipment } from './equipment-store'
+import { calculateOrderPayoutFromItems } from '@/lib/pricing'
 
 const PROFILES_KEY = 'r4f-vendor-profiles-v1'
 
@@ -316,6 +317,8 @@ export function ensureVendorOrdersSeeded(): void {
           days: ev.rentalDays,
           total_price: ev.amount,
           status: ev.status === 'completed' ? 'returned' : 'confirmed',
+          commission_rate: 10,
+          commission_amount: Math.round(ev.amount * 0.10),
           vendor_id: 'v_sargam',
           vendor_name: 'Sargam Sound Systems',
           review:
@@ -365,7 +368,6 @@ export function ensureVendorOrdersSeeded(): void {
 export function getVendorOverview(range: OverviewRange = '30d', vendorId = '1'): VendorOverview {
   ensureVendorOrdersSeeded()
   const accountState = loadAccountState()
-  const profile = getVendorProfile(vendorId)
   const allEquipment = getAllStoredEquipment()
   const today = new Date()
 
@@ -417,11 +419,26 @@ export function getVendorOverview(range: OverviewRange = '30d', vendorId = '1'):
     return date >= prevRangeStart && date < rangeStart
   })
 
-  const currentGross = currentCompleted.reduce((sum, vo) => sum + vo.order.subtotal, 0)
-  const prevGross = prevCompleted.reduce((sum, vo) => sum + vo.order.subtotal, 0)
+  const computeOrdersPayoutSummary = (ordersList: typeof currentCompleted) => {
+    let grossPaise = 0
+    let commissionPaise = 0
+    ordersList.forEach((vo) => {
+      const b = accountState.bookings.find((bk) => bk.booking_id === vo.booking.booking_id)
+      const matchingItems = b?.items.filter((it) => vo.order.item_ids.includes(it.item_id)) || []
+      const calc = calculateOrderPayoutFromItems(matchingItems)
+      grossPaise += Math.round(calc.gross * 100)
+      commissionPaise += Math.round(calc.commission * 100)
+    })
+    const netPaise = grossPaise - commissionPaise
+    return {
+      gross: grossPaise / 100,
+      commission: commissionPaise / 100,
+      net: netPaise / 100,
+    }
+  }
 
-  const currentPayouts = calculatePayoutAmounts(currentGross, profile.commission_rate)
-  const prevPayouts = calculatePayoutAmounts(prevGross, profile.commission_rate)
+  const currentPayouts = computeOrdersPayoutSummary(currentCompleted)
+  const prevPayouts = computeOrdersPayoutSummary(prevCompleted)
 
   const earningsDeltaPercent =
     prevPayouts.net > 0
@@ -475,8 +492,7 @@ export function getVendorOverview(range: OverviewRange = '30d', vendorId = '1'):
       const dayOrders = currentCompleted.filter(
         (vo) => format(vo.completedAt || vo.createdAt, 'yyyy-MM-dd') === dStr
       )
-      const dayGross = dayOrders.reduce((sum, vo) => sum + vo.order.subtotal, 0)
-      const dayCalc = calculatePayoutAmounts(dayGross, profile.commission_rate)
+      const dayCalc = computeOrdersPayoutSummary(dayOrders)
 
       earnings_series.push({
         date: dStr,
@@ -496,8 +512,7 @@ export function getVendorOverview(range: OverviewRange = '30d', vendorId = '1'):
         const d = vo.completedAt || vo.createdAt
         return d > start && d <= end
       })
-      const bGross = bucketOrders.reduce((sum, vo) => sum + vo.order.subtotal, 0)
-      const bCalc = calculatePayoutAmounts(bGross, profile.commission_rate)
+      const bCalc = computeOrdersPayoutSummary(bucketOrders)
 
       earnings_series.push({
         date: format(end, 'yyyy-MM-dd'),
@@ -517,8 +532,7 @@ export function getVendorOverview(range: OverviewRange = '30d', vendorId = '1'):
         const d = vo.completedAt || vo.createdAt
         return d > start && d <= end
       })
-      const wGross = weekOrders.reduce((sum, vo) => sum + vo.order.subtotal, 0)
-      const wCalc = calculatePayoutAmounts(wGross, profile.commission_rate)
+      const wCalc = computeOrdersPayoutSummary(weekOrders)
 
       earnings_series.push({
         date: format(end, 'yyyy-MM-dd'),
@@ -534,8 +548,7 @@ export function getVendorOverview(range: OverviewRange = '30d', vendorId = '1'):
     const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct']
     months.forEach((m, idx) => {
       const mOrders = currentCompleted.filter((vo) => (vo.completedAt || vo.createdAt).getMonth() === idx)
-      const mGross = mOrders.reduce((sum, vo) => sum + vo.order.subtotal, 0)
-      const mCalc = calculatePayoutAmounts(mGross, profile.commission_rate)
+      const mCalc = computeOrdersPayoutSummary(mOrders)
 
       earnings_series.push({
         date: `2026-${String(idx + 1).padStart(2, '0')}-01`,
@@ -740,23 +753,24 @@ export function getVendorPayouts(
         payoutStatus = 'processing'
       }
 
-      const amounts = calculatePayoutAmounts(vo.subtotal, profile.commission_rate)
+      const matchingItems = booking.items.filter((i: BookingItemDetail) => isVendorMatch(i.vendor_id, vendorId) && vo.item_ids.includes(i.item_id))
+      const amounts = calculateOrderPayoutFromItems(matchingItems)
 
-      const itemsStr = booking.items
-        .filter((i: BookingItemDetail) => isVendorMatch(i.vendor_id, vendorId))
+      const itemsStr = matchingItems
         .map((i: BookingItemDetail) => i.name)
         .join(', ')
 
       const pId = `PO-${vo.vendor_order_id.replace('VO-', '')}`
 
-      const payoutLineItems = booking.items
-        .filter((i: BookingItemDetail) => isVendorMatch(i.vendor_id, vendorId))
+      const payoutLineItems = matchingItems
         .map((i: BookingItemDetail) => ({
           equipment_name: i.name,
           quantity: i.quantity,
           daily_rate: i.unit_price,
           days: i.days || booking.rental_days,
           subtotal: i.total_price,
+          commission_rate: i.commission_rate ?? profile.commission_rate,
+          commission_amount: i.commission_amount ?? Math.round(i.total_price * ((i.commission_rate ?? profile.commission_rate) / 100)),
         }))
 
       payouts.push({

@@ -124,9 +124,14 @@ export function createInitialEquipmentState(): EquipmentStoreState {
   }
 }
 
+let memoryEquipmentState: EquipmentStoreState | null = null
+
 export function getStoredEquipmentState(): EquipmentStoreState {
   if (typeof window === 'undefined') {
-    return createInitialEquipmentState()
+    if (!memoryEquipmentState) {
+      memoryEquipmentState = createInitialEquipmentState()
+    }
+    return memoryEquipmentState
   }
 
   try {
@@ -153,7 +158,10 @@ export function getStoredEquipmentState(): EquipmentStoreState {
 }
 
 export function saveStoredEquipmentState(state: EquipmentStoreState): void {
-  if (typeof window === 'undefined') return
+  if (typeof window === 'undefined') {
+    memoryEquipmentState = state
+    return
+  }
   try {
     localStorage.setItem(STORE_KEY, JSON.stringify(state))
   } catch (err) {
@@ -196,10 +204,34 @@ export function enrichInventoryItem(item: Partial<InventoryItem> & { equipment_i
     included: item.includes || item.included || [],
     specifications: item.specifications || {},
     blocked_ranges: item.blocked_ranges || [],
+    commission_rate: item.commission_rate !== undefined ? item.commission_rate : null,
     created_at: item.created_at || now,
     updated_at: item.updated_at || item.updated || now,
     updated: item.updated_at || item.updated || now,
   }
+}
+
+export function updateEquipmentCommissionRate(
+  equipmentId: string,
+  rate: number | null
+): InventoryItem {
+  const state = getStoredEquipmentState()
+  const index = state.items.findIndex((item) => item.equipment_id === equipmentId)
+  if (index === -1) {
+    throw new Error(`Equipment item with ID ${equipmentId} not found`)
+  }
+  const existing = state.items[index]
+  const clampedRate = rate !== null && rate !== undefined && !isNaN(Number(rate))
+    ? Math.round(Math.max(0, Math.min(100, Number(rate))) * 100) / 100
+    : null
+  const updated = enrichInventoryItem({
+    ...existing,
+    commission_rate: clampedRate,
+    updated_at: new Date().toISOString(),
+  })
+  state.items[index] = updated
+  saveStoredEquipmentState(state)
+  return updated
 }
 
 export function getAllStoredEquipment(): InventoryItem[] {

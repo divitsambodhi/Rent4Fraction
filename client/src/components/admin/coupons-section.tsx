@@ -37,6 +37,7 @@ export function CouponsSection({
 
   const allCoupons = useMemo(() => {
     return getAdminCoupons()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [version])
 
   const couponsWithStatus: CouponWithStatus[] = useMemo(() => {

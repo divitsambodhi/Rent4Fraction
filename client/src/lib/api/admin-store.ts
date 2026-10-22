@@ -4,8 +4,8 @@ import {
   getVendorProfile,
   updateVendorProfile,
   getStoredVendorProfiles,
-  calculatePayoutAmounts,
 } from './vendor-store'
+import { calculateOrderPayoutFromItems } from '@/lib/pricing'
 import { CANONICAL_CATEGORIES, type CanonicalCategory } from './canonical-ids'
 import { MOCK_COUPONS } from '@/lib/config/pricing-placeholders'
 import { evaluateDisputeResolution } from '@/lib/lifecycle/settlement'
@@ -34,6 +34,7 @@ const PAYOUT_STATUS_KEY = 'r4f-payout-status-v1'
 export interface ManagedCategory extends CanonicalCategory {
   is_active: boolean
   equipment_count?: number
+  default_commission_rate?: number | null
 }
 
 function initCategories(): ManagedCategory[] {
@@ -101,6 +102,7 @@ export function saveAdminCategory(category: Partial<ManagedCategory> & { name: s
     icon: category.icon || 'Folder',
     description: category.description || '',
     image: category.image || '/images/equipment/line-array-speaker.svg',
+    default_commission_rate: category.default_commission_rate ?? null,
     is_active: category.is_active !== undefined ? category.is_active : true,
   }
   categories.push(newCat)
@@ -222,8 +224,10 @@ export function getAdminPayouts(): AdminPayoutRow[] {
 
       const profile = profiles[vo.vendor_id] || getVendorProfile(vo.vendor_id)
       const commissionRate = profile?.commission_rate ?? 10
-      const amounts = calculatePayoutAmounts(vo.subtotal, commissionRate)
+      const matchingItems = booking.items.filter((it) => vo.item_ids.includes(it.item_id))
+      const amounts = calculateOrderPayoutFromItems(matchingItems)
       const pId = `PO-${vo.vendor_order_id.replace('VO-', '')}`
+      const effectiveRate = amounts.gross > 0 ? Math.round((amounts.commission / amounts.gross) * 10000) / 100 : commissionRate
 
       // Default status
       let defaultStatus: PayoutStatus = 'pending'
@@ -246,7 +250,7 @@ export function getAdminPayouts(): AdminPayoutRow[] {
         booking_id: booking.booking_id,
         gross: amounts.gross,
         commission: amounts.commission,
-        commission_rate: commissionRate,
+        commission_rate: effectiveRate,
         net: amounts.net,
         status: finalStatus,
         created_at: booking.end_date,
@@ -501,11 +505,8 @@ export function getAdminOverviewKPIs(): AdminOverviewKPIs {
 
   accountState.bookings.forEach((b) => {
     grossBookingValue += b.total_amount
-    b.vendor_orders.forEach((vo) => {
-      const p = profiles[vo.vendor_id]
-      const rate = p?.commission_rate ?? 10
-      const c = Math.round(vo.subtotal * (rate / 100))
-      platformCommissionEarned += c
+    b.items.forEach((item) => {
+      platformCommissionEarned += item.commission_amount ?? Math.round(item.total_price * ((item.commission_rate ?? 10) / 100))
     })
   })
 

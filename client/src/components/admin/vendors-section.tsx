@@ -31,6 +31,7 @@ export function VendorsSection({
   const allVendors: VendorProfile[] = useMemo(() => {
     const profiles = getStoredVendorProfiles()
     return Object.values(profiles)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [vendorListVersion])
 
   const counts = useMemo(() => {

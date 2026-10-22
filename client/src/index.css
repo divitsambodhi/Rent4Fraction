@@ -215,6 +215,19 @@ textarea {
   font-size: 16px;
 }
 
+/* Remove default browser search inner focus rectangle and native outlines */
+input[type="search"]::-webkit-search-decoration,
+input[type="search"]::-webkit-search-cancel-button,
+input[type="search"]::-webkit-search-results-button,
+input[type="search"]::-webkit-search-results-decoration {
+  display: none;
+}
+
+input:focus,
+input:focus-visible {
+  outline: none !important;
+}
+
 @media (min-width: 768px) and (pointer: fine) {
   input:not([type="checkbox"]):not([type="radio"]),
   select,

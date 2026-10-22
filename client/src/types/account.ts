@@ -197,6 +197,8 @@ export interface BookingItemDetail {
   category?: string
   review: ItemReview | null
   damage_report: DamageReport | null
+  commission_rate: number
+  commission_amount: number
 }
 
 export interface VendorOrder {

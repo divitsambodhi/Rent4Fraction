@@ -7,6 +7,9 @@ import {
   deliveryFee,
   tax,
   quote,
+  resolveCommission,
+  calculateItemCommission,
+  calculateOrderPayoutFromItems,
 } from '../pricing'
 import { MOCK_COUPONS } from '../config/pricing-placeholders'
 import type { CartLine } from '@/types/checkout'
@@ -275,6 +278,112 @@ describe('Pricing Engine Unit Tests', () => {
 
         expect(q.total).toBe(computed)
       }
+    })
+  })
+
+  describe('resolveCommission Precedence & Rounding', () => {
+    it('uses equipment override when present (Precedence 1)', () => {
+      const result = resolveCommission(
+        { commission_rate: 15.5 },
+        { default_commission_rate: 12 },
+        { commission_rate: 10 }
+      )
+      expect(result).toEqual({ rate: 15.5, source: 'Equipment' })
+    })
+
+    it('uses category default when equipment has null/undefined (Precedence 2)', () => {
+      const result = resolveCommission(
+        { commission_rate: null },
+        { default_commission_rate: 12.25 },
+        { commission_rate: 10 }
+      )
+      expect(result).toEqual({ rate: 12.25, source: 'Category' })
+    })
+
+    it('uses vendor default when equipment and category have no rate (Precedence 3)', () => {
+      const result = resolveCommission(
+        { commission_rate: undefined },
+        { default_commission_rate: null },
+        { commission_rate: 8.5 }
+      )
+      expect(result).toEqual({ rate: 8.5, source: 'Vendor' })
+    })
+
+    it('falls back to platform default (Precedence 4)', () => {
+      const result = resolveCommission(null, null, null)
+      expect(result).toEqual({ rate: 10, source: 'Platform' })
+    })
+
+    it('clamps rates between 0 and 100 with at most 2 decimal places', () => {
+      const high = resolveCommission({ commission_rate: 125.456 }, null, null)
+      expect(high.rate).toBe(100)
+
+      const low = resolveCommission({ commission_rate: -5.2 }, null, null)
+      expect(low.rate).toBe(0)
+
+      const precision = resolveCommission({ commission_rate: 12.3456 }, null, null)
+      expect(precision.rate).toBe(12.35)
+    })
+  })
+
+  describe('Per-Item Commission Snapshots & Payout Calculations', () => {
+    it('accurately calculates item commission using paise-safe arithmetic', () => {
+      const res = calculateItemCommission(15000, 10)
+      expect(res.rate).toBe(10)
+      expect(res.commissionAmount).toBe(1500)
+      expect(res.netAmount).toBe(13500)
+    })
+
+    it('handles fractional paise without float drift', () => {
+      // 333.33 total with 10% rate = 33.33 commission, 300 net
+      const res = calculateItemCommission(333.33, 10)
+      expect(res.commissionAmount).toBe(33.33)
+      expect(res.netAmount).toBe(300)
+    })
+
+    it('sums per-item commission snapshots for order payouts (never vendor-level rate)', () => {
+      const items = [
+        {
+          item_id: 'i1',
+          equipment_id: 'eq1',
+          name: 'Speaker',
+          image_url: '',
+          unit_price: 2500,
+          quantity: 2,
+          days: 3,
+          total_price: 15000,
+          status: 'confirmed' as const,
+          vendor_id: 'v1',
+          vendor_name: 'V1',
+          review: null,
+          damage_report: null,
+          commission_rate: 15, // item override
+          commission_amount: 2250,
+        },
+        {
+          item_id: 'i2',
+          equipment_id: 'eq2',
+          name: 'Lights',
+          image_url: '',
+          unit_price: 1000,
+          quantity: 1,
+          days: 3,
+          total_price: 3000,
+          status: 'confirmed' as const,
+          vendor_id: 'v1',
+          vendor_name: 'V1',
+          review: null,
+          damage_report: null,
+          commission_rate: 8, // category default
+          commission_amount: 240,
+        },
+      ]
+
+      const payout = calculateOrderPayoutFromItems(items)
+      expect(payout.gross).toBe(18000)
+      expect(payout.commission).toBe(2490) // 2250 + 240
+      expect(payout.net).toBe(15510) // 18000 - 2490
+      expect(payout.effective_rate).toBe(13.83) // 2490 / 18000 * 100
     })
   })
 })

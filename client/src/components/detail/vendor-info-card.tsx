@@ -7,7 +7,8 @@ import { cn } from '@/lib/utils'
 
 interface VendorInfoCardProps {
   vendor: VendorDetail
-  onOpenMessage: () => void
+  onOpenMessage?: () => void
+  preview?: boolean
   className?: string
 }
 
@@ -22,6 +23,7 @@ function getInitials(name: string): string {
 export function VendorInfoCard({
   vendor,
   onOpenMessage,
+  preview = false,
   className,
 }: VendorInfoCardProps) {
   const initials = getInitials(vendor.business_name)
@@ -87,7 +89,7 @@ export function VendorInfoCard({
 
           {/* Action Buttons */}
           <div className="flex flex-wrap items-center gap-2.5 pt-2">
-            <AppLink to={`/equipment?vendor=${vendor.vendor_id}`}>
+            <AppLink to={preview ? `/equipment?vendor=${vendor.vendor_id}&preview=1` : `/equipment?vendor=${vendor.vendor_id}`}>
               <Button
                 type="button"
                 variant="outline"
@@ -99,16 +101,18 @@ export function VendorInfoCard({
               </Button>
             </AppLink>
 
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              onClick={onOpenMessage}
-              className="text-xs font-semibold gap-1.5 h-10 px-4 rounded-[8px]"
-            >
-              <MessageSquare className="size-3.5" />
-              <span>Message vendor</span>
-            </Button>
+            {!preview && onOpenMessage && (
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={onOpenMessage}
+                className="text-xs font-semibold gap-1.5 h-10 px-4 rounded-[8px]"
+              >
+                <MessageSquare className="size-3.5" />
+                <span>Message vendor</span>
+              </Button>
+            )}
           </div>
         </div>
       </div>

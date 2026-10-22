@@ -5,6 +5,7 @@ import type { Coupon } from './checkout'
 export type AdminSection =
   | 'overview'
   | 'vendors'
+  | 'equipment'
   | 'disputes'
   | 'payouts'
   | 'categories'

@@ -9,9 +9,9 @@ import { allowedActions } from './allowed-actions'
 import { deriveBookingStatus } from './derive-status'
 import {
   calculateDepositSettlement,
-  calculatePayout,
   evaluateDisputeResolution,
 } from './settlement'
+import { calculateOrderPayoutFromItems } from '@/lib/pricing'
 import type {
   DisputeResolutionPayload,
   InspectionPayload,
@@ -373,8 +373,7 @@ export function applyAction(
       // Order completion creates payout and deposit settlement
       order.status = 'completed'
 
-      const rate = context.vendorCommissionRate ?? 10
-      const payoutAmounts = calculatePayout(order.subtotal, rate)
+      const payoutAmounts = calculateOrderPayoutFromItems(orderItems)
       const payoutId = `PO-${Date.now().toString().slice(-5)}`
 
       createdPayout = {
