@@ -1,0 +1,29 @@
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Environments
+.venv/
+env/
+venv/
+ENV/
+
+# Testing & Coverage
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Type Checking & Tool Caches
+.mypy_cache/
+.ruff_cache/
+
+# Local Environment Variables & Secrets
+.env
+.env.local
+.env.*.local
+*.pem
+service-account.json
+
+# IDE
+.vscode/
+.idea/

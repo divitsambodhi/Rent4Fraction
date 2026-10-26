@@ -1,0 +1,243 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "Rent4Fraction API",
+    "description": "Event Equipment Rental Platform Backend API",
+    "version": "0.1.0"
+  },
+  "paths": {
+    "/health": {
+      "get": {
+        "tags": [
+          "Health"
+        ],
+        "summary": "Application Liveness Check",
+        "description": "Liveness probe: verifies the web process is running without database dependency.",
+        "operationId": "health_check",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HealthStatusResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/health/db": {
+      "get": {
+        "tags": [
+          "Health"
+        ],
+        "summary": "Database Readiness Check",
+        "description": "Readiness probe:\n- Tests live MySQL connectivity\n- Checks MySQL version is at least 8.0.16 (supports CHECK constraints)\n- Verifies migrations exist in schema_migrations",
+        "operationId": "database_health_check",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DatabaseHealthResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/version": {
+      "get": {
+        "tags": [
+          "Health"
+        ],
+        "summary": "Application Version & Revision",
+        "operationId": "get_version",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/VersionResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "DatabaseHealthResponse": {
+        "properties": {
+          "status": {
+            "type": "string",
+            "title": "Status"
+          },
+          "database": {
+            "type": "string",
+            "title": "Database"
+          },
+          "mysql_version": {
+            "type": "string",
+            "title": "Mysql Version"
+          },
+          "version_valid": {
+            "type": "boolean",
+            "title": "Version Valid"
+          },
+          "latest_migration": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Latest Migration"
+          },
+          "migrations_count": {
+            "type": "integer",
+            "title": "Migrations Count"
+          }
+        },
+        "type": "object",
+        "required": [
+          "status",
+          "database",
+          "mysql_version",
+          "version_valid",
+          "latest_migration",
+          "migrations_count"
+        ],
+        "title": "DatabaseHealthResponse"
+      },
+      "HealthStatusResponse": {
+        "properties": {
+          "status": {
+            "type": "string",
+            "title": "Status"
+          },
+          "environment": {
+            "type": "string",
+            "title": "Environment"
+          }
+        },
+        "type": "object",
+        "required": [
+          "status",
+          "environment"
+        ],
+        "title": "HealthStatusResponse"
+      },
+      "VersionResponse": {
+        "properties": {
+          "app": {
+            "type": "string",
+            "title": "App"
+          },
+          "version": {
+            "type": "string",
+            "title": "Version"
+          },
+          "environment": {
+            "type": "string",
+            "title": "Environment"
+          },
+          "git_commit": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Git Commit"
+          }
+        },
+        "type": "object",
+        "required": [
+          "app",
+          "version",
+          "environment",
+          "git_commit"
+        ],
+        "title": "VersionResponse"
+      }
+    }
+  },
+  "tags": [
+    {
+      "name": "Health",
+      "description": "Liveness and database readiness probes"
+    },
+    {
+      "name": "Authentication",
+      "description": "User sessions, profiles, and credentials"
+    },
+    {
+      "name": "Catalog",
+      "description": "Equipment discovery, categories, and availability"
+    },
+    {
+      "name": "Cart",
+      "description": "Shopping cart line item management"
+    },
+    {
+      "name": "Wishlist",
+      "description": "Saved customer wishlist items"
+    },
+    {
+      "name": "Addresses",
+      "description": "Customer delivery address book"
+    },
+    {
+      "name": "Checkout",
+      "description": "Booking estimates and coupon applications"
+    },
+    {
+      "name": "Bookings",
+      "description": "Booking orders and status tracking"
+    },
+    {
+      "name": "Payments",
+      "description": "Payment intents and settlements"
+    },
+    {
+      "name": "Webhooks",
+      "description": "Razorpay and payment gateway webhooks"
+    },
+    {
+      "name": "Vendor",
+      "description": "Vendor dashboard, orders, inventory, and payouts"
+    },
+    {
+      "name": "Admin",
+      "description": "Platform management, vendor approvals, and disputes"
+    },
+    {
+      "name": "Reviews",
+      "description": "Equipment customer ratings and feedback"
+    },
+    {
+      "name": "Messages",
+      "description": "Direct communication between users and vendors"
+    },
+    {
+      "name": "Notifications",
+      "description": "Customer and vendor alerts"
+    },
+    {
+      "name": "Help",
+      "description": "FAQs and customer support knowledge base"
+    }
+  ]
+}

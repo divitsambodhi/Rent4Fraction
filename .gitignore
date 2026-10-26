@@ -196,21 +196,30 @@ MOVE_TO_CLIENT.md
 !README.md
 !client/README.md
 !database/README.md
+!server/README.md
 
 *.txt
-**/*.txt
 !database/requirements.txt
 !client/slop-allowlist.txt
+!server/requirements.txt
+!server/requirements-dev.txt
+
 
 *.doc
 *.docx
 *.pdf
+
+# Database dumps and local backups
+database/backup*
+*.sq
+*.dump
 
 # Environment and sensitive credential files
 .env
 .env.*
 .env*.local
 !.env.example
+!server/.env.example
 *.local
 *.local.json
 *.pem
@@ -226,4 +235,5 @@ client_secrets*.json
 id_rsa*
 id_ed25519*
 auth-tokens*.json
+
 

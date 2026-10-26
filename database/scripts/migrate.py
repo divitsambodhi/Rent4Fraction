@@ -108,9 +108,19 @@ def explain_connection_error(exc: Exception) -> str:
             f"   Fix: Verify that your MySQL Windows service (e.g. MySQL80) is RUNNING\n"
             f"        and that port {port} matches your MySQL configuration."
         )
-    if "1045" in msg or "Access denied" in msg:
+    if "1044" in msg:
         return (
-            f"-> Access denied for user '{user}'.\n"
+            f"-> Access denied for user '{user}' to database '{db}'.\n"
+            f"   The database '{db}' might not exist or '{user}' does not have permissions granted on it.\n"
+            f"   Fix: In MySQL Workbench / CLI as root, run:\n"
+            f"        CREATE DATABASE IF NOT EXISTS {db} CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci;\n"
+            f"        GRANT ALL PRIVILEGES ON {db}.* TO '{user}'@'localhost';\n"
+            f"        GRANT ALL PRIVILEGES ON {db}.* TO '{user}'@'127.0.0.1';\n"
+            f"        FLUSH PRIVILEGES;"
+        )
+    if "1045" in msg:
+        return (
+            f"-> Access denied for user '{user}' (wrong password or user does not exist).\n"
             f"   Fix: Check that MYSQL_USER and MYSQL_PASSWORD in database\\.env\n"
             f"        match the password you set in database\\manual\\00_create_database_and_user.sql."
         )
@@ -121,6 +131,7 @@ def explain_connection_error(exc: Exception) -> str:
             f"        and execute it as root first to create the database and user."
         )
     return f"-> {exc}"
+
 
 
 # ---------------------------------------------------------------------------
