@@ -67,9 +67,25 @@ class RequestContextMiddleware(BaseHTTPMiddleware):
                 response.headers["X-Content-Type-Options"] = "nosniff"
                 response.headers["X-Frame-Options"] = "DENY"
                 response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
-                response.headers["Content-Security-Policy"] = (
-                    "default-src 'none'; frame-ancestors 'none';"
-                )
+
+                # Allow Swagger UI and ReDoc to load CDN bundles and stylesheets on doc paths;
+                # enforce strict default-src 'none' on API routes.
+                path = request.url.path
+                if path in ("/docs", "/redoc", "/openapi.json") or path.startswith(
+                    ("/docs/", "/redoc/")
+                ):
+                    response.headers["Content-Security-Policy"] = (
+                        "default-src 'self'; "
+                        "script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; "
+                        "style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; "
+                        "img-src 'self' data: https://fastapi.tiangolo.com https://cdn.jsdelivr.net; "
+                        "frame-ancestors 'none';"
+                    )
+                else:
+                    response.headers["Content-Security-Policy"] = (
+                        "default-src 'none'; frame-ancestors 'none';"
+                    )
+
                 if self.is_production:
                     response.headers["Strict-Transport-Security"] = (
                         "max-age=31536000; includeSubDomains"

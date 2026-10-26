@@ -1,4 +1,4 @@
-﻿-- =============================================================================
+-- =============================================================================
 -- Seed 003 — Vendors + equipment + images
 -- Idempotent: ON DUPLICATE KEY UPDATE keyed on unique constraints.
 -- vendor3 (Deepak / PartyEssentials) is left in 'pending' status.
@@ -11,8 +11,8 @@ SET @v2_user_id = (SELECT user_id FROM users WHERE firebase_uid = 'dev-vendor-2-
 SET @v3_user_id = (SELECT user_id FROM users WHERE firebase_uid = 'dev-vendor-3-uid-replace-me');
 
 -- ── Vendors ───────────────────────────────────────────────────────────────────
--- vendor1 — SoundMaster Pro (approved)
-INSERT INTO vendors (user_id, business_name, description, address, phone, logo_url, gst_number, approval_status, approved_by, approved_at, commission_rate)
+-- vendor1 — SoundMaster Pro (approved, 10% commission, 250 delivery fee)
+INSERT INTO vendors (user_id, business_name, description, address, phone, logo_url, gst_number, approval_status, approved_by, approved_at, commission_rate, delivery_fee)
 SELECT @v1_user_id,
        'SoundMaster Pro',
        'Premium audio equipment rental for weddings, corporate events and concerts.',
@@ -23,15 +23,17 @@ SELECT @v1_user_id,
        'approved',
        @admin_id,
        '2025-01-15 10:00:00',
-       10.00
+       10.00,
+       250.00
 ON DUPLICATE KEY UPDATE
     business_name   = 'SoundMaster Pro',
     approval_status = 'approved',
     approved_by     = @admin_id,
-    approved_at     = '2025-01-15 10:00:00';
+    approved_at     = '2025-01-15 10:00:00',
+    delivery_fee    = 250.00;
 
--- vendor2 — LightUp Events (approved)
-INSERT INTO vendors (user_id, business_name, description, address, phone, logo_url, gst_number, approval_status, approved_by, approved_at, commission_rate)
+-- vendor2 — LightUp Events (approved, NULL commission inherits from category/platform, 200 delivery fee)
+INSERT INTO vendors (user_id, business_name, description, address, phone, logo_url, gst_number, approval_status, approved_by, approved_at, commission_rate, delivery_fee)
 SELECT @v2_user_id,
        'LightUp Events',
        'State-of-the-art lighting and furniture hire for every occasion.',
@@ -42,15 +44,17 @@ SELECT @v2_user_id,
        'approved',
        @admin_id,
        '2025-01-20 11:00:00',
-       10.00
+       NULL,
+       200.00
 ON DUPLICATE KEY UPDATE
     business_name   = 'LightUp Events',
     approval_status = 'approved',
     approved_by     = @admin_id,
-    approved_at     = '2025-01-20 11:00:00';
+    approved_at     = '2025-01-20 11:00:00',
+    delivery_fee    = 200.00;
 
--- vendor3 — Party Essentials (pending — not yet approved)
-INSERT INTO vendors (user_id, business_name, description, address, phone, logo_url, gst_number, approval_status, commission_rate)
+-- vendor3 — Party Essentials (pending — not yet approved, 150 delivery fee)
+INSERT INTO vendors (user_id, business_name, description, address, phone, logo_url, gst_number, approval_status, commission_rate, delivery_fee)
 SELECT @v3_user_id,
        'Party Essentials',
        'One-stop shop for tents, furniture and decorative rentals.',
@@ -59,10 +63,13 @@ SELECT @v3_user_id,
        'https://placehold.co/200x200/533483/e94560?text=PE',
        '07AACFP7890C1ZZ',
        'pending',
-       12.00
+       NULL,
+       150.00
 ON DUPLICATE KEY UPDATE
     business_name   = 'Party Essentials',
-    approval_status = 'pending';
+    approval_status = 'pending',
+    delivery_fee    = 150.00;
+
 
 -- ── Resolve vendor_ids ────────────────────────────────────────────────────────
 SET @vendor1_id = (SELECT vendor_id FROM vendors WHERE user_id = @v1_user_id);
@@ -86,14 +93,16 @@ SET @cat_tables_id       = (SELECT category_id FROM categories WHERE name = 'Tab
 -- Equipment — vendor1 (SoundMaster Pro)
 -- =============================================================================
 -- E1: Pro Speaker System 5000
-INSERT INTO equipment (vendor_id, category_id, name, description, price_per_day, security_deposit, quantity, min_rental_days, delivery_available, specifications, status)
+INSERT INTO equipment (vendor_id, category_id, name, description, price_per_day, security_deposit, quantity, min_rental_days, commission_rate, delivery_available, specifications, status)
 SELECT @vendor1_id, @cat_speakers_id,
     'Pro Speaker System 5000',
     '2× 15-inch full-range PA speakers with 1000W RMS power, suitable for audiences up to 500.',
-    1500.00, 3000.00, 3, 1, 1,
+    1500.00, 3000.00, 3, 1, 8.00, 1,
     JSON_OBJECT('power_rms','1000W','coverage','100°x15°','weight_kg',28,'impedance','8 Ohm'),
     'active'
 WHERE NOT EXISTS (SELECT 1 FROM equipment WHERE vendor_id = @vendor1_id AND name = 'Pro Speaker System 5000');
+
+UPDATE equipment SET commission_rate = 8.00 WHERE vendor_id = @vendor1_id AND name = 'Pro Speaker System 5000';
 
 SET @eq1_id = (SELECT equipment_id FROM equipment WHERE vendor_id = @vendor1_id AND name = 'Pro Speaker System 5000');
 

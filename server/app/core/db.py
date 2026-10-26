@@ -80,8 +80,12 @@ def transaction(session: Session) -> Generator[Session, None, None]:
     Auto-commits on completion, rolls back on any exception.
     """
     if session.in_transaction():
-        # Session already inside transaction block
-        yield session
+        try:
+            yield session
+            session.commit()
+        except Exception:
+            session.rollback()
+            raise
     else:
         try:
             with session.begin():

@@ -32,6 +32,7 @@ class Settings(BaseSettings):
     # Firebase Auth (optional in initial foundation)
     FIREBASE_PROJECT_ID: str | None = None
     GOOGLE_APPLICATION_CREDENTIALS: str | None = None
+    FIREBASE_AUTH_EMULATOR_HOST: str | None = None
 
     # Razorpay Payments (optional in initial foundation)
     RAZORPAY_KEY_ID: str | None = None
@@ -47,15 +48,15 @@ class Settings(BaseSettings):
     @field_validator("DATABASE_URL", mode="before")
     @classmethod
     def validate_database_url(cls, v: Any, info: Any) -> str:
-        # Fallback to TEST_DATABASE_URL from values if DATABASE_URL is not provided
+        # If an explicit value was passed to Settings(DATABASE_URL=...), honor it directly
         val = v
-        if not val and isinstance(info.data, dict):
-            val = info.data.get("TEST_DATABASE_URL")
-        if not val:
-            # Check os.environ as final fallback before failing
-            import os
+        if val is None:
+            if isinstance(info.data, dict):
+                val = info.data.get("TEST_DATABASE_URL")
+            if not val:
+                import os
 
-            val = os.environ.get("DATABASE_URL") or os.environ.get("TEST_DATABASE_URL")
+                val = os.environ.get("DATABASE_URL") or os.environ.get("TEST_DATABASE_URL")
 
         if not val or not str(val).strip():
             raise ValueError("DATABASE_URL (or TEST_DATABASE_URL) is required and cannot be empty")

@@ -213,6 +213,8 @@ MOVE_TO_CLIENT.md
 database/backup*
 *.sq
 *.dump
+backup*.sql
+*backup*.sql
 
 # Environment and sensitive credential files
 .env
@@ -235,5 +237,9 @@ client_secrets*.json
 id_rsa*
 id_ed25519*
 auth-tokens*.json
+secrets/
+**/secrets/
+firebase-service-account*.json
+**/firebase-service-account*.json
 
 

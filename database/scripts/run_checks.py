@@ -148,10 +148,11 @@ def chk_overbooking_insert(cur):
     stock = scalar(cur, "SELECT quantity FROM equipment WHERE equipment_id = %s", (eq_id,))
 
     cur.execute(
-        "INSERT INTO bookings (user_id, address_id, start_date, end_date, subtotal, discount, tax, delivery_fee, security_deposit, total_amount, payment_status, status) "
-        "VALUES (%s, %s, '2026-03-01', '2026-03-02', 100.00, 0.00, 18.00, 0.00, 0.00, 118.00, 'unpaid', 'pending')",
+        "INSERT INTO bookings (user_id, address_id, start_date, end_date, delivery_address_snapshot, subtotal, discount, tax, delivery_fee, security_deposit, total_amount, payment_status, status) "
+        "VALUES (%s, %s, '2026-03-01', '2026-03-02', '{\"city\":\"Mumbai\"}', 100.00, 0.00, 18.00, 0.00, 0.00, 118.00, 'unpaid', 'pending')",
         (cust_id, addr_id),
     )
+
     b_id = scalar(cur, "SELECT LAST_INSERT_ID()")
     cur.execute(
         "INSERT INTO vendor_orders (booking_id, vendor_id, subtotal, status) VALUES (%s, %s, 100.00, 'pending')",
@@ -242,8 +243,8 @@ def chk_booking_address_ownership(cur):
     c2 = scalar(cur, "SELECT user_id FROM users WHERE firebase_uid = 'dev-customer-2-uid-replace-me'")
     c2_addr = scalar(cur, "SELECT address_id FROM addresses WHERE user_id = %s LIMIT 1", (c2,))
     cur.execute(
-        "INSERT INTO bookings (user_id, address_id, start_date, end_date, subtotal, discount, tax, delivery_fee, security_deposit, total_amount, payment_status, status) "
-        "VALUES (%s, %s, '2026-08-01', '2026-08-02', 100.00, 0.00, 18.00, 0.00, 0.00, 118.00, 'unpaid', 'pending')",
+        "INSERT INTO bookings (user_id, address_id, start_date, end_date, delivery_address_snapshot, subtotal, discount, tax, delivery_fee, security_deposit, total_amount, payment_status, status) "
+        "VALUES (%s, %s, '2026-08-01', '2026-08-02', '{\"city\":\"New Delhi\"}', 100.00, 0.00, 18.00, 0.00, 0.00, 118.00, 'unpaid', 'pending')",
         (c1, c2_addr),
     )
     raise AssertionError("Allowed booking with another user's address!")
@@ -276,8 +277,8 @@ def chk_booking_item_min_days(cur):
     addr_id = scalar(cur, "SELECT address_id FROM addresses WHERE user_id = %s LIMIT 1", (cust_id,))
 
     cur.execute(
-        "INSERT INTO bookings (user_id, address_id, start_date, end_date, subtotal, discount, tax, delivery_fee, security_deposit, total_amount, payment_status, status) "
-        "VALUES (%s, %s, '2026-10-01', '2026-10-01', 100.00, 0.00, 18.00, 0.00, 0.00, 118.00, 'unpaid', 'pending')",
+        "INSERT INTO bookings (user_id, address_id, start_date, end_date, delivery_address_snapshot, subtotal, discount, tax, delivery_fee, security_deposit, total_amount, payment_status, status) "
+        "VALUES (%s, %s, '2026-10-01', '2026-10-01', '{\"city\":\"Mumbai\"}', 100.00, 0.00, 18.00, 0.00, 0.00, 118.00, 'unpaid', 'pending')",
         (cust_id, addr_id),
     )
     b_id = scalar(cur, "SELECT LAST_INSERT_ID()")
@@ -320,11 +321,12 @@ def chk_total_amount_check(cur):
     cust_id = scalar(cur, "SELECT user_id FROM users WHERE firebase_uid = 'dev-customer-1-uid-replace-me'")
     addr_id = scalar(cur, "SELECT address_id FROM addresses WHERE user_id = %s LIMIT 1", (cust_id,))
     cur.execute(
-        "INSERT INTO bookings (user_id, address_id, start_date, end_date, subtotal, discount, tax, delivery_fee, security_deposit, total_amount, payment_status, status) "
-        "VALUES (%s, %s, '2026-04-01', '2026-04-01', 1000.00, 0.00, 180.00, 0.00, 0.00, 999.00, 'unpaid', 'pending')",
+        "INSERT INTO bookings (user_id, address_id, start_date, end_date, delivery_address_snapshot, subtotal, discount, tax, delivery_fee, security_deposit, total_amount, payment_status, status) "
+        "VALUES (%s, %s, '2026-04-01', '2026-04-01', '{\"city\":\"Mumbai\"}', 1000.00, 0.00, 180.00, 0.00, 0.00, 999.00, 'unpaid', 'pending')",
         (cust_id, addr_id),
     )
     raise AssertionError("Allowed wrong total_amount arithmetic!")
+
 
 
 def chk_views_execution(cur):

@@ -43,7 +43,7 @@ from app.models.payments import (
     Payout,
     PayoutStatus,
 )
-from app.models.platform import IdempotencyKey, SchemaMigration
+from app.models.platform import AuditLog, IdempotencyKey, SchemaMigration
 from app.models.social import Message, Notification, Review
 
 __all__ = [
@@ -97,4 +97,5 @@ __all__ = [
     # Platform
     "SchemaMigration",
     "IdempotencyKey",
+    "AuditLog",
 ]

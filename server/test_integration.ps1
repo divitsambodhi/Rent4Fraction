@@ -28,5 +28,14 @@ if (-not $port) { $port = "3306" }
 $encodedPass = [System.Net.WebUtility]::UrlEncode($p)
 $env:TEST_DATABASE_URL = "mysql+pymysql://${u}:${encodedPass}@${h}:${port}/${TargetDb}?charset=utf8mb4"
 
+$pytestExe = ".\.venv312\Scripts\pytest.exe"
+if (-not (Test-Path $pytestExe)) {
+    $pytestExe = ".\.venv\Scripts\pytest.exe"
+}
+if (-not (Test-Path $pytestExe)) {
+    $pytestExe = "pytest"
+}
+
 Write-Host "Running integration tests against $TargetDb..." -ForegroundColor Cyan
-& ".\.venv\Scripts\pytest.exe" -m integration -v
+& $pytestExe -m integration -v
+

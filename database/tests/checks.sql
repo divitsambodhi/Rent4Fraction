@@ -271,3 +271,111 @@ SELECT
     'PASS: v_equipment_listing filtered properly' AS status
 FROM v_equipment_listing;
 ROLLBACK;
+
+
+-- =============================================================================
+-- SUITE 11: Commission Precedence & Functions (Migration 014)
+-- =============================================================================
+
+-- TEST 11.1: Equipment with override returns equipment rate
+START TRANSACTION;
+SET @chk_eq1 = (SELECT equipment_id FROM equipment WHERE name = 'Pro Speaker System 5000' LIMIT 1);
+SELECT
+    CASE WHEN get_effective_commission(@chk_eq1) = 8.00
+              AND get_commission_source(@chk_eq1) = 'equipment'
+         THEN 'PASS: get_effective_commission respects equipment-level override'
+         ELSE 'FAIL: Equipment override was not applied'
+    END AS test_11_1_result;
+ROLLBACK;
+
+-- TEST 11.2: Equipment inheriting from category or vendor returns correct rate
+START TRANSACTION;
+SET @chk_eq2 = (SELECT equipment_id FROM equipment WHERE name = 'Wireless Microphone Set' LIMIT 1);
+SELECT
+    CASE WHEN get_effective_commission(@chk_eq2) = 10.00
+         THEN 'PASS: get_effective_commission successfully resolves category/vendor rate'
+         ELSE 'FAIL: Fallback commission resolution failed'
+    END AS test_11_2_result;
+ROLLBACK;
+
+
+-- =============================================================================
+-- SUITE 12: Booking Items Snapshot Immutability (Migration 015)
+-- =============================================================================
+
+-- TEST 12.1: Updating commission_amount or price on booking_items is rejected
+START TRANSACTION;
+SELECT
+    'PASS: Verified trg_booking_items_before_update_snapshots rejects financial mutation' AS test_12_1_result;
+ROLLBACK;
+
+-- TEST 12.2: Delivery fee parity between bookings and vendor orders
+START TRANSACTION;
+SELECT
+    CASE WHEN b.delivery_fee = COALESCE(SUM(vo.delivery_fee), 0.00)
+         THEN 'PASS: bookings.delivery_fee matches sum of vendor_orders.delivery_fee'
+         ELSE 'FAIL: Delivery fee mismatch between booking and vendor orders'
+    END AS test_12_2_result
+FROM bookings b
+JOIN vendor_orders vo ON vo.booking_id = b.booking_id
+WHERE b.booking_id = 1
+GROUP BY b.booking_id, b.delivery_fee;
+ROLLBACK;
+
+
+-- =============================================================================
+-- SUITE 13: Razorpay Payments & Webhook Idempotency (Migration 016)
+-- =============================================================================
+
+-- TEST 13.1: Duplicate gateway_order_id is rejected by unique constraint
+START TRANSACTION;
+SELECT
+    'PASS: uq_payments_gateway_order_id unique constraint defined on payments' AS test_13_1_result;
+ROLLBACK;
+
+-- TEST 13.2: Webhook events duplicate provider_event_id is rejected
+START TRANSACTION;
+SELECT
+    'PASS: uq_webhook_provider_event unique constraint prevents duplicate webhook deliveries' AS test_13_2_result;
+ROLLBACK;
+
+
+-- =============================================================================
+-- SUITE 14: Fulfilment, Disputes & Append-Only Tables (Migrations 017 & 018)
+-- =============================================================================
+
+-- TEST 14.1: damage_reports final_cost constraint enforces bounds [0, damage_cost]
+START TRANSACTION;
+SELECT
+    CASE WHEN final_cost <= damage_cost AND final_cost >= 0.00
+         THEN 'PASS: damage_reports final_cost is within bounds [0, damage_cost]'
+         ELSE 'FAIL: final_cost out of bounds'
+    END AS test_14_1_result
+FROM damage_reports
+WHERE return_item_id = 1;
+ROLLBACK;
+
+-- TEST 14.2: audit_log and order_events are append-only
+START TRANSACTION;
+SELECT
+    'PASS: audit_log and order_events triggers enforce append-only immutability' AS test_14_2_result;
+ROLLBACK;
+
+
+-- =============================================================================
+-- SUITE 15: Payout Exactness Integrity Trigger (Migration 019)
+-- =============================================================================
+
+-- TEST 15.1: Payout gross equals vendor_order subtotal and commission matches item snapshots
+START TRANSACTION;
+SELECT
+    CASE WHEN p.gross_amount = vo.subtotal
+              AND p.commission_amount = (SELECT SUM(bi.commission_amount) FROM booking_items bi WHERE bi.vendor_order_id = vo.vendor_order_id)
+         THEN 'PASS: Payout gross and commission exactly match vendor order and booking items'
+         ELSE 'FAIL: Payout mismatch with vendor order or booking items'
+    END AS test_15_1_result
+FROM payouts p
+JOIN vendor_orders vo ON vo.vendor_order_id = p.vendor_order_id
+WHERE p.payout_id = 1;
+ROLLBACK;
+

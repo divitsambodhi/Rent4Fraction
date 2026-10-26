@@ -84,7 +84,7 @@ class ForbiddenError(DomainError):
 class ValidationFailedError(DomainError):
     def __init__(self, message: str = "Validation failed", details: Any | None = None) -> None:
         super().__init__(
-            code="VALIDATION_FAILED",
+            code="validation_failed",
             message=message,
             status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
             details=details,
@@ -99,6 +99,163 @@ class PaymentError(DomainError):
             code="PAYMENT_ERROR",
             message=message,
             status_code=status.HTTP_400_BAD_REQUEST,
+            details=details,
+        )
+
+
+# -----------------------------------------------------------------------------
+# Auth Domain Errors (Strictly matches Section 5 specification)
+# -----------------------------------------------------------------------------
+class AuthMissingTokenError(DomainError):
+    def __init__(
+        self,
+        message: str = "Authorization header is missing or malformed",
+        details: Any | None = None,
+    ) -> None:
+        super().__init__(
+            code="auth_missing_token",
+            message=message,
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            details=details,
+        )
+
+
+class AuthInvalidTokenError(DomainError):
+    def __init__(
+        self,
+        message: str = "Invalid authentication token",
+        details: Any | None = None,
+    ) -> None:
+        super().__init__(
+            code="auth_invalid_token",
+            message=message,
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            details=details,
+        )
+
+
+class AuthTokenExpiredError(DomainError):
+    def __init__(
+        self,
+        message: str = "Authentication token has expired",
+        details: Any | None = None,
+    ) -> None:
+        super().__init__(
+            code="auth_token_expired",
+            message=message,
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            details=details,
+        )
+
+
+class AuthRevokedError(DomainError):
+    def __init__(
+        self,
+        message: str = "Authentication token has been revoked",
+        details: Any | None = None,
+    ) -> None:
+        super().__init__(
+            code="auth_revoked",
+            message=message,
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            details=details,
+        )
+
+
+class UserNotRegisteredError(DomainError):
+    def __init__(
+        self,
+        message: str = "User is not registered. Please complete registration.",
+        details: Any | None = None,
+    ) -> None:
+        super().__init__(
+            code="user_not_registered",
+            message=message,
+            status_code=status.HTTP_403_FORBIDDEN,
+            details=details,
+        )
+
+
+class AccountDeactivatedError(DomainError):
+    def __init__(
+        self,
+        message: str = "This account has been deactivated. Please contact support.",
+        details: Any | None = None,
+    ) -> None:
+        super().__init__(
+            code="account_deactivated",
+            message=message,
+            status_code=status.HTTP_403_FORBIDDEN,
+            details=details,
+        )
+
+
+class ForbiddenRoleError(DomainError):
+    def __init__(
+        self,
+        message: str = "Access forbidden for your current role",
+        details: Any | None = None,
+    ) -> None:
+        super().__init__(
+            code="forbidden_role",
+            message=message,
+            status_code=status.HTTP_403_FORBIDDEN,
+            details=details,
+        )
+
+
+class VendorNotApprovedError(DomainError):
+    def __init__(
+        self,
+        message: str = "Vendor profile is not approved",
+        details: Any | None = None,
+    ) -> None:
+        super().__init__(
+            code="vendor_not_approved",
+            message=message,
+            status_code=status.HTTP_403_FORBIDDEN,
+            details=details,
+        )
+
+
+class EmailNotVerifiedError(DomainError):
+    def __init__(
+        self,
+        message: str = "Email address has not been verified",
+        details: Any | None = None,
+    ) -> None:
+        super().__init__(
+            code="email_not_verified",
+            message=message,
+            status_code=status.HTTP_403_FORBIDDEN,
+            details=details,
+        )
+
+
+class EmailAlreadyRegisteredError(DomainError):
+    def __init__(
+        self,
+        message: str = "An account with this email already exists",
+        details: Any | None = None,
+    ) -> None:
+        super().__init__(
+            code="email_already_registered",
+            message=message,
+            status_code=status.HTTP_409_CONFLICT,
+            details=details,
+        )
+
+
+class RateLimitedError(DomainError):
+    def __init__(
+        self,
+        message: str = "Too many attempts. Please wait a few minutes and try again.",
+        details: Any | None = None,
+    ) -> None:
+        super().__init__(
+            code="rate_limited",
+            message=message,
+            status_code=status.HTTP_429_TOO_MANY_REQUESTS,
             details=details,
         )
 
@@ -264,7 +421,7 @@ def register_exception_handlers(app: FastAPI) -> None:
             for err in exc.errors()
         ]
         return build_error_response(
-            code="VALIDATION_FAILED",
+            code="validation_failed",
             message="Request validation failed. Check details.",
             status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
             request_id=req_id,
@@ -283,6 +440,8 @@ def register_exception_handlers(app: FastAPI) -> None:
             code = "FORBIDDEN"
         elif exc.status_code == 409:
             code = "CONFLICT"
+        elif exc.status_code == 429:
+            code = "rate_limited"
         return build_error_response(
             code=code,
             message=str(exc.detail),

@@ -70,6 +70,8 @@ class Notification(Base):
     title: Mapped[str] = mapped_column(String(255), nullable=False)
     message: Mapped[str] = mapped_column(Text, nullable=False)
     is_read: Mapped[int] = mapped_column(TINYINT(1), nullable=False, default=0)
+    entity_type: Mapped[str | None] = mapped_column(String(30), nullable=True)
+    entity_id: Mapped[int | None] = mapped_column(BIGINT(unsigned=True), nullable=True)
     created_at: Mapped[datetime] = mapped_column(
         DateTime, server_default=func.now(), nullable=False
     )
