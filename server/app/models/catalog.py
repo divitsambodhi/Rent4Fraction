@@ -62,6 +62,9 @@ class Category(Base):
         ForeignKey("categories.category_id", ondelete="SET NULL"),
         nullable=True,
     )
+    default_commission_rate: Mapped[Decimal | None] = mapped_column(
+        SQLDecimal(5, 2), nullable=True
+    )
     is_active: Mapped[int] = mapped_column(TINYINT(1), nullable=False, default=1)
 
     parent: Mapped[Category | None] = relationship("Category", remote_side=[category_id])
@@ -90,6 +93,7 @@ class Equipment(Base):
     )
     quantity: Mapped[int] = mapped_column(Integer, nullable=False, default=1)
     min_rental_days: Mapped[int] = mapped_column(Integer, nullable=False, default=1)
+    commission_rate: Mapped[Decimal | None] = mapped_column(SQLDecimal(5, 2), nullable=True)
     delivery_available: Mapped[int] = mapped_column(TINYINT(1), nullable=False, default=1)
     specifications: Mapped[Any | None] = mapped_column(JSON, nullable=True)
     avg_rating: Mapped[Decimal] = mapped_column(
@@ -134,6 +138,7 @@ class EquipmentImage(Base):
         nullable=False,
     )
     url: Mapped[str] = mapped_column(String(500), nullable=False)
+    storage_path: Mapped[str | None] = mapped_column(String(500), nullable=True)
     is_primary: Mapped[int] = mapped_column(TINYINT(1), nullable=False, default=0)
     sort_order: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
 

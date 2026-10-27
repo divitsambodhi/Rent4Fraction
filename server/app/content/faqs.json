@@ -1,0 +1,86 @@
+[
+  {
+    "id": "faq-1",
+    "category": "deposits",
+    "question": "How does the refundable security deposit work?",
+    "answer": "Security deposits are securely held when you place a booking. Once the rental duration concludes and the vendor inspects the returned equipment, the deposit is released back to your original payment method. If equipment is damaged, deductions may occur through an itemized damage report."
+  },
+  {
+    "id": "faq-2",
+    "category": "bookings",
+    "question": "Can I book equipment from multiple vendors in one order?",
+    "answer": "Yes. Rent4Fraction allows you to assemble items from multiple independent vendors into a single cart and checkout. Each vendor fulfills their respective portion of the booking, with separate handover dates and fulfillment tracking."
+  },
+  {
+    "id": "faq-3",
+    "category": "delivery",
+    "question": "What is the difference between venue delivery and pickup?",
+    "answer": "Venue delivery means the vendor arranges transport directly to your event venue at the agreed time window. Pickup means you or your crew collect the equipment directly from the vendor’s registered warehouse. Options offered depend on individual vendor listings."
+  },
+  {
+    "id": "faq-4",
+    "category": "deposits",
+    "question": "What happens if equipment is damaged during a rental?",
+    "answer": "If an item is returned damaged, the vendor documents the condition and submits an inspection report detailing repair costs. You can review the report in your account and choose to accept the deduction or dispute it for moderation review by our team."
+  },
+  {
+    "id": "faq-5",
+    "category": "vendors",
+    "question": "How are vendor applications reviewed and approved?",
+    "answer": "Before any partner can list equipment on Rent4Fraction, our onboarding team reviews submitted business registration, identity documents, and inventory details to ensure marketplace safety."
+  },
+  {
+    "id": "faq-6",
+    "category": "bookings",
+    "question": "Can I cancel a pending or confirmed booking?",
+    "answer": "Yes, bookings can be cancelled through your customer account before the rental period commences. The applicable refund terms are governed by the platform refund policy."
+  },
+  {
+    "id": "faq-7",
+    "category": "payments",
+    "question": "Which payment methods are accepted on Rent4Fraction?",
+    "answer": "We support major Indian payment channels including UPI, credit and debit cards, net banking, supported digital wallets, and cash on delivery where explicitly offered by vendors."
+  },
+  {
+    "id": "faq-8",
+    "category": "bookings",
+    "question": "When am I eligible to leave a review for equipment and vendors?",
+    "answer": "To maintain review authenticity, reviews are unlocked only after a rental has been returned and marked complete by the fulfilling vendor."
+  },
+  {
+    "id": "faq-9",
+    "category": "bookings",
+    "question": "Can I modify rental dates after adding equipment to my cart?",
+    "answer": "Yes, you can adjust rental start and end dates directly in the cart before finalizing checkout. The cart dynamically verifies vendor availability and recalculates rental totals."
+  },
+  {
+    "id": "faq-10",
+    "category": "general",
+    "question": "How is account data and authentication secured?",
+    "answer": "Account authentication and password security are managed through verified authentication providers. We recommend using unique passwords and keeping your registered email address secure."
+  },
+  {
+    "id": "faq-11",
+    "category": "general",
+    "question": "How do I reach support if I need assistance with a booking?",
+    "answer": "You can reach our team using the Contact Support form on this page or by messaging your fulfilling vendor directly through the built-in account inbox."
+  },
+  {
+    "id": "faq-12",
+    "category": "deposits",
+    "question": "What is the process for resolving a disputed damage report?",
+    "answer": "When a renter disputes a damage report, both the vendor inspection evidence and renter statements are reviewed by Rent4Fraction support to arrive at a fair, documented resolution."
+  },
+  {
+    "id": "faq-13",
+    "category": "deposits",
+    "question": "Who is liable for equipment damage or operational misuse?",
+    "answer": "Renters are responsible for returning equipment in the same working condition as received. Vendors provide equipment testing upon collection or handover."
+  },
+  {
+    "id": "faq-14",
+    "category": "vendors",
+    "question": "How are vendor payouts processed following completed rentals?",
+    "answer": "Following successful return inspection, vendor payouts are calculated based on gross rental rates less the agreed platform commission rate, and transferred directly to registered bank accounts."
+  }
+]

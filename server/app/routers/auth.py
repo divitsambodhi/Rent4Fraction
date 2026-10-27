@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from typing import Any
+
 from fastapi import APIRouter, Depends, Request, status
 from sqlalchemy.orm import Session
 
@@ -12,6 +14,7 @@ from app.core.deps import (
 from app.core.security import TokenVerifier, get_token, get_token_verifier
 from app.models.accounts import User
 from app.schemas.auth import AuthUserResponse, RegisterRequest
+from app.schemas.customer import UpdateProfileRequest
 from app.services.auth import build_auth_user_response, register_user
 
 router = APIRouter(prefix="/api/v1/auth", tags=["Authentication"])
@@ -67,3 +70,32 @@ def get_me(
     user = db.query(User).filter(User.user_id == current_user.user_id).first()
     assert user is not None, "Authenticated user must exist in database"
     return build_auth_user_response(user)
+
+
+@router.patch(
+    "/profile",
+    response_model=dict[str, Any],
+    status_code=status.HTTP_200_OK,
+    summary="Update customer name and phone",
+    operation_id="update_profile",
+)
+def update_profile(
+    body: UpdateProfileRequest,
+    current_user: CurrentUser = Depends(get_current_user),
+    db: Session = Depends(get_db),
+) -> dict[str, Any]:
+    from app.services.customer import CustomerService
+    user = db.query(User).filter(User.user_id == current_user.user_id).first()
+    assert user is not None
+    service = CustomerService(db)
+    service.update_profile(user, name=body.name, phone=body.phone)
+    words = user.name.strip().split()
+    initials = "".join(w[0].upper() for w in words[:2])
+    return {
+        "id": str(user.user_id),
+        "name": user.name,
+        "email": user.email,
+        "phone": user.phone,
+        "role": user.role.value,
+        "avatarInitials": initials,
+    }

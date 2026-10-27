@@ -97,8 +97,11 @@ class Vendor(Base):
         BIGINT(unsigned=True), ForeignKey("users.user_id"), nullable=True
     )
     approved_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
-    commission_rate: Mapped[Decimal] = mapped_column(
-        SQLDecimal(5, 2), nullable=False, default=Decimal("10.00")
+    commission_rate: Mapped[Decimal | None] = mapped_column(
+        SQLDecimal(5, 2), nullable=True, default=Decimal("10.00")
+    )
+    delivery_fee: Mapped[Decimal] = mapped_column(
+        SQLDecimal(12, 2), nullable=False, default=Decimal("0.00")
     )
     created_at: Mapped[datetime] = mapped_column(
         DateTime, server_default=func.now(), nullable=False

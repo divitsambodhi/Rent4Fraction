@@ -3,12 +3,13 @@ from __future__ import annotations
 import enum
 from datetime import date, datetime
 from decimal import Decimal
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 from sqlalchemy import (
     DECIMAL as SQLDecimal,
 )
 from sqlalchemy import (
+    Computed,
     Date,
     DateTime,
     ForeignKey,
@@ -20,7 +21,7 @@ from sqlalchemy import (
 from sqlalchemy import (
     Enum as SQLEnum,
 )
-from sqlalchemy.dialects.mysql import BIGINT, TINYINT
+from sqlalchemy.dialects.mysql import BIGINT, JSON, TINYINT
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.core.db import Base
@@ -119,6 +120,25 @@ class Booking(Base):
     event_type: Mapped[str | None] = mapped_column(String(100), nullable=True)
     event_date: Mapped[date | None] = mapped_column(Date, nullable=True)
     venue_address: Mapped[str | None] = mapped_column(Text, nullable=True)
+    delivery_address_snapshot: Mapped[Any] = mapped_column(
+        JSON,
+        nullable=False,
+        default=lambda: {
+            "name": "Customer",
+            "phone": "",
+            "line1": "Default Address",
+            "line2": "",
+            "city": "Mumbai",
+            "state": "Maharashtra",
+            "pincode": "400001",
+            "country": "India",
+        },
+    )
+    delivery_city: Mapped[str | None] = mapped_column(
+        String(100),
+        Computed("JSON_UNQUOTE(JSON_EXTRACT(delivery_address_snapshot, '$.city'))"),
+        nullable=True,
+    )
     subtotal: Mapped[Decimal] = mapped_column(SQLDecimal(12, 2), nullable=False)
     discount: Mapped[Decimal] = mapped_column(
         SQLDecimal(12, 2), nullable=False, default=Decimal("0.00")
@@ -145,6 +165,10 @@ class Booking(Base):
         default=BookingStatus.pending,
     )
     notes: Mapped[str | None] = mapped_column(Text, nullable=True)
+    expires_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
+    cancelled_by: Mapped[str | None] = mapped_column(String(20), nullable=True)
+    cancelled_reason: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    cancelled_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
     created_at: Mapped[datetime] = mapped_column(
         DateTime, server_default=func.now(), nullable=False
     )
@@ -174,6 +198,10 @@ class VendorOrder(Base):
         BIGINT(unsigned=True), ForeignKey("vendors.vendor_id", ondelete="RESTRICT"), nullable=False
     )
     subtotal: Mapped[Decimal] = mapped_column(SQLDecimal(12, 2), nullable=False)
+    fulfilment_type: Mapped[str] = mapped_column(String(20), nullable=False, default="delivery")
+    delivery_fee: Mapped[Decimal] = mapped_column(
+        SQLDecimal(12, 2), nullable=False, default=Decimal("0.00")
+    )
     status: Mapped[VendorOrderStatus] = mapped_column(
         SQLEnum(VendorOrderStatus, values_callable=lambda x: [e.value for e in x]),
         nullable=False,
@@ -229,6 +257,15 @@ class BookingItem(Base):
     price_per_day: Mapped[Decimal] = mapped_column(SQLDecimal(12, 2), nullable=False)
     days: Mapped[int] = mapped_column(Integer, nullable=False)
     total_price: Mapped[Decimal] = mapped_column(SQLDecimal(12, 2), nullable=False)
+    commission_rate: Mapped[Decimal] = mapped_column(
+        SQLDecimal(5, 2), nullable=False, default=Decimal("0.00")
+    )
+    commission_amount: Mapped[Decimal] = mapped_column(
+        SQLDecimal(12, 2), nullable=False, default=Decimal("0.00")
+    )
+    deposit_amount: Mapped[Decimal] = mapped_column(
+        SQLDecimal(12, 2), nullable=False, default=Decimal("0.00")
+    )
     item_status: Mapped[BookingItemStatus] = mapped_column(
         SQLEnum(BookingItemStatus, values_callable=lambda x: [e.value for e in x]),
         nullable=False,
@@ -236,6 +273,7 @@ class BookingItem(Base):
     )
 
     vendor_order: Mapped[VendorOrder] = relationship("VendorOrder", back_populates="items")
+    vendor: Mapped[Vendor] = relationship("Vendor")
     equipment: Mapped[Equipment] = relationship("Equipment", back_populates="booking_items")
     reviews: Mapped[list[Review]] = relationship("Review", back_populates="booking_item")
 

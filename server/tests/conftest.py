@@ -10,6 +10,7 @@ from sqlalchemy.dialects.mysql import BIGINT, TINYINT
 from sqlalchemy.ext.compiler import compiles
 from sqlalchemy.orm import Session, sessionmaker
 from sqlalchemy.pool import StaticPool
+from sqlalchemy.schema import Computed
 
 import app.models  # noqa: F401
 from app.core.config import Settings, set_settings
@@ -25,6 +26,11 @@ def _compile_tinyint_sqlite(_type: Any, _compiler: Any, **_kw: Any) -> str:
 @compiles(BIGINT, "sqlite")
 def _compile_bigint_sqlite(_type: Any, _compiler: Any, **_kw: Any) -> str:
     return "INTEGER"
+
+
+@compiles(Computed, "sqlite")
+def _compile_computed_sqlite(_element: Any, _compiler: Any, **_kw: Any) -> str:
+    return ""
 
 
 @pytest.fixture(scope="session", autouse=True)

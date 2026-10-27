@@ -52,9 +52,14 @@ class NotFoundError(DomainError):
 
 
 class ConflictError(DomainError):
-    def __init__(self, message: str = "Resource conflict", details: Any | None = None) -> None:
+    def __init__(
+        self,
+        message: str = "Resource conflict",
+        details: Any | None = None,
+        code: str = "CONFLICT",
+    ) -> None:
         super().__init__(
-            code="CONFLICT",
+            code=code,
             message=message,
             status_code=status.HTTP_409_CONFLICT,
             details=details,

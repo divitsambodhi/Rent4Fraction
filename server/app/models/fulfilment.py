@@ -113,11 +113,14 @@ class Return(Base):
         nullable=False,
     )
     return_date: Mapped[date | None] = mapped_column(Date, nullable=True)
+    scheduled_start: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
+    scheduled_end: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
     status: Mapped[ReturnStatus] = mapped_column(
         SQLEnum(ReturnStatus, values_callable=lambda x: [e.value for e in x]),
         nullable=False,
         default=ReturnStatus.scheduled,
     )
+    note: Mapped[str | None] = mapped_column(String(255), nullable=True)
     created_at: Mapped[datetime] = mapped_column(
         DateTime, server_default=func.now(), nullable=False
     )
@@ -180,6 +183,11 @@ class DamageReport(Base):
         default=DamageReportStatus.reported,
     )
     images_notes: Mapped[str | None] = mapped_column(Text, nullable=True)
+    dispute_reason: Mapped[str | None] = mapped_column(Text, nullable=True)
+    disputed_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
+    resolution_note: Mapped[str | None] = mapped_column(Text, nullable=True)
+    resolved_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
+    final_cost: Mapped[Decimal | None] = mapped_column(SQLDecimal(12, 2), nullable=True)
     resolved_by: Mapped[int | None] = mapped_column(
         BIGINT(unsigned=True), ForeignKey("users.user_id", ondelete="SET NULL"), nullable=True
     )
