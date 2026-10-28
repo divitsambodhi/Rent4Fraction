@@ -3,8 +3,9 @@ import { ChevronDown, ChevronUp, KeyRound, Sparkles } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { INITIAL_MOCK_ACCOUNTS } from '@/lib/auth/mock-accounts'
 
-// Dev-only toggle: easily disabled in production
-export const ENABLE_DEMO_ACCOUNTS = true
+// Dev-only toggle: strictly enabled only in DEV with mock API mode
+export const ENABLE_DEMO_ACCOUNTS =
+  import.meta.env.DEV && import.meta.env.VITE_API_MODE === 'mock'
 
 export interface DemoAccountsPanelProps {
   onFill: (email: string, password: string) => void

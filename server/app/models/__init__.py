@@ -42,6 +42,8 @@ from app.models.payments import (
     PaymentType,
     Payout,
     PayoutStatus,
+    WebhookEvent,
+    WebhookEventStatus,
 )
 from app.models.platform import (
     AuditLog,
@@ -86,6 +88,8 @@ __all__ = [
     "PaymentStatus",
     "Payout",
     "PayoutStatus",
+    "WebhookEvent",
+    "WebhookEventStatus",
     # Fulfilment
     "Delivery",
     "DeliveryType",

@@ -38,12 +38,21 @@ export function PriceSummary({ summary, className }: PriceSummaryProps) {
       )}
 
       {/* Tax */}
-      <div className="flex items-center justify-between text-muted-foreground">
-        <span>Taxes & GST (18%)</span>
-        <span className="font-semibold text-foreground tabular-nums">
-          {formatINR(summary.tax)}
-        </span>
-      </div>
+      {summary.tax > 0 ? (
+        <div className="flex items-center justify-between text-muted-foreground">
+          <span>Taxes & GST (18%)</span>
+          <span className="font-semibold text-foreground tabular-nums">
+            {formatINR(summary.tax)}
+          </span>
+        </div>
+      ) : (
+        <div className="flex items-center justify-between text-muted-foreground">
+          <span>Platform fee & tax</span>
+          <span className="font-medium text-emerald-600 dark:text-emerald-400 tabular-nums">
+            ₹0 (0% platform fee)
+          </span>
+        </div>
+      )}
 
       {/* Delivery Fee */}
       <div className="flex items-center justify-between text-muted-foreground">
@@ -58,7 +67,7 @@ export function PriceSummary({ summary, className }: PriceSummaryProps) {
         <div className="flex items-center gap-1">
           <span>Security deposit</span>
           <span className="text-[10px] text-muted-foreground/80 font-normal">
-            (refundable after inspection)
+            (refundable upon return)
           </span>
         </div>
         <span className="font-semibold text-foreground tabular-nums">
@@ -71,7 +80,10 @@ export function PriceSummary({ summary, className }: PriceSummaryProps) {
 
       {/* Grand Total */}
       <div className="flex items-baseline justify-between text-foreground pt-0.5">
-        <span className="text-sm font-serif font-bold">Total payable</span>
+        <div className="space-y-0.5">
+          <span className="text-sm font-serif font-bold block">Total due on delivery</span>
+          <span className="text-[10px] text-muted-foreground block font-sans">Cash settlement at venue</span>
+        </div>
         <span className="text-base sm:text-lg font-bold tabular-nums font-sans">
           {formatINR(summary.total)}
         </span>

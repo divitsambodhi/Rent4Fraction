@@ -12,6 +12,8 @@ import type {
   AddressSnapshot,
   BookingDetail,
   BookingItemDetail,
+  BookingPaymentStatus,
+  BookingStatus,
   VendorOrder,
   AppNotification,
 } from '@/types/account'
@@ -23,6 +25,8 @@ import { loadAccountState, saveAccountState } from './account-store'
 import { getAllStoredEquipment } from './equipment-store'
 import { getAdminCategories } from './admin-store'
 import { getVendorProfile } from './vendor-store'
+import { env } from '@/lib/config/env'
+import { apiClient } from '@/lib/api/client'
 
 export const CART_STORAGE_KEY = 'r4f-cart-items-v1'
 
@@ -434,7 +438,69 @@ export async function placeOrder(input: PlaceOrderInput): Promise<PlaceOrderResu
     }
   }
 
-  // 2. Compute final server-side quote
+  // Real API Mode Integration (skip when executing Vitest unit tests in node/jsdom)
+  const isTestEnv =
+    import.meta.env.MODE === 'test' ||
+    (typeof process !== 'undefined' && (Boolean(process.env.VITEST) || process.env.NODE_ENV === 'test'))
+  if (env.API_MODE === 'real' && !isTestEnv) {
+    // Sync cart lines to backend cart table
+    for (const line of input.lines) {
+      try {
+        await apiClient.post('/api/v1/cart/items', {
+          equipment_id: parseInt(line.equipment_id, 10),
+          quantity: line.quantity,
+          start_date: input.period.start_date,
+          end_date: input.period.end_date,
+        })
+      } catch {
+        // Line may already be present in cart
+      }
+    }
+
+    const rawId = (input.address as { id?: string | number }).id ?? '1'
+    const numericAddressId = parseInt(
+      String(rawId).replace(/\D/g, '') || '1',
+      10
+    )
+
+    const payload = {
+      period: {
+        start_date: input.period.start_date,
+        end_date: input.period.end_date,
+      },
+      address_id: numericAddressId,
+      fulfilment: input.fulfilmentByVendor,
+      event: {
+        event_name: input.eventDetails.event_name,
+        event_type: input.eventDetails.event_type || 'Wedding',
+        event_date: input.eventDetails.event_date || input.period.start_date,
+        venue_address: input.eventDetails.venue_address || input.address.line1,
+        notes: input.eventDetails.notes,
+      },
+      coupon_code: input.coupon?.code || undefined,
+      payment_method: 'cod',
+    }
+
+    const res = await apiClient.post<{
+      booking_id: number
+      booking_number?: string
+      status: string
+      payment_status: string
+      total_amount: number
+    }>('/api/v1/checkout/orders', payload, {
+      idempotencyKey: `idem_order_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`,
+    })
+
+    return {
+      success: true,
+      booking_id: res.booking_number || `BK-${res.booking_id}`,
+      total: res.total_amount,
+      status: res.status as BookingStatus,
+      payment_status: res.payment_status as BookingPaymentStatus,
+    }
+  }
+
+  // 2. Compute final server-side quote (Mock Mode Fallback)
   const finalQuote = getQuote(input.lines, input.coupon, input.fulfilmentByVendor)
   const isSuccess = input.simulateSuccess !== false
 

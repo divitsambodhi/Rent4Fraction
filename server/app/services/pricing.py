@@ -117,6 +117,7 @@ class QuoteResult:
 # Pure Financial & Pricing Engine Functions
 # -----------------------------------------------------------------------------
 
+
 def rental_days(start: str | date, end: str | date) -> int:
     """
     Calculates inclusive rental days from start and end dates (YYYY-MM-DD or date objects).
@@ -184,7 +185,9 @@ def group_by_period(lines: list[CartLineInput]) -> list[CartPeriod]:
                 vl_days = vl.days if vl.days is not None else days
                 lt = line_total(vl.price_per_day, vl.quantity, vl_days)
                 v_subtotal_paise += rupees_to_paise(lt)
-                v_deposit_paise += rupees_to_paise(to_decimal(vl.security_deposit) * Decimal(vl.quantity))
+                v_deposit_paise += rupees_to_paise(
+                    to_decimal(vl.security_deposit) * Decimal(vl.quantity)
+                )
                 if not vl.delivery_available:
                     v_delivery_available = False
 
@@ -464,6 +467,7 @@ def resolve_commission(
 
     Clamped between 0.00 and 100.00 with at most 2 decimal places.
     """
+
     def _parse(val: Any) -> Decimal | None:
         if val is None:
             return None
@@ -496,6 +500,55 @@ def resolve_commission(
         return _clamp_and_round(vend), "Vendor"
 
     return _clamp_and_round(platform_default), "Platform"
+
+
+def get_effective_commission(
+    db: Any,
+    equipment_id: int,
+    category_id: int | None = None,
+    vendor_id: int | None = None,
+) -> tuple[Decimal, str]:
+    from app.models.accounts import Vendor
+    from app.models.catalog import Category, Equipment
+
+    eq = db.query(Equipment).filter(Equipment.equipment_id == equipment_id).first()
+    eq_rate = eq.commission_rate if eq else None
+    cat_id = category_id or (eq.category_id if eq else None)
+    v_id = vendor_id or (eq.vendor_id if eq else None)
+
+    cat_rate = None
+    parent_cat_rate = None
+    if cat_id:
+        cat = db.query(Category).filter(Category.category_id == cat_id).first()
+        if cat:
+            cat_rate = cat.default_commission_rate
+            if cat.parent_id:
+                p_cat = db.query(Category).filter(Category.category_id == cat.parent_id).first()
+                if p_cat:
+                    parent_cat_rate = p_cat.default_commission_rate
+
+    v_rate = None
+    if v_id:
+        v = db.query(Vendor).filter(Vendor.vendor_id == v_id).first()
+        if v:
+            v_rate = v.commission_rate
+
+    return resolve_commission(
+        equipment_rate=eq_rate,
+        category_rate=cat_rate,
+        parent_category_rate=parent_cat_rate,
+        vendor_rate=v_rate,
+    )
+
+
+def get_commission_source(
+    db: Any,
+    equipment_id: int,
+    category_id: int | None = None,
+    vendor_id: int | None = None,
+) -> str:
+    _, source = get_effective_commission(db, equipment_id, category_id, vendor_id)
+    return source
 
 
 def calculate_item_commission(
@@ -550,7 +603,9 @@ def calculate_order_payout_from_items(
         if comm_amt is not None:
             commission_paise += rupees_to_paise(to_decimal(comm_amt))
         else:
-            rate = to_decimal(comm_rate) if comm_rate is not None else DEFAULT_PLATFORM_COMMISSION_RATE
+            rate = (
+                to_decimal(comm_rate) if comm_rate is not None else DEFAULT_PLATFORM_COMMISSION_RATE
+            )
             comm_paise_item = int(
                 (Decimal(item_total_paise) * (rate / Decimal("100"))).quantize(
                     Decimal("1"), rounding="ROUND_HALF_UP"
@@ -560,9 +615,7 @@ def calculate_order_payout_from_items(
 
     net_paise = gross_paise - commission_paise
     effective_rate = (
-        round(float(commission_paise) / float(gross_paise) * 100.0, 2)
-        if gross_paise > 0
-        else 0.0
+        round(float(commission_paise) / float(gross_paise) * 100.0, 2) if gross_paise > 0 else 0.0
     )
 
     return {

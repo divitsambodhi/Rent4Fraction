@@ -15,14 +15,42 @@ from app.repositories.customer import CustomerRepository
 from app.services.pricing import CartLineInput, group_by_period, line_total, rental_days
 
 INDIAN_STATES_AND_UTS = {
-    "andhra pradesh", "arunachal pradesh", "assam", "bihar", "chhattisgarh",
-    "goa", "gujarat", "haryana", "himachal pradesh", "jharkhand", "karnataka",
-    "kerala", "madhya pradesh", "maharashtra", "manipur", "meghalaya", "mizoram",
-    "nagaland", "odisha", "punjab", "rajasthan", "sikkim", "tamil nadu",
-    "telangana", "tripura", "uttar pradesh", "uttarakhand", "west bengal",
-    "andaman and nicobar islands", "chandigarh",
-    "dadra and nagar haveli and daman and diu", "delhi", "jammu and kashmir",
-    "ladakh", "lakshadweep", "puducherry"
+    "andhra pradesh",
+    "arunachal pradesh",
+    "assam",
+    "bihar",
+    "chhattisgarh",
+    "goa",
+    "gujarat",
+    "haryana",
+    "himachal pradesh",
+    "jharkhand",
+    "karnataka",
+    "kerala",
+    "madhya pradesh",
+    "maharashtra",
+    "manipur",
+    "meghalaya",
+    "mizoram",
+    "nagaland",
+    "odisha",
+    "punjab",
+    "rajasthan",
+    "sikkim",
+    "tamil nadu",
+    "telangana",
+    "tripura",
+    "uttar pradesh",
+    "uttarakhand",
+    "west bengal",
+    "andaman and nicobar islands",
+    "chandigarh",
+    "dadra and nagar haveli and daman and diu",
+    "delhi",
+    "jammu and kashmir",
+    "ladakh",
+    "lakshadweep",
+    "puducherry",
 }
 
 PIN_CODE_REGEX = re.compile(r"^[1-9][0-9]{5}$")
@@ -68,8 +96,10 @@ class CustomerService:
             )
 
             # Determine read-time status
-            is_active = (eq.status == EquipmentStatus.active)
-            is_approved = bool(eq.vendor and eq.vendor.approval_status == VendorApprovalStatus.approved)
+            is_active = eq.status == EquipmentStatus.active
+            is_approved = bool(
+                eq.vendor and eq.vendor.approval_status == VendorApprovalStatus.approved
+            )
             if not is_active or not is_approved or avail_qty <= 0:
                 line_status = "unavailable"
             elif avail_qty < c.quantity:
@@ -129,32 +159,38 @@ class CustomerService:
             v_groups: list[dict[str, Any]] = []
             for vg in cp.vendor_groups:
                 vg_lines = [
-                    item for item in formatted_items
+                    item
+                    for item in formatted_items
                     if item["vendor_id"] == vg.vendor_id
                     and item["start_date"] == cp.start_date
                     and item["end_date"] == cp.end_date
                 ]
-                v_groups.append({
-                    "vendor_id": vg.vendor_id,
-                    "vendor_name": vg.vendor_name,
-                    "lines": vg_lines,
-                    "subtotal": float(vg.subtotal),
-                    "deposit_total": float(vg.deposit_total),
-                    "delivery_available": vg.delivery_available,
-                })
+                v_groups.append(
+                    {
+                        "vendor_id": vg.vendor_id,
+                        "vendor_name": vg.vendor_name,
+                        "lines": vg_lines,
+                        "subtotal": float(vg.subtotal),
+                        "deposit_total": float(vg.deposit_total),
+                        "delivery_available": vg.delivery_available,
+                    }
+                )
 
             period_lines = [
-                item for item in formatted_items
+                item
+                for item in formatted_items
                 if item["start_date"] == cp.start_date and item["end_date"] == cp.end_date
             ]
-            formatted_periods.append({
-                "period_key": f"{cp.start_date}_{cp.end_date}",
-                "start_date": cp.start_date,
-                "end_date": cp.end_date,
-                "days": cp.days,
-                "lines": period_lines,
-                "vendor_groups": v_groups,
-            })
+            formatted_periods.append(
+                {
+                    "period_key": f"{cp.start_date}_{cp.end_date}",
+                    "start_date": cp.start_date,
+                    "end_date": cp.end_date,
+                    "days": cp.days,
+                    "lines": period_lines,
+                    "vendor_groups": v_groups,
+                }
+            )
 
         return {
             "items": formatted_items,
@@ -181,7 +217,12 @@ class CustomerService:
         if end_date < start_date:
             raise ValidationFailedError(
                 "Rental end date must not be before start date",
-                [{"field": "end_date", "message": "End date must be greater than or equal to start date"}],
+                [
+                    {
+                        "field": "end_date",
+                        "message": "End date must be greater than or equal to start date",
+                    }
+                ],
             )
         if (end_date - start_date).days > 365:
             raise ValidationFailedError(
@@ -228,7 +269,12 @@ class CustomerService:
         if chk_end < chk_start:
             raise ValidationFailedError(
                 "Rental end date must not be before start date",
-                [{"field": "end_date", "message": "End date must be greater than or equal to start date"}],
+                [
+                    {
+                        "field": "end_date",
+                        "message": "End date must be greater than or equal to start date",
+                    }
+                ],
             )
         if (chk_end - chk_start).days > 365:
             raise ValidationFailedError(
@@ -288,7 +334,12 @@ class CustomerService:
         if end_date < start_date:
             raise ValidationFailedError(
                 "Rental end date must not be before start date",
-                [{"field": "end_date", "message": "End date must be greater than or equal to start date"}],
+                [
+                    {
+                        "field": "end_date",
+                        "message": "End date must be greater than or equal to start date",
+                    }
+                ],
             )
         if (end_date - start_date).days > 365:
             raise ValidationFailedError(
@@ -354,28 +405,30 @@ class CustomerService:
             img = eq.images[0].url if eq.images else ""
             line_cost = float(line_total(eq.price_per_day, 1, days))
 
-            results.append({
-                "wishlist_id": f"{w.user_id}_{w.equipment_id}",
-                "equipment_id": str(eq.equipment_id),
-                "name": eq.name,
-                "description": eq.description or "",
-                "price_per_day": float(eq.price_per_day),
-                "security_deposit": float(eq.security_deposit),
-                "quantity": eq.quantity,
-                "min_rental_days": eq.min_rental_days,
-                "delivery_available": bool(eq.delivery_available),
-                "avg_rating": float(eq.avg_rating),
-                "review_count": eq.review_count,
-                "specifications": eq.specifications or {},
-                "primary_image_url": img,
-                "vendor_id": str(eq.vendor_id),
-                "vendor_name": eq.vendor.business_name if eq.vendor else "",
-                "category_id": str(eq.category_id),
-                "category_name": eq.category.name if eq.category else "",
-                "available_quantity": avail_qty,
-                "price_for_days": line_cost,
-                "created_at": w.created_at.isoformat(),
-            })
+            results.append(
+                {
+                    "wishlist_id": f"{w.user_id}_{w.equipment_id}",
+                    "equipment_id": str(eq.equipment_id),
+                    "name": eq.name,
+                    "description": eq.description or "",
+                    "price_per_day": float(eq.price_per_day),
+                    "security_deposit": float(eq.security_deposit),
+                    "quantity": eq.quantity,
+                    "min_rental_days": eq.min_rental_days,
+                    "delivery_available": bool(eq.delivery_available),
+                    "avg_rating": float(eq.avg_rating),
+                    "review_count": eq.review_count,
+                    "specifications": eq.specifications or {},
+                    "primary_image_url": img,
+                    "vendor_id": str(eq.vendor_id),
+                    "vendor_name": eq.vendor.business_name if eq.vendor else "",
+                    "category_id": str(eq.category_id),
+                    "category_name": eq.category.name if eq.category else "",
+                    "available_quantity": avail_qty,
+                    "price_for_days": line_cost,
+                    "created_at": w.created_at.isoformat(),
+                }
+            )
 
         if sort == "price_asc":
             results.sort(key=lambda x: x["price_per_day"])
@@ -404,16 +457,20 @@ class CustomerService:
     ) -> None:
         errors = []
         if not PIN_CODE_REGEX.match(pincode):
-            errors.append({
-                "field": "pincode",
-                "message": "PIN code must be a valid 6-digit Indian postal code starting with digits 1-9",
-            })
+            errors.append(
+                {
+                    "field": "pincode",
+                    "message": "PIN code must be a valid 6-digit Indian postal code starting with digits 1-9",
+                }
+            )
         clean_state = state.strip().lower()
         if clean_state not in INDIAN_STATES_AND_UTS:
-            errors.append({
-                "field": "state",
-                "message": f"'{state}' is not a recognized Indian state or union territory",
-            })
+            errors.append(
+                {
+                    "field": "state",
+                    "message": f"'{state}' is not a recognized Indian state or union territory",
+                }
+            )
         if errors:
             raise ValidationFailedError("Address validation failed", errors)
 
@@ -572,10 +629,17 @@ class CustomerService:
 
         if phone is not None:
             clean_phone = phone.strip()
-            if not PHONE_REGEX.match(clean_phone) and not (clean_phone.startswith("+") and len(clean_phone) >= 10):
+            if not PHONE_REGEX.match(clean_phone) and not (
+                clean_phone.startswith("+") and len(clean_phone) >= 10
+            ):
                 raise ValidationFailedError(
                     "Phone must be a valid 10-digit number",
-                    [{"field": "phone", "message": "Phone number must be a valid 10-digit mobile number"}],
+                    [
+                        {
+                            "field": "phone",
+                            "message": "Phone number must be a valid 10-digit mobile number",
+                        }
+                    ],
                 )
             user.phone = clean_phone
 

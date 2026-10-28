@@ -13,14 +13,14 @@ export function SuccessPanel({ booking }: SuccessPanelProps) {
   const steps = [
     {
       num: 1,
-      title: 'Vendors confirm your order',
-      desc: 'Each vendor reviews gear availability and approves the request (typically within 2 hours).',
+      title: 'Vendors confirm your order (24h window)',
+      desc: 'Each equipment vendor reviews gear availability and has 24 hours to accept your booking request.',
       icon: Clock,
     },
     {
       num: 2,
-      title: 'Fulfilment is coordinated',
-      desc: 'Delivery windows and driver contacts are scheduled, or warehouse pickup instructions are sent.',
+      title: 'Delivery & Cash Collection',
+      desc: 'Vendor delivers equipment to your venue, assists with handover verification, and collects cash on delivery.',
       icon: Truck,
     },
     {
@@ -31,8 +31,8 @@ export function SuccessPanel({ booking }: SuccessPanelProps) {
     },
     {
       num: 4,
-      title: 'Security deposit release',
-      desc: 'Once gear return condition is verified, your refundable deposit is released immediately.',
+      title: 'Direct deposit refund',
+      desc: 'Once gear condition is inspected, your refundable deposit is settled directly in cash by the vendor.',
       icon: ShieldCheck,
     },
   ]

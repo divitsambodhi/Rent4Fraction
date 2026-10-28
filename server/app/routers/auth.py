@@ -85,6 +85,7 @@ def update_profile(
     db: Session = Depends(get_db),
 ) -> dict[str, Any]:
     from app.services.customer import CustomerService
+
     user = db.query(User).filter(User.user_id == current_user.user_id).first()
     assert user is not None
     service = CustomerService(db)

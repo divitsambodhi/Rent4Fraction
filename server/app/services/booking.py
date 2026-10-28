@@ -5,14 +5,36 @@ from typing import Any
 
 from sqlalchemy.orm import Session
 
-from app.core.errors import ConflictError, NotFoundError, ValidationFailedError
+from app.core.errors import (
+    CancellationNotAllowedError,
+    ConflictError,
+    NotFoundError,
+    ValidationFailedError,
+)
 from app.core.money import to_decimal
+from app.core.time import utc_now
 from app.models.accounts import Address, User, Vendor
-from app.models.orders import Booking, BookingPaymentStatus, CartItem
-from app.models.platform import PlatformSetting
+from app.models.orders import (
+    Booking,
+    BookingItem,
+    BookingItemStatus,
+    BookingPaymentStatus,
+    BookingStatus,
+    CartItem,
+    Coupon,
+    VendorOrder,
+    VendorOrderStatus,
+)
+from app.models.platform import OrderEvent, PlatformSetting
 from app.repositories.booking import BookingRepository
 from app.repositories.catalog import get_equipment_available_quantity
-from app.services.pricing import CartLineInput, CouponInput, quote
+from app.services.pricing import get_commission_source, get_effective_commission
+from app.services.pricing import (
+    CartLineInput,
+    CouponInput,
+    quote,
+)
+from app.services.refunds import compute_cancellation_refund, refund_payment
 
 
 class BookingService:
@@ -69,6 +91,7 @@ class BookingService:
             }
 
         from app.services.pricing import coupon_discount
+
         discount_dec, msg = coupon_discount(c_input, sub_dec)
 
         if msg is not None:
@@ -106,11 +129,7 @@ class BookingService:
         fulfilment = fulfilment_by_vendor or {}
 
         # 1. Fetch user's cart items
-        cart_rows = (
-            self.db.query(CartItem)
-            .filter(CartItem.user_id == user.user_id)
-            .all()
-        )
+        cart_rows = self.db.query(CartItem).filter(CartItem.user_id == user.user_id).all()
 
         if not cart_rows:
             return {
@@ -129,7 +148,8 @@ class BookingService:
         if period and "_" in period:
             s_str, e_str = period.split("_", 1)
             target_rows = [
-                c for c in cart_rows
+                c
+                for c in cart_rows
                 if c.start_date.isoformat() == s_str and c.end_date.isoformat() == e_str
             ]
             if not target_rows:
@@ -141,9 +161,15 @@ class BookingService:
         vendor_ids_set: set[int] = set()
 
         if address_id is not None:
-            addr = self.db.query(Address).filter(Address.address_id == address_id, Address.user_id == user.user_id).first()
+            addr = (
+                self.db.query(Address)
+                .filter(Address.address_id == address_id, Address.user_id == user.user_id)
+                .first()
+            )
             if not addr:
-                issues.append("Specified delivery address does not exist or does not belong to you.")
+                issues.append(
+                    "Specified delivery address does not exist or does not belong to you."
+                )
 
         for c in target_rows:
             eq = c.equipment
@@ -202,24 +228,30 @@ class BookingService:
                     valid_to=c_obj.valid_to,
                 )
 
-        # 5. Tax rate from platform_settings
-        tax_setting = (
-            self.db.query(PlatformSetting)
-            .filter(PlatformSetting.setting_key == "tax_rate_percent")
-            .first()
-        )
-        tax_rate = 18
-        if tax_setting and tax_setting.setting_value:
-            try:
-                tax_rate = int(tax_setting.setting_value)
-            except ValueError:
-                tax_rate = 18
+        # 5. Tax rate from platform_settings (0% when platform takes no commission / COD mode)
+        from app.core.config import get_settings
+
+        settings = get_settings()
+        if not settings.PAYMENTS_ONLINE_ENABLED:
+            tax_rate = Decimal("0.00")
+        else:
+            tax_setting = (
+                self.db.query(PlatformSetting)
+                .filter(PlatformSetting.setting_key == "tax_rate_percent")
+                .first()
+            )
+            tax_rate = Decimal("18.00")
+            if tax_setting and tax_setting.setting_value:
+                try:
+                    tax_rate = Decimal(tax_setting.setting_value)
+                except Exception:
+                    tax_rate = Decimal("18.00")
 
         # 6. Execute pure quote calculation
         quote_res = quote(
             lines=lines,
             coupon=c_input,
-            tax_rate_percent=Decimal(str(tax_rate)),
+            tax_rate_percent=tax_rate,
             fulfilment_by_vendor=fulfilment,
             vendor_fee_map=vendor_fee_map,
         )
@@ -283,32 +315,141 @@ class BookingService:
         reason: str | None = None,
     ) -> dict[str, Any]:
         """
-        Cancels an UNPAID booking.
-        Paid cancellations require the refund flow built in the next step:
-        returns 409 'cancellation_requires_refund_flow'.
+        Cancels an unpaid or paid booking:
+        - Unpaid: cancels immediately, releases holds, cancels vendor orders.
+        - Paid: executes cancellation refund calculation, calls gateway refund,
+          records refund payment rows, sets booking/items/orders cancelled,
+          and releases reserved coupons.
         """
         booking = (
             self.db.query(Booking)
             .filter(Booking.booking_id == booking_id, Booking.user_id == user.user_id)
+            .with_for_update()
             .first()
         )
         if not booking:
             raise NotFoundError("Booking", str(booking_id))
 
-        if booking.payment_status != BookingPaymentStatus.unpaid:
+        if booking.status in (BookingStatus.cancelled, BookingStatus.completed):
+            raise CancellationNotAllowedError(f"Booking is already {booking.status.value}.")
+
+        # 1. Unpaid Cancellation
+        if booking.payment_status == BookingPaymentStatus.unpaid:
+            self.repo.cancel_booking(
+                user_id=user.user_id,
+                booking_id=booking_id,
+                reason=reason or "Customer cancelled unpaid booking",
+            )
+            self.db.commit()
+            return {"status": "success", "message": "Booking cancelled successfully"}
+
+        if booking.payment_status == BookingPaymentStatus.paid:
             raise ConflictError(
-                "Paid bookings cannot be cancelled directly in this step; cancellation requires the refund flow.",
-                details={"error_code": "cancellation_requires_refund_flow"},
+                "Cancellation of paid bookings must follow the refund flow.",
                 code="cancellation_requires_refund_flow",
             )
 
-        self.repo.cancel_booking(
-            user_id=user.user_id,
-            booking_id=booking_id,
-            reason=reason or "Customer cancelled unpaid booking",
+        raise ConflictError(
+            "Booking cannot be cancelled in its current payment status.",
+            code="cancellation_not_allowed",
         )
-        self.db.commit()
-        return {"status": "success", "message": "Booking cancelled successfully"}
+
+    def cancel_booking(
+        self,
+        user: User,
+        booking_id: int,
+        reason: str | None = None,
+    ) -> dict[str, Any]:
+        """
+        Cancels a booking:
+        - If unpaid: cancels without charges.
+        - If paid: executes automated refund and updates status to refunded/partially_refunded.
+        """
+        booking = (
+            self.db.query(Booking)
+            .filter(
+                Booking.booking_id == booking_id,
+                Booking.user_id == user.user_id,
+            )
+            .with_for_update()
+            .first()
+        )
+        if not booking:
+            raise NotFoundError("Booking", str(booking_id))
+
+        if booking.status in (BookingStatus.cancelled, BookingStatus.completed):
+            raise CancellationNotAllowedError(f"Booking is already {booking.status.value}.")
+
+        if booking.payment_status == BookingPaymentStatus.unpaid:
+            return self.cancel_unpaid_booking(user, booking_id, reason)
+
+        if booking.payment_status == BookingPaymentStatus.paid:
+            if booking.start_date <= utc_now().date():
+                raise CancellationNotAllowedError(
+                    "Cancellation is not permitted on or after the rental start date."
+                )
+
+            refund_amount = compute_cancellation_refund(booking, utc_now().date())
+            if refund_amount > Decimal("0.00"):
+                refund_payment(
+                    self.db,
+                    booking_id=booking.booking_id,
+                    amount=refund_amount,
+                    reason=reason or "Customer cancelled paid booking",
+                )
+
+            booking.status = BookingStatus.cancelled
+            if refund_amount >= booking.total_amount:
+                booking.payment_status = BookingPaymentStatus.refunded
+            else:
+                booking.payment_status = BookingPaymentStatus.partial
+
+            # Transition items and vendor orders to cancelled
+            items = (
+                self.db.query(BookingItem)
+                .filter(BookingItem.booking_id == booking.booking_id)
+                .all()
+            )
+            for it in items:
+                it.status = BookingItemStatus.cancelled
+
+            vendor_orders = (
+                self.db.query(VendorOrder)
+                .filter(VendorOrder.booking_id == booking.booking_id)
+                .all()
+            )
+            for vo in vendor_orders:
+                vo.status = VendorOrderStatus.cancelled
+
+            # Release coupon if reserved
+            if booking.coupon_id:
+                coupon = (
+                    self.db.query(Coupon)
+                    .filter(Coupon.coupon_id == booking.coupon_id)
+                    .with_for_update()
+                    .first()
+                )
+                if coupon and coupon.used_count > 0:
+                    coupon.used_count -= 1
+
+            self.db.add(
+                OrderEvent(
+                    booking_id=booking.booking_id,
+                    actor_role="customer",
+                    event_type="booking_cancelled_paid",
+                    note=f"Customer cancelled paid booking. Refund issued: ₹{refund_amount} ({reason or 'No reason provided'})",
+                )
+            )
+            self.db.commit()
+            return {
+                "status": "success",
+                "message": f"Booking cancelled successfully. Refund of ₹{refund_amount} initiated.",
+            }
+
+        raise ConflictError(
+            "Booking cannot be cancelled in its current payment status.",
+            code="cancellation_not_allowed",
+        )
 
     def respond_to_damage_report(
         self,
@@ -325,7 +466,12 @@ class BookingService:
         if action == "dispute" and (not dispute_reason or len(dispute_reason.strip()) < 20):
             raise ValidationFailedError(
                 "Dispute reason must be at least 20 characters",
-                [{"field": "dispute_reason", "message": "Dispute reason must be at least 20 characters"}],
+                [
+                    {
+                        "field": "dispute_reason",
+                        "message": "Dispute reason must be at least 20 characters",
+                    }
+                ],
             )
 
         dr = self.repo.respond_to_damage_report(

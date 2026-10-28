@@ -16,7 +16,6 @@ import { DamageReportCard } from '@/components/account/damage-report-card'
 import { ActivityTimeline } from '@/components/account/activity-timeline'
 import { NextStepPanel } from './next-step-panel'
 import { AppLink } from '@/components/shared/app-link'
-import { calculatePayout } from '@/lib/lifecycle'
 import { toast } from 'sonner'
 import type { BookingDetail, VendorOrder } from '@/types/account'
 import type { LifecycleAction } from '@/lib/lifecycle'
@@ -36,7 +35,7 @@ export function OrderSheet({
   onOpenChange,
   order,
   booking,
-  commissionRate = 10,
+  commissionRate: _commissionRate = 0,
   equipmentDeposits = {},
   onAction,
 }: OrderSheetProps) {
@@ -45,7 +44,7 @@ export function OrderSheet({
   if (!order || !booking) return null
 
   const orderItems = booking.items.filter((it) => order.item_ids.includes(it.item_id))
-  const payout = calculatePayout(order.subtotal, commissionRate)
+  const orderDeliveryFee = (order as { delivery_fee?: number }).delivery_fee || 0
 
   // Copy helper
   const handleCopy = (text: string, label: string) => {
@@ -224,43 +223,44 @@ export function OrderSheet({
           )}
         </section>
 
-        {/* 5. FINANCIAL BREAKDOWN */}
+        {/* 5. FINANCIAL BREAKDOWN (COD ONLY) */}
         <section className="p-4 sm:p-5 rounded-[14px] border border-border bg-surface shadow-none space-y-4">
-          <span className="text-xs font-medium text-muted-foreground">
-            Payout & Security Deposit Breakdown
+          <span className="text-xs font-semibold text-foreground flex items-center gap-1.5">
+            <CheckCircle2 className="size-3.5 text-emerald-600" />
+            <span>Cash on Delivery & Deposit Settlement</span>
           </span>
 
           <div className="space-y-2 text-xs">
             <div className="flex items-center justify-between py-1">
-              <span className="text-muted-foreground">Vendor Subtotal (Gross)</span>
-              <strong className="text-foreground tabular-nums">₹{payout.gross.toLocaleString('en-IN')}</strong>
+              <span className="text-muted-foreground">Rental Subtotal</span>
+              <strong className="text-foreground tabular-nums">₹{order.subtotal.toLocaleString('en-IN')}</strong>
+            </div>
+
+            <div className="flex items-center justify-between py-1">
+              <span className="text-muted-foreground">Delivery & Logistics</span>
+              <strong className="text-foreground tabular-nums">₹{orderDeliveryFee.toLocaleString('en-IN')}</strong>
             </div>
 
             <div className="flex items-center justify-between py-1 text-muted-foreground">
-              <span>Platform Commission ({commissionRate}%)</span>
-              <span className="text-destructive tabular-nums">−₹{payout.commission.toLocaleString('en-IN')}</span>
+              <span>Platform Fee (0% Platform Model)</span>
+              <span className="text-emerald-600 font-medium tabular-nums">₹0 (Zero Commission)</span>
+            </div>
+
+            <div className="flex items-center justify-between py-1">
+              <span className="text-muted-foreground">Refundable Security Deposit (Cash)</span>
+              <strong className="text-foreground tabular-nums">₹{depositShare.toLocaleString('en-IN')}</strong>
             </div>
 
             <div className="flex items-center justify-between py-2 border-t border-border font-semibold text-sm">
-              <span className="text-foreground">Net Vendor Payout</span>
+              <span className="text-foreground">Total Cash to Collect on Delivery</span>
               <span className="text-emerald-600 dark:text-emerald-400 font-display tabular-nums">
-                ₹{payout.net.toLocaleString('en-IN')}
-              </span>
-            </div>
-
-            <div className="p-3 rounded-[10px] bg-muted/20 border border-border flex items-center justify-between">
-              <div>
-                <p className="font-semibold text-foreground text-xs">Deposit Share Held</p>
-                <p className="text-[11px] text-muted-foreground">Secures physical items for this order</p>
-              </div>
-              <span className="text-xs font-bold text-foreground tabular-nums">
-                ₹{depositShare.toLocaleString('en-IN')}
+                ₹{(order.subtotal + orderDeliveryFee + depositShare).toLocaleString('en-IN')}
               </span>
             </div>
           </div>
 
-          <p className="text-[11px] text-muted-foreground italic">
-            Security deposits are handled and refunded by Rent4Fraction.
+          <p className="text-[11px] text-muted-foreground">
+            Direct vendor-to-customer cash settlement. Collect total cash upon delivery at venue, and refund security deposit directly to customer in cash upon return inspection.
           </p>
         </section>
 

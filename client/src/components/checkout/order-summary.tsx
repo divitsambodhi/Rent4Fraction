@@ -83,7 +83,7 @@ export function OrderSummary({
                   </button>
                 </TooltipTrigger>
                 <TooltipContent side="top" className="max-w-[240px] text-xs">
-                  We hold your deposit securely in escrow until equipment is checked back in.
+                  Your refundable security deposit is settled directly in cash with the vendor upon post-rental return inspection.
                 </TooltipContent>
               </Tooltip>
             </TooltipProvider>

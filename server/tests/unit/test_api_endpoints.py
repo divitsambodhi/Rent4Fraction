@@ -522,7 +522,7 @@ def test_booking_cancellation_unpaid_vs_paid(api_test_setup: dict[str, Any]) -> 
     )
     assert res_cancel_unpaid.status_code == 200
 
-    # 2. Paid Booking
+    # 2. Paid Booking (Step 6 & 9 merged refund flow)
     b_paid = Booking(
         user_id=cust1.user_id,
         address_id=addr.address_id,
@@ -537,16 +537,36 @@ def test_booking_cancellation_unpaid_vs_paid(api_test_setup: dict[str, Any]) -> 
         event_type="Music",
     )
     db.add(b_paid)
+    db.flush()
+
+    from app.integrations.razorpay import FakePaymentGateway, set_payment_gateway
+    from app.models.payments import Payment, PaymentStatus, PaymentType
+
+    set_payment_gateway(FakePaymentGateway())
+    charge = Payment(
+        booking_id=b_paid.booking_id,
+        user_id=cust1.user_id,
+        amount=Decimal("8850.00"),
+        currency="INR",
+        type=PaymentType.full,
+        status=PaymentStatus.success,
+        transaction_id="pay_fake_api_cancellation_1",
+        gateway_order_id="order_fake_api_cancellation_1",
+    )
+    db.add(charge)
     db.commit()
 
-    # Cancelling paid booking in Step 5 must return 409 cancellation_requires_refund_flow
+    # Cancelling paid booking executes full refund flow and returns 200 OK
     res_cancel_paid = client.post(
         f"/api/v1/bookings/{b_paid.booking_id}/cancel",
         headers=cust_auth,
         json={"reason": "Cancelled"},
     )
-    assert res_cancel_paid.status_code == 409
-    assert res_cancel_paid.json()["error"]["code"] == "cancellation_requires_refund_flow"
+    assert res_cancel_paid.status_code == 200
+    assert res_cancel_paid.json()["status"] == "success"
+    db.refresh(b_paid)
+    assert b_paid.status == BookingStatus.cancelled
+    assert b_paid.payment_status == BookingPaymentStatus.refunded
 
 
 # =============================================================================

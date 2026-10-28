@@ -33,6 +33,9 @@ def quantize_money(amount: Decimal | str | int | float) -> Decimal:
     return d.quantize(QUANT_TWO_DECIMALS, rounding=ROUND_HALF_UP)
 
 
+round_half_up = quantize_money
+
+
 def rupees_to_paise(rupees: Decimal | str | int | float) -> int:
     """
     Converts INR Rupees to integer paise (1 INR = 100 paise) using ROUND_HALF_UP.

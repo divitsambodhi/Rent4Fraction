@@ -312,9 +312,9 @@ class CustomerRepository:
             return None
 
         # Unset previous default
-        self.db.query(Address).filter(
-            Address.user_id == user_id, Address.is_default == 1
-        ).update({"is_default": 0})
+        self.db.query(Address).filter(Address.user_id == user_id, Address.is_default == 1).update(
+            {"is_default": 0}
+        )
         addr.is_default = 1
         self.db.flush()
         return addr
@@ -499,7 +499,9 @@ class CustomerRepository:
             self.db.query(func.count(Booking.booking_id))
             .filter(
                 Booking.user_id == user_id,
-                Booking.status.in_([BookingStatus.pending, BookingStatus.confirmed, BookingStatus.in_progress]),
+                Booking.status.in_(
+                    [BookingStatus.pending, BookingStatus.confirmed, BookingStatus.in_progress]
+                ),
             )
             .scalar()
             or 0

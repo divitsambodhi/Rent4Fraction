@@ -34,7 +34,8 @@ class Settings(BaseSettings):
     GOOGLE_APPLICATION_CREDENTIALS: str | None = None
     FIREBASE_AUTH_EMULATOR_HOST: str | None = None
 
-    # Razorpay Payments (optional in initial foundation)
+    # Razorpay Payments (dormant behind PAYMENTS_ONLINE_ENABLED=False)
+    PAYMENTS_ONLINE_ENABLED: bool = False
     RAZORPAY_KEY_ID: str | None = None
     RAZORPAY_KEY_SECRET: str | None = None
     RAZORPAY_WEBHOOK_SECRET: str | None = None
@@ -42,12 +43,23 @@ class Settings(BaseSettings):
     # Cloud Storage
     STORAGE_BUCKET: str | None = None
 
-    # Policies
+    # COD Policies & Market Governance
+    COD_ENABLED: bool = True
+    CURRENCY: str = "INR"
+    GOOGLE_SIGNIN_ENABLED: bool = True
+    VENDOR_ACCEPTANCE_TIMEOUT_HOURS: int = 24
+    CUSTOMER_MAX_PENDING_BOOKINGS: int = 3
+    CUSTOMER_NO_SHOW_THRESHOLD: int = 2
     REQUIRE_VERIFIED_EMAIL_FOR_CHECKOUT: bool = True
+    REQUIRE_VERIFIED_PHONE_FOR_CHECKOUT: bool = True
+    PAYMENT_HOLD_MINUTES: int = 15
+    ENABLE_SCHEDULER: bool = False
 
     @field_validator("DATABASE_URL", mode="before")
     @classmethod
     def validate_database_url(cls, v: Any, info: Any) -> str:
+        import sys
+
         # If an explicit value was passed to Settings(DATABASE_URL=...), honor it directly
         val = v
         if val is None:
@@ -62,6 +74,12 @@ class Settings(BaseSettings):
             raise ValueError("DATABASE_URL (or TEST_DATABASE_URL) is required and cannot be empty")
 
         url_str = str(val).strip()
+        is_test_mode = "pytest" in sys.modules or (
+            isinstance(info.data, dict) and info.data.get("ENV") == "test"
+        )
+        if url_str.startswith("sqlite") and is_test_mode:
+            return url_str
+
         if not url_str.startswith("mysql+pymysql://"):
             raise ValueError("DATABASE_URL must start with 'mysql+pymysql://'")
         return url_str
@@ -85,6 +103,12 @@ def get_settings() -> Settings:
     if _settings_instance is None:
         _settings_instance = Settings()
     return _settings_instance
+
+
+def __getattr__(name: str) -> Any:
+    if name == "settings":
+        return get_settings()
+    raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
 
 
 def set_settings(settings: Settings) -> None:

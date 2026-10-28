@@ -11,6 +11,10 @@ export function TestCouponsPanel({
   onSelectCoupon,
   disabled = false,
 }: TestCouponsPanelProps) {
+  if (!import.meta.env.DEV || import.meta.env.VITE_API_MODE !== 'mock') {
+    return null
+  }
+
   const coupons = Object.values(MOCK_COUPONS)
 
   return (

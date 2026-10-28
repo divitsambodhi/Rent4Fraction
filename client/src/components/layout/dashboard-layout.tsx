@@ -17,7 +17,6 @@ import {
   Star,
   Sun,
   User as UserIcon,
-  Wallet,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import {
@@ -57,9 +56,8 @@ export const vendorNavSections: NavSection[] = [
     ],
   },
   {
-    title: 'Money & feedback',
+    title: 'Feedback',
     items: [
-      { title: 'Payouts', href: '/vendor?tab=payouts', tabKey: 'payouts', icon: Wallet, requiresApproval: true },
       { title: 'Reviews', href: '/vendor?tab=reviews', tabKey: 'reviews', icon: Star, badge: '4', requiresApproval: true },
     ],
   },
@@ -79,7 +77,6 @@ export const adminNav: NavItem[] = [
   { title: 'Vendors', href: '/admin?section=vendors', tabKey: 'vendors', icon: Building2, badge: '2' },
   { title: 'Equipment', href: '/admin?section=equipment', tabKey: 'equipment', icon: Package },
   { title: 'Disputes', href: '/admin?section=disputes', tabKey: 'disputes', icon: Scale, badge: '2' },
-  { title: 'Payouts', href: '/admin?section=payouts', tabKey: 'payouts', icon: Wallet, badge: '3' },
   { title: 'Categories', href: '/admin?section=categories', tabKey: 'categories', icon: Package },
   { title: 'Coupons', href: '/admin?section=coupons', tabKey: 'coupons', icon: ShoppingBag },
   { title: 'Users', href: '/admin?section=users', tabKey: 'users', icon: UserIcon },

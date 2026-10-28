@@ -36,8 +36,12 @@ def _get_user(db: Session, current_user: CurrentUser) -> User:
 )
 def get_wishlist(
     sort: str = Query("newest", description="Sort by: newest, price_asc, price_desc"),
-    from_date: date | None = Query(None, alias="from", description="Calculate price and availability from date"),
-    to_date: date | None = Query(None, alias="to", description="Calculate price and availability to date"),
+    from_date: date | None = Query(
+        None, alias="from", description="Calculate price and availability from date"
+    ),
+    to_date: date | None = Query(
+        None, alias="to", description="Calculate price and availability to date"
+    ),
     current_user: CurrentUser = Depends(require_customer),
     db: Session = Depends(get_db),
 ) -> Any:

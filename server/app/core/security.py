@@ -4,7 +4,8 @@ import logging
 from collections.abc import Callable
 from typing import Any
 
-from fastapi import Header
+from fastapi import Depends, Header
+from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from firebase_admin import auth
 
 from app.core.errors import (
@@ -20,12 +21,20 @@ logger = logging.getLogger("rent4fraction.security")
 # Type alias for token verification callables
 TokenVerifier = Callable[[str, bool], dict[str, Any]]
 
+http_bearer = HTTPBearer(auto_error=False)
 
-def get_token(authorization: str | None = Header(None)) -> str:
+
+def get_token(
+    credentials: HTTPAuthorizationCredentials | None = Depends(http_bearer),
+    authorization: str | None = Header(None),
+) -> str:
     """
-    Extracts Bearer token from the HTTP Authorization header.
+    Extracts Bearer token from HTTPBearer security scheme or HTTP Authorization header.
     Raises 401 auth_missing_token if header is absent, malformed, or empty.
     """
+    if credentials and hasattr(credentials, "credentials") and credentials.credentials.strip():
+        return credentials.credentials.strip()
+
     if not authorization:
         raise AuthMissingTokenError(
             "Authentication token is missing. Please provide Authorization: Bearer <token>"

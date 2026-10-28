@@ -11,6 +11,7 @@ import { PasswordInput } from './password-input'
 import { FormAlert } from './form-alert'
 import { ForgotPasswordDialog } from './forgot-password-dialog'
 import { DemoAccountsPanel } from './demo-accounts-panel'
+import { GoogleSignInButton } from './google-sign-in-button'
 import { useAuth } from '@/providers/auth-provider'
 import { useAppNavigate } from '@/components/shared/app-link'
 import { getHomeForRole, mapAuthError, sanitizeRedirect } from '@/lib/auth'
@@ -113,6 +114,23 @@ export function LoginForm({ onSwitchMode, redirectParam }: LoginFormProps) {
 
       {/* DEV ONLY demo credentials */}
       <DemoAccountsPanel onFill={handleFillDemo} />
+
+      {/* Google Social Sign-In */}
+      <div className="space-y-3">
+        <GoogleSignInButton
+          onSuccess={() => {
+            const sanitized = sanitizeRedirect(redirectParam)
+            navigate(sanitized || '/')
+          }}
+          disabled={isSubmitting}
+        />
+        <div className="relative flex items-center justify-center">
+          <div className="border-t border-border w-full" />
+          <span className="bg-card px-2 text-[11px] text-muted-foreground uppercase tracking-wider relative">
+            or continue with email
+          </span>
+        </div>
+      </div>
 
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-4 text-left" noValidate>
         {/* Email */}

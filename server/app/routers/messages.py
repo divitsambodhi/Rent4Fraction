@@ -88,4 +88,3 @@ def send_user_message(
         equipment_id=payload.get_equipment_id(),
         body=payload.get_body(),
     )
-

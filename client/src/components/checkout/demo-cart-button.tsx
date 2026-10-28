@@ -12,6 +12,10 @@ export function DemoCartButton({
   disabled = false,
   className,
 }: DemoCartButtonProps) {
+  if (!import.meta.env.DEV || import.meta.env.VITE_API_MODE !== 'mock') {
+    return null
+  }
+
   return (
     <Button
       type="button"

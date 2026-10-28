@@ -72,9 +72,14 @@ def search_equipment(
     from_date: date | None = Query(None, alias="from", description="Rental start date (inclusive)"),
     to_date: date | None = Query(None, alias="to", description="Rental end date (inclusive)"),
     available: bool | None = Query(None, description="Available only flag"),
-    sort: str = Query("relevance", description="Sort option (relevance, price_asc, price_desc, rating, reviews, newest)"),
+    sort: str = Query(
+        "relevance",
+        description="Sort option (relevance, price_asc, price_desc, rating, reviews, newest)",
+    ),
     page: int = Query(1, ge=1, description="Page number"),
-    page_size: int = Query(24, ge=1, le=48, alias="pageSize", description="Items per page (max 48)"),
+    page_size: int = Query(
+        24, ge=1, le=48, alias="pageSize", description="Items per page (max 48)"
+    ),
     db: Session = Depends(get_db),
 ) -> Any:
     service = CatalogService(db)

@@ -60,7 +60,12 @@ class CatalogService:
             if to_date < from_date:
                 raise ValidationFailedError(
                     "Rental end date must not be before start date",
-                    [{"field": "to", "message": "End date must be greater than or equal to start date"}],
+                    [
+                        {
+                            "field": "to",
+                            "message": "End date must be greater than or equal to start date",
+                        }
+                    ],
                 )
             if (to_date - from_date).days > 365:
                 raise ValidationFailedError(
@@ -108,7 +113,12 @@ class CatalogService:
         if to_date < from_date:
             raise ValidationFailedError(
                 "Rental end date must not be before start date",
-                [{"field": "to", "message": "End date must be greater than or equal to start date"}],
+                [
+                    {
+                        "field": "to",
+                        "message": "End date must be greater than or equal to start date",
+                    }
+                ],
             )
         if (to_date - from_date).days > 365:
             raise ValidationFailedError(

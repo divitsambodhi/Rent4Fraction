@@ -2,6 +2,7 @@ import { describe, it, expect } from 'vitest'
 import { loadAccountState } from '@/lib/api/account-store'
 import { submitReview } from '@/lib/api/account'
 import { getUnifiedEquipmentRating } from '@/lib/api/selectors'
+import { stepRange } from '@/components/catalog/date-range-picker'
 
 // In-memory storage shim for Node test runner
 const mockStorageMap = new Map<string, string>()
@@ -126,9 +127,7 @@ describe('Event Dates Date Persistence (Task A2)', () => {
 })
 
 describe('DateRangePicker 2-Step Range Selection (stepRange)', () => {
-  // Dynamic import of stepRange to verify pure logic
-  it('first click selects start date without completing range (popover stays open)', async () => {
-    const { stepRange } = await import('@/components/catalog/date-range-picker')
+  it('first click selects start date without completing range (popover stays open)', () => {
     const start = new Date(2026, 9, 20)
     const res = stepRange(undefined, start)
 
@@ -137,8 +136,7 @@ describe('DateRangePicker 2-Step Range Selection (stepRange)', () => {
     expect(res.next.to).toBeUndefined()
   })
 
-  it('second click on later date completes range', async () => {
-    const { stepRange } = await import('@/components/catalog/date-range-picker')
+  it('second click on later date completes range', () => {
     const start = new Date(2026, 9, 20)
     const end = new Date(2026, 9, 25)
 
@@ -150,8 +148,7 @@ describe('DateRangePicker 2-Step Range Selection (stepRange)', () => {
     expect(step2.next.to).toEqual(end)
   })
 
-  it('second click on same date completes single-day range', async () => {
-    const { stepRange } = await import('@/components/catalog/date-range-picker')
+  it('second click on same date completes single-day range', () => {
     const day = new Date(2026, 9, 20)
 
     const step1 = stepRange(undefined, day)
@@ -162,8 +159,7 @@ describe('DateRangePicker 2-Step Range Selection (stepRange)', () => {
     expect(step2.next.to).toEqual(day)
   })
 
-  it('clicking earlier date shifts start date and keeps popover open', async () => {
-    const { stepRange } = await import('@/components/catalog/date-range-picker')
+  it('clicking earlier date shifts start date and keeps popover open', () => {
     const day1 = new Date(2026, 9, 25)
     const earlierDay = new Date(2026, 9, 20)
 
@@ -175,8 +171,7 @@ describe('DateRangePicker 2-Step Range Selection (stepRange)', () => {
     expect(step2.next.to).toBeUndefined()
   })
 
-  it('clicking when a range was already complete starts a new selection without closing', async () => {
-    const { stepRange } = await import('@/components/catalog/date-range-picker')
+  it('clicking when a range was already complete starts a new selection without closing', () => {
     const oldRange = {
       from: new Date(2026, 9, 10),
       to: new Date(2026, 9, 15),

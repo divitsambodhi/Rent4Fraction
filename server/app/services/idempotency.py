@@ -163,3 +163,42 @@ class IdempotencyService:
             expires_at=expires_at,
         )
         self.store.save(rec)
+
+    def check_or_lock(
+        self,
+        key: str | None,
+        user_id: int | None = None,
+        endpoint: str | None = None,
+        payload: Any = None,
+    ) -> IdempotencyRecord | None:
+        """Convenience method for endpoint idempotency checking."""
+        if not key:
+            return None
+        req_data: dict[str, Any] = {"user_id": user_id, "endpoint": endpoint, "payload": payload}
+        return self.check_and_replay(key=key, request_data=req_data)
+
+    def save_response(
+        self,
+        key: str | None,
+        user_id: int | None = None,
+        endpoint: str | None = None,
+        status_code: int = 200,
+        response_body: str = "",
+        ttl: timedelta | None = None,
+    ) -> None:
+        """Convenience method for endpoint response caching."""
+        if not key:
+            return
+        req_data: dict[str, Any] = {"user_id": user_id, "endpoint": endpoint, "payload": {}}
+        self.record_response(
+            key=key,
+            request_data=req_data,
+            response_code=status_code,
+            response_body=response_body,
+            ttl=ttl,
+        )
+
+
+def get_idempotency_service(db: Session, default_ttl_hours: int = 24) -> IdempotencyService:
+    store = DatabaseIdempotencyStore(db)
+    return IdempotencyService(store=store, default_ttl_hours=default_ttl_hours)

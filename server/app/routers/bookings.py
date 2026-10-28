@@ -7,6 +7,7 @@ from sqlalchemy.orm import Session
 
 from app.core.db import get_db
 from app.core.deps import CurrentUser, require_customer
+from app.integrations.razorpay import PaymentGateway, get_payment_gateway
 from app.models.accounts import User
 from app.schemas.booking import (
     BookingCancelRequest,
@@ -15,7 +16,9 @@ from app.schemas.booking import (
     DamageReportResponse,
     DamageReportResponseRequest,
 )
+from app.schemas.checkout import RazorpayOrderBlock
 from app.services.booking import BookingService
+from app.services.payments import PaymentService
 
 router = APIRouter(prefix="/api/v1", tags=["Bookings"])
 
@@ -40,7 +43,11 @@ def _get_user(db: Session, current_user: CurrentUser) -> User:
     include_in_schema=False,
 )
 def list_user_bookings(
-    status_filter: str | None = Query("all", alias="status", description="Tab filter: all, upcoming, ongoing, completed, cancelled"),
+    status_filter: str | None = Query(
+        "all",
+        alias="status",
+        description="Tab filter: all, upcoming, ongoing, completed, cancelled",
+    ),
     q: str | None = Query(None, description="Search by event name, type, or booking ID"),
     page: int = Query(1, ge=1, description="Page number"),
     page_size: int = Query(10, ge=1, le=50, alias="pageSize", description="Items per page"),
@@ -101,11 +108,34 @@ def cancel_unpaid_booking(
 ) -> dict[str, str]:
     user = _get_user(db, current_user)
     service = BookingService(db)
-    return service.cancel_unpaid_booking(
+    return service.cancel_booking(
         user=user,
         booking_id=booking_id,
         reason=payload.reason,
     )
+
+
+@router.post(
+    "/bookings/{booking_id}/pay",
+    response_model=RazorpayOrderBlock,
+    operation_id="retry_booking_payment",
+    summary="Retry payment for an unpaid pending booking within hold window",
+)
+@router.post(
+    "/account/bookings/{booking_id}/pay",
+    response_model=RazorpayOrderBlock,
+    operation_id="retry_account_booking_payment_alias",
+    include_in_schema=False,
+)
+def retry_booking_payment(
+    booking_id: int,
+    current_user: CurrentUser = Depends(require_customer),
+    db: Session = Depends(get_db),
+    gateway: PaymentGateway = Depends(get_payment_gateway),
+) -> Any:
+    user = _get_user(db, current_user)
+    service = PaymentService(db, gateway=gateway)
+    return service.retry_booking_payment(user_id=user.user_id, booking_id=booking_id)
 
 
 @router.post(
@@ -136,4 +166,3 @@ def respond_to_damage_report(
         action=payload.action,
         dispute_reason=payload.dispute_reason,
     )
-

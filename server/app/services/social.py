@@ -62,7 +62,12 @@ class SocialService:
         if not clean_body or len(clean_body) > 1000:
             raise ValidationFailedError(
                 "Message body must be between 1 and 1000 characters",
-                [{"field": "body", "message": "Message body must be between 1 and 1000 characters"}],
+                [
+                    {
+                        "field": "body",
+                        "message": "Message body must be between 1 and 1000 characters",
+                    }
+                ],
             )
 
         msg = self.cust_repo.send_message(

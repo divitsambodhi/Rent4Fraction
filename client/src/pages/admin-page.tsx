@@ -18,7 +18,6 @@ const VALID_SECTIONS: AdminSection[] = [
   'vendors',
   'equipment',
   'disputes',
-  'payouts',
   'categories',
   'coupons',
   'users',
@@ -36,11 +35,11 @@ export function AdminPage() {
   const titles: Record<AdminSection, string> = {
     overview: 'Overview · Platform Health',
     vendors: 'Vendor Partners & Applications',
-    equipment: 'Equipment Listings & Commission Governance',
-    disputes: 'Dispute Cases & Claims',
-    payouts: 'Vendor Payouts & Settlements',
+    equipment: 'Equipment Listings & Moderation',
+    disputes: 'Dispute Cases & Mediation',
+    payouts: 'Settlements',
     categories: 'Catalogue Taxonomy & Categories',
-    coupons: 'Promotional Coupons & Vouchers',
+    coupons: 'Vendor Promotional Coupons',
     users: 'User Governance & Roles',
     bookings: 'Global Rental Bookings',
   }

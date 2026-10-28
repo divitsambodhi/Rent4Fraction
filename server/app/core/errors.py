@@ -266,6 +266,253 @@ class RateLimitedError(DomainError):
 
 
 # -----------------------------------------------------------------------------
+# Checkout, Payments, and Refunds Domain Errors (Step 6 & 9)
+# -----------------------------------------------------------------------------
+class PaymentGatewayUnavailableError(DomainError):
+    def __init__(
+        self,
+        message: str = "Payment gateway is currently unavailable. Please try again.",
+        details: Any | None = None,
+    ) -> None:
+        super().__init__(
+            code="payment_gateway_unavailable",
+            message=message,
+            status_code=status.HTTP_502_BAD_GATEWAY,
+            details=details,
+        )
+
+
+class PaymentGatewayRejectedError(DomainError):
+    def __init__(
+        self,
+        message: str = "Payment could not be processed by gateway.",
+        details: Any | None = None,
+    ) -> None:
+        super().__init__(
+            code="payment_gateway_rejected",
+            message=message,
+            status_code=status.HTTP_400_BAD_REQUEST,
+            details=details,
+        )
+
+
+class InvalidSignatureError(DomainError):
+    def __init__(
+        self,
+        message: str = "Payment signature verification failed.",
+        details: Any | None = None,
+    ) -> None:
+        super().__init__(
+            code="invalid_signature",
+            message=message,
+            status_code=status.HTTP_400_BAD_REQUEST,
+            details=details,
+        )
+
+
+class InvalidWebhookSignatureError(DomainError):
+    def __init__(
+        self,
+        message: str = "Webhook signature verification failed.",
+        details: Any | None = None,
+    ) -> None:
+        super().__init__(
+            code="invalid_webhook_signature",
+            message=message,
+            status_code=status.HTTP_400_BAD_REQUEST,
+            details=details,
+        )
+
+
+class BookingExpiredError(DomainError):
+    def __init__(
+        self,
+        message: str = "Booking hold window has expired. Please create a new booking.",
+        details: Any | None = None,
+    ) -> None:
+        super().__init__(
+            code="booking_expired",
+            message=message,
+            status_code=status.HTTP_409_CONFLICT,
+            details=details,
+        )
+
+
+class ItemsUnavailableError(DomainError):
+    def __init__(
+        self,
+        message: str = "One or more items in your cart are no longer available for the chosen dates.",
+        details: Any | None = None,
+    ) -> None:
+        super().__init__(
+            code="items_unavailable",
+            message=message,
+            status_code=status.HTTP_409_CONFLICT,
+            details=details,
+        )
+
+
+class CodNotAvailableError(DomainError):
+    def __init__(
+        self,
+        message: str = "Cash on delivery is currently disabled. Please select an online payment method.",
+        details: Any | None = None,
+    ) -> None:
+        super().__init__(
+            code="cod_not_available",
+            message=message,
+            status_code=status.HTTP_403_FORBIDDEN,
+            details=details,
+        )
+
+
+class DeliveryNotAvailableError(DomainError):
+    def __init__(
+        self,
+        message: str = "Delivery is not available for one or more items from this vendor.",
+        details: Any | None = None,
+    ) -> None:
+        super().__init__(
+            code="delivery_not_available",
+            message=message,
+            status_code=status.HTTP_400_BAD_REQUEST,
+            details=details,
+        )
+
+
+class CancellationNotAllowedError(DomainError):
+    def __init__(
+        self,
+        message: str = "Booking cancellation is not permitted in its current state.",
+        details: Any | None = None,
+    ) -> None:
+        super().__init__(
+            code="cancellation_not_allowed",
+            message=message,
+            status_code=status.HTTP_409_CONFLICT,
+            details=details,
+        )
+
+
+class RefundFailedError(DomainError):
+    def __init__(
+        self,
+        message: str = "Refund operation failed.",
+        details: Any | None = None,
+    ) -> None:
+        super().__init__(
+            code="refund_failed",
+            message=message,
+            status_code=status.HTTP_400_BAD_REQUEST,
+            details=details,
+        )
+
+
+class RefundExceedsCapturedError(ConflictError):
+    def __init__(
+        self,
+        message: str = "Refund amount exceeds total captured charges.",
+        details: Any | None = None,
+    ) -> None:
+        super().__init__(
+            message=message,
+            details=details,
+            code="refund_exceeds_captured",
+        )
+
+
+class IdempotencyKeyReuseError(DomainError):
+    def __init__(
+        self,
+        message: str = "Idempotency key has already been used with a different request payload.",
+        details: Any | None = None,
+    ) -> None:
+        super().__init__(
+            code="idempotency_key_reuse",
+            message=message,
+            status_code=status.HTTP_409_CONFLICT,
+            details=details,
+        )
+
+
+# -----------------------------------------------------------------------------
+# Lifecycle, Inventory, and Admin Domain Errors (Steps 7 & 8)
+# -----------------------------------------------------------------------------
+class InvalidTransitionError(DomainError):
+    def __init__(
+        self,
+        message: str = "Action is not allowed from current order status",
+        allowed_actions: list[str] | None = None,
+        details: Any | None = None,
+    ) -> None:
+        payload_details: dict[str, Any] = dict(details) if isinstance(details, dict) else {}
+        if allowed_actions is not None:
+            payload_details["allowed_actions"] = allowed_actions
+        super().__init__(
+            code="invalid_transition",
+            message=message,
+            status_code=status.HTTP_409_CONFLICT,
+            details=payload_details if payload_details else None,
+        )
+
+
+class InventoryHasActiveBookingsError(DomainError):
+    def __init__(
+        self,
+        message: str = "Equipment cannot be archived because it has active or upcoming bookings.",
+        details: Any | None = None,
+    ) -> None:
+        super().__init__(
+            code="conflict",
+            message=message,
+            status_code=status.HTTP_409_CONFLICT,
+            details=details,
+        )
+
+
+class AvailabilityConflictError(DomainError):
+    def __init__(
+        self,
+        message: str = "Availability block conflicts with existing bookings or blocks.",
+        details: Any | None = None,
+    ) -> None:
+        super().__init__(
+            code="conflict",
+            message=message,
+            status_code=status.HTTP_409_CONFLICT,
+            details=details,
+        )
+
+
+class AdminSelfDeactivationForbiddenError(DomainError):
+    def __init__(
+        self,
+        message: str = "An administrator cannot deactivate their own account.",
+        details: Any | None = None,
+    ) -> None:
+        super().__init__(
+            code="forbidden",
+            message=message,
+            status_code=status.HTTP_403_FORBIDDEN,
+            details=details,
+        )
+
+
+class LastAdminDeactivationForbiddenError(DomainError):
+    def __init__(
+        self,
+        message: str = "The last remaining active administrator cannot be deactivated.",
+        details: Any | None = None,
+    ) -> None:
+        super().__init__(
+            code="forbidden",
+            message=message,
+            status_code=status.HTTP_403_FORBIDDEN,
+            details=details,
+        )
+
+
+# -----------------------------------------------------------------------------
 # MySQL Trigger SIGNAL (SQLSTATE 45000) Error Catalog Mapping
 # -----------------------------------------------------------------------------
 # Maps MySQL trigger messages from 013_functions_and_triggers.sql to domain codes & HTTP statuses

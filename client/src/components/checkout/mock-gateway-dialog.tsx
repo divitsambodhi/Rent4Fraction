@@ -10,7 +10,8 @@ import {
 } from '@/components/ui/dialog'
 import { formatINR } from '@/lib/format'
 
-export const MOCK_GATEWAY_ENABLED = true
+export const MOCK_GATEWAY_ENABLED =
+  import.meta.env.DEV && import.meta.env.VITE_API_MODE === 'mock'
 
 interface MockGatewayDialogProps {
   open: boolean
@@ -25,6 +26,8 @@ export function MockGatewayDialog({
   paymentMethod,
   onOutcome,
 }: MockGatewayDialogProps) {
+  if (!MOCK_GATEWAY_ENABLED || !open) return null
+
   const [processing, setProcessing] = useState(false)
   const [chosenOutcome, setChosenOutcome] = useState<'success' | 'failure' | null>(null)
 

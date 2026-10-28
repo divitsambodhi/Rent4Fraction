@@ -38,11 +38,7 @@ class BookingRepository:
     # Coupon Operations
     # -------------------------------------------------------------------------
     def get_coupon_by_code(self, code: str) -> Coupon | None:
-        return (
-            self.db.query(Coupon)
-            .filter(func.lower(Coupon.code) == code.strip().lower())
-            .first()
-        )
+        return self.db.query(Coupon).filter(func.lower(Coupon.code) == code.strip().lower()).first()
 
     # -------------------------------------------------------------------------
     # Customer Bookings List & Counts
@@ -75,7 +71,10 @@ class BookingRepository:
                 counts["cancelled"] += 1
             elif b.status == BookingStatus.completed:
                 counts["completed"] += 1
-            elif b.start_date > today and b.status in [BookingStatus.pending, BookingStatus.confirmed]:
+            elif b.start_date > today and b.status in [
+                BookingStatus.pending,
+                BookingStatus.confirmed,
+            ]:
                 counts["upcoming"] += 1
             elif b.start_date <= today <= b.end_date or b.status == BookingStatus.in_progress:
                 counts["ongoing"] += 1
@@ -142,11 +141,13 @@ class BookingRepository:
                     seen_vendors.add(vo.vendor.vendor_id)
                     words = vo.vendor.business_name.strip().split()
                     initials = "".join(w[0].upper() for w in words[:2])
-                    vendor_avatars.append({
-                        "id": str(vo.vendor.vendor_id),
-                        "name": vo.vendor.business_name,
-                        "initials": initials,
-                    })
+                    vendor_avatars.append(
+                        {
+                            "id": str(vo.vendor.vendor_id),
+                            "name": vo.vendor.business_name,
+                            "initials": initials,
+                        }
+                    )
 
             # Item count
             item_count = (
@@ -167,54 +168,63 @@ class BookingRepository:
                 self.db.query(func.count(DamageReport.report_id))
                 .join(ReturnItem, DamageReport.return_item_id == ReturnItem.return_item_id)
                 .join(BookingItem, ReturnItem.booking_item_id == BookingItem.booking_item_id)
-                .filter(BookingItem.booking_id == b.booking_id, DamageReport.status == DamageReportStatus.reported)
+                .filter(
+                    BookingItem.booking_id == b.booking_id,
+                    DamageReport.status == DamageReportStatus.reported,
+                )
                 .scalar()
                 or 0
             )
             if reported_count > 0:
                 action_needed.append(f"{reported_count} damage report awaiting review")
 
-            summaries.append({
-                "booking_id": f"BK-{b.booking_id:04d}",
-                "event_name": b.event_name or "Event Rental",
-                "event_type": b.event_type or "Corporate event",
-                "status": b.status.value,
-                "payment_status": b.payment_status.value,
-                "start_date": b.start_date.isoformat(),
-                "end_date": b.end_date.isoformat(),
-                "rental_days": rental_days_val,
-                "delivery_city": city,
-                "vendor_count": len(vendor_avatars),
-                "item_count": int(item_count),
-                "vendor_avatars": vendor_avatars,
-                "total_amount": float(b.total_amount),
-                "action_needed": action_needed,
-                "created_at": b.booking_date.isoformat(),
-            })
+            summaries.append(
+                {
+                    "booking_id": f"BK-{b.booking_id:04d}",
+                    "event_name": b.event_name or "Event Rental",
+                    "event_type": b.event_type or "Corporate event",
+                    "status": b.status.value,
+                    "payment_status": b.payment_status.value,
+                    "start_date": b.start_date.isoformat(),
+                    "end_date": b.end_date.isoformat(),
+                    "rental_days": rental_days_val,
+                    "delivery_city": city,
+                    "vendor_count": len(vendor_avatars),
+                    "item_count": int(item_count),
+                    "vendor_avatars": vendor_avatars,
+                    "total_amount": float(b.total_amount),
+                    "action_needed": action_needed,
+                    "created_at": b.booking_date.isoformat(),
+                }
+            )
 
         return summaries, total_for_filter, counts
 
     # -------------------------------------------------------------------------
     # Booking Detail Assembler
     # -------------------------------------------------------------------------
-    def get_booking_detail(self, user_id: int, booking_id: int) -> dict[str, Any] | None:
+    def get_booking_detail(self, booking_id: int, user_id: int | None = None) -> dict[str, Any] | None:
         """
         Assembles complete booking detail matching client's BookingDetail schema.
-        Strict IDOR isolation: returns None if booking does not belong to user_id.
+        When user_id is provided, enforces strict IDOR isolation.
         """
-        b = (
+        query = (
             self.db.query(Booking)
             .options(
                 joinedload(Booking.address),
                 joinedload(Booking.coupon),
                 joinedload(Booking.vendor_orders).joinedload(VendorOrder.vendor),
                 joinedload(Booking.vendor_orders).joinedload(VendorOrder.deliveries),
-                joinedload(Booking.vendor_orders).joinedload(VendorOrder.returns).joinedload(Return.items),
+                joinedload(Booking.vendor_orders)
+                .joinedload(VendorOrder.returns)
+                .joinedload(Return.items),
                 joinedload(Booking.payments),
             )
-            .filter(Booking.booking_id == booking_id, Booking.user_id == user_id)
-            .first()
+            .filter(Booking.booking_id == booking_id)
         )
+        if user_id is not None:
+            query = query.filter(Booking.user_id == user_id)
+        b = query.first()
         if not b:
             return None
 
@@ -289,25 +299,29 @@ class BookingRepository:
             if it.equipment and it.equipment.images:
                 primary_img = it.equipment.images[0].url
 
-            item_details.append({
-                "item_id": str(it.booking_item_id),
-                "equipment_id": str(it.equipment_id),
-                "name": it.equipment.name if it.equipment else "",
-                "image_url": primary_img,
-                "unit_price": float(it.price_per_day),
-                "quantity": it.quantity,
-                "days": it.days,
-                "total_price": float(it.total_price),
-                "status": it.item_status.value,
-                "vendor_id": str(it.vendor_id),
-                "vendor_name": it.vendor.business_name if it.vendor else "",
-                "security_deposit": float(it.deposit_amount),
-                "category": it.equipment.category.name if it.equipment and it.equipment.category else "",
-                "review": rev_data,
-                "damage_report": damage_report_data,
-                "commission_rate": float(it.commission_rate),
-                "commission_amount": float(it.commission_amount),
-            })
+            item_details.append(
+                {
+                    "item_id": str(it.booking_item_id),
+                    "equipment_id": str(it.equipment_id),
+                    "name": it.equipment.name if it.equipment else "",
+                    "image_url": primary_img,
+                    "unit_price": float(it.price_per_day),
+                    "quantity": it.quantity,
+                    "days": it.days,
+                    "total_price": float(it.total_price),
+                    "status": it.item_status.value,
+                    "vendor_id": str(it.vendor_id),
+                    "vendor_name": it.vendor.business_name if it.vendor else "",
+                    "security_deposit": float(it.deposit_amount),
+                    "category": it.equipment.category.name
+                    if it.equipment and it.equipment.category
+                    else "",
+                    "review": rev_data,
+                    "damage_report": damage_report_data,
+                    "commission_rate": float(it.commission_rate),
+                    "commission_amount": float(it.commission_amount),
+                }
+            )
 
         # 3. Vendor Orders with deliveries & returns
         vendor_orders_payload: list[dict[str, Any]] = []
@@ -323,7 +337,9 @@ class BookingRepository:
                 deliv_data = {
                     "type": d.type.value,
                     "status": d.status.value,
-                    "scheduled_window": f"{d.scheduled_start.strftime('%I:%M %p')} - {d.scheduled_end.strftime('%I:%M %p')}" if d.scheduled_start and d.scheduled_end else "10:00 AM - 12:00 PM",
+                    "scheduled_window": f"{d.scheduled_start.strftime('%I:%M %p')} - {d.scheduled_end.strftime('%I:%M %p')}"
+                    if d.scheduled_start and d.scheduled_end
+                    else "10:00 AM - 12:00 PM",
                     "tracking_info": d.tracking_info,
                     "delivered_by": d.delivered_by,
                     "delivery_proof_url": d.proof_url,
@@ -337,28 +353,42 @@ class BookingRepository:
                 ret_obj = vo.returns
                 ret_data = {
                     "status": ret_obj.status.value,
-                    "scheduled_window": f"{ret_obj.scheduled_start.strftime('%I:%M %p')} - {ret_obj.scheduled_end.strftime('%I:%M %p')}" if ret_obj.scheduled_start and ret_obj.scheduled_end else None,
+                    "scheduled_window": f"{ret_obj.scheduled_start.strftime('%I:%M %p')} - {ret_obj.scheduled_end.strftime('%I:%M %p')}"
+                    if ret_obj.scheduled_start and ret_obj.scheduled_end
+                    else None,
                     "returned_at": ret_obj.return_date.isoformat() if ret_obj.return_date else None,
-                    "inspected_at": ret_obj.updated_at.isoformat() if ret_obj.status.value == "returned" else None,
+                    "inspected_at": ret_obj.updated_at.isoformat()
+                    if ret_obj.status.value == "returned"
+                    else None,
                     "condition": "good",
                     "notes": ret_obj.note,
                 }
 
-            vo_item_ids = [str(it.booking_item_id) for it in items if it.vendor_order_id == vo.vendor_order_id]
+            vo_item_ids = [
+                str(it.booking_item_id) for it in items if it.vendor_order_id == vo.vendor_order_id
+            ]
 
-            vendor_orders_payload.append({
-                "vendor_order_id": str(vo.vendor_order_id),
-                "vendor_id": str(vo.vendor_id),
-                "vendor_name": v_name,
-                "vendor_initials": initials,
-                "status": vo.status.value,
-                "rejection_reason": vo.rejection_reason,
-                "subtotal": float(vo.subtotal),
-                "item_ids": vo_item_ids,
-                "delivery": deliv_data,
-                "return": ret_data,
-                "fulfilment_type": getattr(vo, "fulfilment_type", "delivery"),
-            })
+            # Vendor contact privacy: reveal phone once accepted
+            v_phone = None
+            if vo.status.value not in ("pending", "rejected") and vo.vendor:
+                v_phone = vo.vendor.phone
+
+            vendor_orders_payload.append(
+                {
+                    "vendor_order_id": str(vo.vendor_order_id),
+                    "vendor_id": str(vo.vendor_id),
+                    "vendor_name": v_name,
+                    "vendor_initials": initials,
+                    "vendor_phone": v_phone,
+                    "status": vo.status.value,
+                    "rejection_reason": vo.rejection_reason,
+                    "subtotal": float(vo.subtotal),
+                    "item_ids": vo_item_ids,
+                    "delivery": deliv_data,
+                    "return": ret_data,
+                    "fulfilment_type": getattr(vo, "fulfilment_type", "delivery"),
+                }
+            )
 
         # 4. Payments
         payments_payload = [
@@ -367,7 +397,7 @@ class BookingRepository:
                 "booking_id": f"BK-{b.booking_id:04d}",
                 "event_name": b.event_name or "Event Rental",
                 "type": p.type.value,
-                "method": p.method.value,
+                "method": p.method.value if p.method else "card",
                 "amount": float(p.amount),
                 "status": p.status.value,
                 "created_at": p.created_at.isoformat(),
@@ -381,12 +411,17 @@ class BookingRepository:
         held = float(b.security_deposit)
         deducted = 0.0
         for it_dict in item_details:
-            if it_dict.get("damage_report") and it_dict["damage_report"].get("status") == "resolved":
+            if (
+                it_dict.get("damage_report")
+                and it_dict["damage_report"].get("status") == "resolved"
+            ):
                 deducted += it_dict["damage_report"].get("damage_cost", 0.0)
 
         # Deposit refunds recorded
         refunded = sum(
-            float(p.amount) for p in b.payments if p.type == PaymentType.deposit_refund and p.status == PaymentStatus.success
+            float(p.amount)
+            for p in b.payments
+            if p.type == PaymentType.deposit_refund and p.status == PaymentStatus.success
         )
         pending_refund = max(0.0, held - deducted - refunded)
 
@@ -464,7 +499,11 @@ class BookingRepository:
     # Booking Mutations: Cancel & Damage Dispute
     # -------------------------------------------------------------------------
     def cancel_booking(self, user_id: int, booking_id: int, reason: str | None = None) -> Booking:
-        b = self.db.query(Booking).filter(Booking.booking_id == booking_id, Booking.user_id == user_id).first()
+        b = (
+            self.db.query(Booking)
+            .filter(Booking.booking_id == booking_id, Booking.user_id == user_id)
+            .first()
+        )
         if not b:
             raise NotFoundError("Booking not found")
 
@@ -473,7 +512,10 @@ class BookingRepository:
         if b.payment_status != BookingPaymentStatus.unpaid:
             raise ConflictError(
                 "Booking has recorded payments. Cancellation requires refund workflow.",
-                details={"booking_id": f"BK-{booking_id:04d}", "payment_status": b.payment_status.value},
+                details={
+                    "booking_id": f"BK-{booking_id:04d}",
+                    "payment_status": b.payment_status.value,
+                },
             )
 
         if b.status == BookingStatus.cancelled:
@@ -508,7 +550,11 @@ class BookingRepository:
     def respond_to_damage_report(
         self, user_id: int, booking_id: int, item_id: int, action: str, dispute_reason: str | None
     ) -> DamageReport:
-        b = self.db.query(Booking).filter(Booking.booking_id == booking_id, Booking.user_id == user_id).first()
+        b = (
+            self.db.query(Booking)
+            .filter(Booking.booking_id == booking_id, Booking.user_id == user_id)
+            .first()
+        )
         if not b:
             raise NotFoundError("Booking not found")
 
@@ -524,7 +570,9 @@ class BookingRepository:
 
         dr = ret_item.damage_report
         if dr.status != DamageReportStatus.reported:
-            raise ConflictError(f"Damage report is already in status '{dr.status.value}' and cannot be updated")
+            raise ConflictError(
+                f"Damage report is already in status '{dr.status.value}' and cannot be updated"
+            )
 
         old_status = dr.status.value
         now = datetime.now(UTC)
@@ -599,14 +647,16 @@ class BookingRepository:
             ret_date_str = "Recently"
             if it.vendor_order and it.vendor_order.booking and it.vendor_order.booking.end_date:
                 ret_date_str = it.vendor_order.booking.end_date.strftime("%b %d, %Y")
-            results.append({
-                "booking_id": f"BK-{it.booking_id:04d}",
-                "equipment_id": str(it.equipment_id),
-                "equipment_name": it.equipment.name if it.equipment else "",
-                "equipment_image": img,
-                "vendor_name": it.vendor.business_name if it.vendor else "",
-                "returned_date": ret_date_str,
-            })
+            results.append(
+                {
+                    "booking_id": f"BK-{it.booking_id:04d}",
+                    "equipment_id": str(it.equipment_id),
+                    "equipment_name": it.equipment.name if it.equipment else "",
+                    "equipment_image": img,
+                    "vendor_name": it.vendor.business_name if it.vendor else "",
+                    "returned_date": ret_date_str,
+                }
+            )
         return results
 
     def get_my_reviews(self, user_id: int) -> list[dict[str, Any]]:
@@ -622,18 +672,20 @@ class BookingRepository:
         results: list[dict[str, Any]] = []
         for r in reviews:
             img = r.equipment.images[0].url if r.equipment and r.equipment.images else ""
-            results.append({
-                "review_id": str(r.review_id),
-                "booking_id": f"BK-{r.booking_item_id:04d}",
-                "equipment_id": str(r.equipment_id),
-                "equipment_name": r.equipment.name if r.equipment else "",
-                "equipment_image": img,
-                "vendor_name": r.vendor.business_name if r.vendor else "",
-                "rating": r.rating,
-                "comment": r.comment,
-                "vendor_reply": r.vendor_reply,
-                "created_at": r.review_date.isoformat(),
-            })
+            results.append(
+                {
+                    "review_id": str(r.review_id),
+                    "booking_id": f"BK-{r.booking_item_id:04d}",
+                    "equipment_id": str(r.equipment_id),
+                    "equipment_name": r.equipment.name if r.equipment else "",
+                    "equipment_image": img,
+                    "vendor_name": r.vendor.business_name if r.vendor else "",
+                    "rating": r.rating,
+                    "comment": r.comment,
+                    "vendor_reply": r.vendor_reply,
+                    "created_at": r.review_date.isoformat(),
+                }
+            )
         return results
 
     def create_review(
@@ -659,7 +711,9 @@ class BookingRepository:
                 BookingItem.equipment_id == equipment_id,
             )
         else:
-            raise ValidationFailedError("Either booking_item_id or (booking_id and equipment_id) must be provided")
+            raise ValidationFailedError(
+                "Either booking_item_id or (booking_id and equipment_id) must be provided"
+            )
 
         bi = query.first()
         if not bi:
@@ -670,7 +724,9 @@ class BookingRepository:
             raise ConflictError("Review requires booking item status to be 'returned'")
 
         # Invariant: unique per booking item
-        existing = self.db.query(Review).filter(Review.booking_item_id == bi.booking_item_id).first()
+        existing = (
+            self.db.query(Review).filter(Review.booking_item_id == bi.booking_item_id).first()
+        )
         if existing:
             raise ConflictError("You have already submitted a review for this booking item")
 
@@ -735,7 +791,7 @@ class BookingRepository:
                 "booking_id": f"BK-{p.booking_id:04d}",
                 "event_name": p.booking.event_name if p.booking else "Event Rental",
                 "type": p.type.value,
-                "method": p.method.value,
+                "method": p.method.value if p.method else "card",
                 "amount": float(p.amount),
                 "status": p.status.value,
                 "created_at": p.created_at.isoformat(),
@@ -754,9 +810,15 @@ class BookingRepository:
             .all()
         )
 
-        total_paid = sum(float(p.amount) for p in payments if p.type in [PaymentType.advance, PaymentType.full])
+        total_paid = sum(
+            float(p.amount) for p in payments if p.type in [PaymentType.advance, PaymentType.full]
+        )
         deposits_held = sum(float(p.amount) for p in payments if p.type == PaymentType.deposit)
-        refunded = sum(float(p.amount) for p in payments if p.type in [PaymentType.refund, PaymentType.deposit_refund])
+        refunded = sum(
+            float(p.amount)
+            for p in payments
+            if p.type in [PaymentType.refund, PaymentType.deposit_refund]
+        )
 
         # Deductions from resolved damage reports
         deductions_query = (

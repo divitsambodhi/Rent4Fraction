@@ -33,4 +33,3 @@ def get_account_badges(
     user = _get_user(db, current_user)
     service = CustomerService(db)
     return service.get_badges(user)
-

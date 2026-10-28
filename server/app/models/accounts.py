@@ -86,6 +86,7 @@ class Vendor(Base):
     address: Mapped[str | None] = mapped_column(Text, nullable=True)
     phone: Mapped[str | None] = mapped_column(String(20), nullable=True)
     logo_url: Mapped[str | None] = mapped_column(String(500), nullable=True)
+    logo_storage_path: Mapped[str | None] = mapped_column(String(500), nullable=True)
     gst_number: Mapped[str | None] = mapped_column(String(20), nullable=True)
     approval_status: Mapped[VendorApprovalStatus] = mapped_column(
         SQLEnum(VendorApprovalStatus, values_callable=lambda x: [e.value for e in x]),

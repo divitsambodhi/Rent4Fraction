@@ -79,6 +79,8 @@ class RequestContextMiddleware(BaseHTTPMiddleware):
                         "script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; "
                         "style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; "
                         "img-src 'self' data: https://fastapi.tiangolo.com https://cdn.jsdelivr.net; "
+                        "font-src 'self' data: https://cdn.jsdelivr.net; "
+                        "connect-src 'self' http: https:; "
                         "frame-ancestors 'none';"
                     )
                 else:

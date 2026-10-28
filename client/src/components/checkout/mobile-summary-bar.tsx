@@ -63,7 +63,7 @@ export function MobileSummaryBar({
             aria-label="View price breakdown sheet"
           >
             <div className="flex items-center gap-1 text-[11px] font-semibold text-muted-foreground group-hover:text-foreground transition-colors">
-              <span>Total payable</span>
+              <span>Due on delivery</span>
               <Icon name="chevron-up" size={14} className="text-brand transition-transform group-hover:-translate-y-0.5" />
             </div>
             <div className="text-lg font-bold font-sans text-foreground tabular-nums">

@@ -169,6 +169,7 @@ class VendorOrderResponse(BaseModel):
     vendor_id: str
     vendor_name: str
     vendor_initials: str
+    vendor_phone: str | None = None
     status: str
     rejection_reason: str | None = None
     subtotal: float

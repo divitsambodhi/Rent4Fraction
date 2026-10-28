@@ -62,9 +62,7 @@ class Category(Base):
         ForeignKey("categories.category_id", ondelete="SET NULL"),
         nullable=True,
     )
-    default_commission_rate: Mapped[Decimal | None] = mapped_column(
-        SQLDecimal(5, 2), nullable=True
-    )
+    default_commission_rate: Mapped[Decimal | None] = mapped_column(SQLDecimal(5, 2), nullable=True)
     is_active: Mapped[int] = mapped_column(TINYINT(1), nullable=False, default=1)
 
     parent: Mapped[Category | None] = relationship("Category", remote_side=[category_id])
@@ -141,6 +139,11 @@ class EquipmentImage(Base):
     storage_path: Mapped[str | None] = mapped_column(String(500), nullable=True)
     is_primary: Mapped[int] = mapped_column(TINYINT(1), nullable=False, default=0)
     sort_order: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+    width: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    height: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    placeholder_color: Mapped[str | None] = mapped_column(String(7), nullable=True)
+    content_type: Mapped[str | None] = mapped_column(String(50), nullable=True)
+    size_bytes: Mapped[int | None] = mapped_column(Integer, nullable=True)
 
     equipment: Mapped[Equipment] = relationship("Equipment", back_populates="images")
 

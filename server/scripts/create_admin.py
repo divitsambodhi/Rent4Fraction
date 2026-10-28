@@ -31,7 +31,7 @@ from sqlalchemy.orm import Session  # noqa: E402
 
 from app.core.db import get_engine, transaction  # noqa: E402
 from app.core.firebase import init_firebase  # noqa: E402
-from app.models.accounts import User, UserRole  # noqa: E402
+from app.models.accounts import User, UserRole, Vendor  # noqa: E402
 from app.models.platform import AuditLog  # noqa: E402
 
 
@@ -106,96 +106,117 @@ def main() -> None:
                     f"Notice: User '{email}' is already an administrator (User ID: {existing_user.user_id}).\n"
                     f"No modifications needed."
                 )
-                sys.exit(0)
+            else:
+                # Prompt before promoting existing user
+                old_role = existing_user.role.value
+                print(
+                    f"\nExisting user found:\n"
+                    f"  User ID:      {existing_user.user_id}\n"
+                    f"  Email:        {existing_user.email}\n"
+                    f"  Current Role: {old_role}\n"
+                    f"  Target Role:  admin\n"
+                )
 
-            # Prompt before promoting existing user
-            old_role = existing_user.role.value
+                if not args.yes:
+                    confirm = input("Confirm promotion to 'admin'? [y/N]: ").strip().lower()
+                    if confirm not in ("y", "yes"):
+                        print("Operation cancelled by user.")
+                        sys.exit(0)
+
+                with transaction(session):
+                    # Database invariant trigger: if user has a vendor profile, remove it first
+                    if existing_user.role == UserRole.vendor:
+                        vendor_row = (
+                            session.query(Vendor).filter(Vendor.user_id == existing_user.user_id).first()
+                        )
+                        if vendor_row:
+                            session.delete(vendor_row)
+                            session.flush()
+
+                    existing_user.role = UserRole.admin
+                    existing_user.firebase_uid = firebase_uid
+                    if args.name:
+                        existing_user.name = display_name
+                    existing_user.email_verified = 1
+
+                    audit = AuditLog(
+                        actor_user_id=existing_user.user_id,
+                        actor_role="admin",
+                        action="admin_promoted",
+                        entity_type="user",
+                        entity_id=existing_user.user_id,
+                        before_json={"role": old_role},
+                        after_json={"role": "admin", "promoted_via": "create_admin.py"},
+                        user_agent="server/scripts/create_admin.py",
+                    )
+                    session.add(audit)
+
+                print(
+                    f"\nSUCCESS: User '{email}' (User ID: {existing_user.user_id}) promoted to 'admin'."
+                )
+        else:
+            # User does not exist in DB yet: create new admin user
             print(
-                f"\nExisting user found:\n"
-                f"  User ID:      {existing_user.user_id}\n"
-                f"  Email:        {existing_user.email}\n"
-                f"  Current Role: {old_role}\n"
-                f"  Target Role:  admin\n"
+                f"\nNew administrator profile to create:\n"
+                f"  Firebase UID: {firebase_uid}\n"
+                f"  Email:        {email}\n"
+                f"  Name:         {display_name}\n"
+                f"  Role:         admin\n"
             )
 
             if not args.yes:
-                confirm = input("Confirm promotion to 'admin'? [y/N]: ").strip().lower()
+                confirm = input("Create new administrator account in database? [y/N]: ").strip().lower()
                 if confirm not in ("y", "yes"):
                     print("Operation cancelled by user.")
                     sys.exit(0)
 
             with transaction(session):
-                existing_user.role = UserRole.admin
-                existing_user.firebase_uid = firebase_uid
-                if args.name:
-                    existing_user.name = display_name
-                existing_user.email_verified = 1
+                new_user = User(
+                    firebase_uid=firebase_uid,
+                    name=display_name,
+                    email=email,
+                    role=UserRole.admin,
+                    is_active=1,
+                    email_verified=1,
+                )
+                session.add(new_user)
+                session.flush()
 
                 audit = AuditLog(
-                    actor_user_id=existing_user.user_id,
+                    actor_user_id=new_user.user_id,
                     actor_role="admin",
-                    action="admin_promoted",
+                    action="admin_created",
                     entity_type="user",
-                    entity_id=existing_user.user_id,
-                    before_json={"role": old_role},
-                    after_json={"role": "admin", "promoted_via": "create_admin.py"},
+                    entity_id=new_user.user_id,
+                    before_json=None,
+                    after_json={
+                        "user_id": new_user.user_id,
+                        "email": email,
+                        "role": "admin",
+                        "created_via": "create_admin.py",
+                    },
                     user_agent="server/scripts/create_admin.py",
                 )
                 session.add(audit)
 
             print(
-                f"\nSUCCESS: User '{email}' (User ID: {existing_user.user_id}) promoted to 'admin'."
+                f"\nSUCCESS: Created administrator account for '{email}' "
+                f"(User ID: {new_user.user_id}, Firebase UID: {firebase_uid})."
             )
-            sys.exit(0)
 
-        # User does not exist in DB yet: create new admin user
-        print(
-            f"\nNew administrator profile to create:\n"
-            f"  Firebase UID: {firebase_uid}\n"
-            f"  Email:        {email}\n"
-            f"  Name:         {display_name}\n"
-            f"  Role:         admin\n"
+    # 4. Generate custom Firebase token for testing / Swagger
+    try:
+        custom_token = auth.create_custom_token(firebase_uid)
+        token_str = (
+            custom_token.decode("utf-8") if isinstance(custom_token, bytes) else str(custom_token)
         )
-
-        if not args.yes:
-            confirm = input("Create new administrator account in database? [y/N]: ").strip().lower()
-            if confirm not in ("y", "yes"):
-                print("Operation cancelled by user.")
-                sys.exit(0)
-
-        with transaction(session):
-            new_user = User(
-                firebase_uid=firebase_uid,
-                name=display_name,
-                email=email,
-                role=UserRole.admin,
-                is_active=1,
-                email_verified=1,
-            )
-            session.add(new_user)
-            session.flush()
-
-            audit = AuditLog(
-                actor_user_id=new_user.user_id,
-                actor_role="admin",
-                action="admin_created",
-                entity_type="user",
-                entity_id=new_user.user_id,
-                before_json=None,
-                after_json={
-                    "user_id": new_user.user_id,
-                    "email": email,
-                    "role": "admin",
-                    "created_via": "create_admin.py",
-                },
-                user_agent="server/scripts/create_admin.py",
-            )
-            session.add(audit)
-
-        print(
-            f"\nSUCCESS: Created administrator account for '{email}' "
-            f"(User ID: {new_user.user_id}, Firebase UID: {firebase_uid})."
-        )
+        print("\n---------------------------------------------------------")
+        print("Firebase Custom Token (For Admin testing / Swagger):")
+        print("---------------------------------------------------------")
+        print(token_str)
+        print("---------------------------------------------------------")
+    except Exception as e:
+        print(f"\nAdmin provisioned, but failed generating custom token: {e}")
 
 
 if __name__ == "__main__":

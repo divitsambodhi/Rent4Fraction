@@ -193,7 +193,7 @@ export function OverviewTab({
       {/* Six KPI Cards - 2 columns on mobile */}
       <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-3 sm:gap-4">
         <KpiCard
-          label="Net earnings"
+          label="Cash Collected"
           value={`₹${overview.kpis.net_earnings.toLocaleString('en-IN')}`}
           delta={{
             value: `${overview.kpis.net_earnings_delta_percent >= 0 ? '+' : ''}${overview.kpis.net_earnings_delta_percent.toFixed(1)}%`,

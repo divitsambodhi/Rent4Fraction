@@ -1,4 +1,4 @@
-import { Building2, Inbox as InboxIcon, LayoutDashboard, Star, Wallet } from 'lucide-react'
+import { Building2, Inbox as InboxIcon, LayoutDashboard, Star } from 'lucide-react'
 import { AppLink } from '@/components/shared/app-link'
 import type { VendorDashboardTab } from '@/types/vendor'
 import { cn } from '@/lib/utils'
@@ -23,7 +23,6 @@ export function VendorTabs({
 }: VendorTabsProps) {
   const tabs: TabConfig[] = [
     { id: 'overview', label: 'Overview', icon: LayoutDashboard },
-    { id: 'payouts', label: 'Payouts', icon: Wallet },
     { id: 'reviews', label: 'Reviews', icon: Star, badge: reviewsBadge },
     { id: 'inbox', label: 'Inbox', icon: InboxIcon, badge: inboxBadge },
     { id: 'profile', label: 'Business profile', icon: Building2 },

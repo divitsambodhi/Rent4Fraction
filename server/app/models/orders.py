@@ -134,6 +134,11 @@ class Booking(Base):
             "country": "India",
         },
     )
+
+    @property
+    def address_snapshot(self) -> Any:
+        return self.delivery_address_snapshot
+
     delivery_city: Mapped[str | None] = mapped_column(
         String(100),
         Computed("JSON_UNQUOTE(JSON_EXTRACT(delivery_address_snapshot, '$.city'))"),
@@ -271,6 +276,14 @@ class BookingItem(Base):
         nullable=False,
         default=BookingItemStatus.pending,
     )
+
+    @property
+    def status(self) -> BookingItemStatus:
+        return self.item_status
+
+    @status.setter
+    def status(self, val: BookingItemStatus) -> None:
+        self.item_status = val
 
     vendor_order: Mapped[VendorOrder] = relationship("VendorOrder", back_populates="items")
     vendor: Mapped[Vendor] = relationship("Vendor")

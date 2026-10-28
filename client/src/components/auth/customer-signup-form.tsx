@@ -10,6 +10,7 @@ import { PasswordInput } from './password-input'
 import { PasswordStrength } from './password-strength'
 import { MobileNumberInput } from './mobile-number-input'
 import { FormAlert } from './form-alert'
+import { GoogleSignInButton } from './google-sign-in-button'
 import { AppLink } from '@/components/shared/app-link'
 import { useAuth } from '@/providers/auth-provider'
 import { mapAuthError } from '@/lib/auth'
@@ -125,6 +126,23 @@ export function CustomerSignupForm({
           onDismiss={() => setFormError(null)}
         />
       )}
+
+      {/* Google Social Sign-In */}
+      <div className="space-y-3">
+        <GoogleSignInButton
+          text="Sign up with Google"
+          onSuccess={() => {
+            // onSuccess handled via auth state
+          }}
+          disabled={isSubmitting}
+        />
+        <div className="relative flex items-center justify-center">
+          <div className="border-t border-border w-full" />
+          <span className="bg-card px-2 text-[11px] text-muted-foreground uppercase tracking-wider relative">
+            or sign up with email
+          </span>
+        </div>
+      </div>
 
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-4 text-left" noValidate>
         {/* Full Name */}

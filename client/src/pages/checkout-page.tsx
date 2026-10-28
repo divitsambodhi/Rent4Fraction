@@ -24,7 +24,7 @@ import { cn } from '@/lib/utils'
 const STEPS: StepItem[] = [
   { id: 'cart', title: 'Cart', label: 'Cart' },
   { id: 'details', title: 'Details', label: 'Details' },
-  { id: 'payment', title: 'Payment', label: 'Payment' },
+  { id: 'payment', title: 'Review & COD', label: 'Review & COD' },
   { id: 'result', title: 'Done', label: 'Done' },
 ]
 
@@ -124,7 +124,7 @@ export function CheckoutPage() {
       event_date: selectedPeriod?.start_date || '',
       venue_address: '',
       same_as_delivery: true,
-      payment_method: 'upi',
+      payment_method: 'cod',
       terms_agreed: false,
     }
   })

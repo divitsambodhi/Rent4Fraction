@@ -41,12 +41,14 @@ def apply_equipment_visibility_filter(query: Any) -> Any:
     - its vendor is approved (vendors.approval_status = 'approved')
     - its vendor owner user is active (users.is_active = 1)
     """
-    return query.join(Vendor, Equipment.vendor_id == Vendor.vendor_id).join(
-        User, Vendor.user_id == User.user_id
-    ).filter(
-        Equipment.status == EquipmentStatus.active,
-        Vendor.approval_status == VendorApprovalStatus.approved,
-        User.is_active == 1,
+    return (
+        query.join(Vendor, Equipment.vendor_id == Vendor.vendor_id)
+        .join(User, Vendor.user_id == User.user_id)
+        .filter(
+            Equipment.status == EquipmentStatus.active,
+            Vendor.approval_status == VendorApprovalStatus.approved,
+            User.is_active == 1,
+        )
     )
 
 
@@ -65,7 +67,7 @@ def sanitize_search_query(raw_q: str | None) -> tuple[str | None, bool]:
         return None, False
 
     # Remove special boolean operators: + - < > ( ) ~ * " @ \
-    cleaned = re.sub(r'[\+\-\<\>\(\)\~\*\"\@\\\%_]', ' ', raw_q)
+    cleaned = re.sub(r"[\+\-\<\>\(\)\~\*\"\@\\\%_]", " ", raw_q)
     tokens = [t.strip() for t in cleaned.split() if t.strip()]
     if not tokens:
         return None, False
@@ -106,11 +108,15 @@ def get_equipment_available_quantity(
         .outerjoin(VendorOrder, VendorOrder.vendor_order_id == BookingItem.vendor_order_id)
         .filter(
             BookingItem.equipment_id == equipment_id,
-            BookingItem.item_status.notin_([BookingItemStatus.cancelled, BookingItemStatus.returned]),
+            BookingItem.item_status.notin_(
+                [BookingItemStatus.cancelled, BookingItemStatus.returned]
+            ),
             Booking.status != BookingStatus.cancelled,
             or_(
                 VendorOrder.status.is_(None),
-                VendorOrder.status.notin_([VendorOrderStatus.rejected, VendorOrderStatus.cancelled]),
+                VendorOrder.status.notin_(
+                    [VendorOrderStatus.rejected, VendorOrderStatus.cancelled]
+                ),
             ),
             Booking.start_date <= end_date,
             Booking.end_date >= start_date,
@@ -208,7 +214,8 @@ class CatalogRepository:
                 # Aggregate equipment count to parent
                 by_id[c.parent_id]["equipment_count"] += node["equipment_count"]
                 if by_id[c.parent_id]["starting_price"] == 0.0 or (
-                    node["starting_price"] > 0 and node["starting_price"] < by_id[c.parent_id]["starting_price"]
+                    node["starting_price"] > 0
+                    and node["starting_price"] < by_id[c.parent_id]["starting_price"]
                 ):
                     by_id[c.parent_id]["starting_price"] = node["starting_price"]
             else:
@@ -301,7 +308,11 @@ class CatalogRepository:
             if str(category).isdigit():
                 cat_id = int(category)
             else:
-                cat_row = self.db.query(Category.category_id).filter(Category.name.ilike(str(category))).first()
+                cat_row = (
+                    self.db.query(Category.category_id)
+                    .filter(Category.name.ilike(str(category)))
+                    .first()
+                )
                 if cat_row:
                     cat_id = cat_row[0]
 
@@ -343,15 +354,20 @@ class CatalogRepository:
             if is_ft and proc_q and dialect_name == "mysql":
                 # Use MATCH AGAINST in boolean mode on MySQL
                 base_query = base_query.filter(
-                    func.match(Equipment.name, Equipment.description).op("AGAINST")(f"{proc_q} IN BOOLEAN MODE")
+                    func.match(Equipment.name, Equipment.description).op("AGAINST")(
+                        f"{proc_q} IN BOOLEAN MODE"
+                    )
                 )
             else:
                 # Safe LIKE search escaping operators (fallback or short token or non-MySQL)
-                cleaned_like = re.sub(r'[\+\-\<\>\(\)\~\*\"\@\\\%_]', ' ', q).strip()
+                cleaned_like = re.sub(r"[\+\-\<\>\(\)\~\*\"\@\\\%_]", " ", q).strip()
                 if cleaned_like:
                     like_pattern = f"%{cleaned_like}%"
                     base_query = base_query.filter(
-                        or_(Equipment.name.ilike(like_pattern), Equipment.description.ilike(like_pattern))
+                        or_(
+                            Equipment.name.ilike(like_pattern),
+                            Equipment.description.ilike(like_pattern),
+                        )
                     )
 
         # Compute Facets across filtered results before pagination
@@ -360,7 +376,9 @@ class CatalogRepository:
         min_p = 0.0
         max_p = 0.0
 
-        all_matching = base_query.options(joinedload(Equipment.category), joinedload(Equipment.vendor)).all()
+        all_matching = base_query.options(
+            joinedload(Equipment.category), joinedload(Equipment.vendor)
+        ).all()
         for eq in all_matching:
             c_name = eq.category.name if eq.category else "Other"
             facet_cat_counts[c_name] = facet_cat_counts.get(c_name, 0) + 1
@@ -425,27 +443,29 @@ class CatalogRepository:
                 parent_cat_id = str(eq.category.parent.category_id)
                 parent_cat_name = eq.category.parent.name
 
-            listing_results.append({
-                "equipment_id": str(eq.equipment_id),
-                "name": eq.name,
-                "description": eq.description or "",
-                "price_per_day": float(eq.price_per_day),
-                "security_deposit": float(eq.security_deposit),
-                "quantity": eq.quantity,
-                "min_rental_days": eq.min_rental_days,
-                "delivery_available": bool(eq.delivery_available),
-                "avg_rating": float(eq.avg_rating),
-                "review_count": eq.review_count,
-                "specifications": eq.specifications or {},
-                "vendor_id": str(eq.vendor_id),
-                "vendor_name": eq.vendor.business_name if eq.vendor else "",
-                "category_id": str(eq.category_id),
-                "category_name": eq.category.name if eq.category else "",
-                "parent_category_id": parent_cat_id,
-                "parent_category_name": parent_cat_name,
-                "primary_image_url": primary_img,
-                "available_quantity": avail_qty,
-            })
+            listing_results.append(
+                {
+                    "equipment_id": str(eq.equipment_id),
+                    "name": eq.name,
+                    "description": eq.description or "",
+                    "price_per_day": float(eq.price_per_day),
+                    "security_deposit": float(eq.security_deposit),
+                    "quantity": eq.quantity,
+                    "min_rental_days": eq.min_rental_days,
+                    "delivery_available": bool(eq.delivery_available),
+                    "avg_rating": float(eq.avg_rating),
+                    "review_count": eq.review_count,
+                    "specifications": eq.specifications or {},
+                    "vendor_id": str(eq.vendor_id),
+                    "vendor_name": eq.vendor.business_name if eq.vendor else "",
+                    "category_id": str(eq.category_id),
+                    "category_name": eq.category.name if eq.category else "",
+                    "parent_category_id": parent_cat_id,
+                    "parent_category_name": parent_cat_name,
+                    "primary_image_url": primary_img,
+                    "available_quantity": avail_qty,
+                }
+            )
 
         return {
             "items": listing_results,
@@ -510,7 +530,9 @@ class CatalogRepository:
         category_path: list[dict[str, str]] = []
         if eq.category:
             if eq.category.parent:
-                category_path.append({"id": str(eq.category.parent.category_id), "name": eq.category.parent.name})
+                category_path.append(
+                    {"id": str(eq.category.parent.category_id), "name": eq.category.parent.name}
+                )
             category_path.append({"id": str(eq.category.category_id), "name": eq.category.name})
 
         # Vendor summary (strict privacy: no email, phone, GST, or address beyond city)
@@ -528,7 +550,9 @@ class CatalogRepository:
             "avg_rating": 4.9,  # vendor aggregate
             "review_count": 28,
             "item_count": int(v_item_count),
-            "member_since": v.created_at.strftime("%B %Y") if v and v.created_at else "November 2024",
+            "member_since": v.created_at.strftime("%B %Y")
+            if v and v.created_at
+            else "November 2024",
             "description": v.description or "" if v else "",
             "logo_url": v.logo_url if v else None,
         }
@@ -554,8 +578,12 @@ class CatalogRepository:
             "vendor_name": v.business_name if v else "",
             "category_id": str(eq.category_id),
             "category_name": eq.category.name if eq.category else "",
-            "parent_category_id": str(eq.category.parent.category_id) if eq.category and eq.category.parent else None,
-            "parent_category_name": eq.category.parent.name if eq.category and eq.category.parent else None,
+            "parent_category_id": str(eq.category.parent.category_id)
+            if eq.category and eq.category.parent
+            else None,
+            "parent_category_name": eq.category.parent.name
+            if eq.category and eq.category.parent
+            else None,
             "primary_image_url": primary_url,
             "status": effective_status,
             "images": images_payload,
@@ -590,7 +618,9 @@ class CatalogRepository:
 
         curr = start_date
         while curr <= end_date:
-            day_qty = get_equipment_available_quantity(self.db, equipment_id, eq.quantity, curr, curr)
+            day_qty = get_equipment_available_quantity(
+                self.db, equipment_id, eq.quantity, curr, curr
+            )
             day_str = curr.isoformat()
             if day_qty == 0:
                 unavailable_days.append(day_str)
@@ -603,7 +633,9 @@ class CatalogRepository:
         if avail_qty == 0:
             scan_date = end_date + timedelta(days=1)
             for _ in range(60):
-                scan_qty = get_equipment_available_quantity(self.db, equipment_id, eq.quantity, scan_date, scan_date)
+                scan_qty = get_equipment_available_quantity(
+                    self.db, equipment_id, eq.quantity, scan_date, scan_date
+                )
                 if scan_qty > 0:
                     next_available = scan_date.isoformat()
                     break
@@ -664,17 +696,25 @@ class CatalogRepository:
             parts = u_name.strip().split()
             masked_name = parts[0] + (f" {parts[-1][0]}." if len(parts) > 1 else "")
 
-            review_items.append({
-                "review_id": str(rev.review_id),
-                "user_name": masked_name,
-                "rating": rev.rating,
-                "comment": rev.comment,
-                "vendor_reply": rev.vendor_reply,
-                "review_date": rev.review_date.isoformat(),
-            })
+            review_items.append(
+                {
+                    "review_id": str(rev.review_id),
+                    "user_name": masked_name,
+                    "rating": rev.rating,
+                    "comment": rev.comment,
+                    "vendor_reply": rev.vendor_reply,
+                    "review_date": rev.review_date.isoformat(),
+                }
+            )
 
-        avg_rating = float(eq.avg_rating) if eq else (
-            sum(k * v for k, v in distribution.items()) / len(all_reviews) if all_reviews else 0.0
+        avg_rating = (
+            float(eq.avg_rating)
+            if eq
+            else (
+                sum(k * v for k, v in distribution.items()) / len(all_reviews)
+                if all_reviews
+                else 0.0
+            )
         )
         total_count = eq.review_count if eq else len(all_reviews)
 
@@ -732,24 +772,26 @@ class CatalogRepository:
             res: list[dict[str, Any]] = []
             for item in items:
                 img_url = item.images[0].url if item.images else ""
-                res.append({
-                    "equipment_id": str(item.equipment_id),
-                    "name": item.name,
-                    "description": item.description or "",
-                    "price_per_day": float(item.price_per_day),
-                    "security_deposit": float(item.security_deposit),
-                    "quantity": item.quantity,
-                    "min_rental_days": item.min_rental_days,
-                    "delivery_available": bool(item.delivery_available),
-                    "avg_rating": float(item.avg_rating),
-                    "review_count": item.review_count,
-                    "specifications": item.specifications or {},
-                    "vendor_id": str(item.vendor_id),
-                    "vendor_name": item.vendor.business_name if item.vendor else "",
-                    "category_id": str(item.category_id),
-                    "category_name": item.category.name if item.category else "",
-                    "primary_image_url": img_url,
-                })
+                res.append(
+                    {
+                        "equipment_id": str(item.equipment_id),
+                        "name": item.name,
+                        "description": item.description or "",
+                        "price_per_day": float(item.price_per_day),
+                        "security_deposit": float(item.security_deposit),
+                        "quantity": item.quantity,
+                        "min_rental_days": item.min_rental_days,
+                        "delivery_available": bool(item.delivery_available),
+                        "avg_rating": float(item.avg_rating),
+                        "review_count": item.review_count,
+                        "specifications": item.specifications or {},
+                        "vendor_id": str(item.vendor_id),
+                        "vendor_name": item.vendor.business_name if item.vendor else "",
+                        "category_id": str(item.category_id),
+                        "category_name": item.category.name if item.category else "",
+                        "primary_image_url": img_url,
+                    }
+                )
             return res
 
         return {
@@ -779,22 +821,28 @@ class CatalogRepository:
             # Item count
             item_count = (
                 self.db.query(func.count(Equipment.equipment_id))
-                .filter(Equipment.vendor_id == v.vendor_id, Equipment.status == EquipmentStatus.active)
+                .filter(
+                    Equipment.vendor_id == v.vendor_id, Equipment.status == EquipmentStatus.active
+                )
                 .scalar()
                 or 0
             )
 
-            results.append({
-                "id": str(v.vendor_id),
-                "name": v.business_name,
-                "city": "Mumbai",
-                "rating": 4.9,
-                "review_count": 28,
-                "item_count": int(item_count),
-                "verified": True,
-                "initials": initials,
-                "tagline": (v.description[:80] + "...") if v.description and len(v.description) > 80 else (v.description or "Professional equipment supplier"),
-            })
+            results.append(
+                {
+                    "id": str(v.vendor_id),
+                    "name": v.business_name,
+                    "city": "Mumbai",
+                    "rating": 4.9,
+                    "review_count": 28,
+                    "item_count": int(item_count),
+                    "verified": True,
+                    "initials": initials,
+                    "tagline": (v.description[:80] + "...")
+                    if v.description and len(v.description) > 80
+                    else (v.description or "Professional equipment supplier"),
+                }
+            )
 
         return results
 
@@ -826,24 +874,26 @@ class CatalogRepository:
         eq_results: list[dict[str, Any]] = []
         for eq in equipment_list:
             img = eq.images[0].url if eq.images else ""
-            eq_results.append({
-                "equipment_id": str(eq.equipment_id),
-                "name": eq.name,
-                "description": eq.description or "",
-                "price_per_day": float(eq.price_per_day),
-                "security_deposit": float(eq.security_deposit),
-                "quantity": eq.quantity,
-                "min_rental_days": eq.min_rental_days,
-                "delivery_available": bool(eq.delivery_available),
-                "avg_rating": float(eq.avg_rating),
-                "review_count": eq.review_count,
-                "specifications": eq.specifications or {},
-                "vendor_id": str(vendor.vendor_id),
-                "vendor_name": vendor.business_name,
-                "category_id": str(eq.category_id),
-                "category_name": eq.category.name if eq.category else "",
-                "primary_image_url": img,
-            })
+            eq_results.append(
+                {
+                    "equipment_id": str(eq.equipment_id),
+                    "name": eq.name,
+                    "description": eq.description or "",
+                    "price_per_day": float(eq.price_per_day),
+                    "security_deposit": float(eq.security_deposit),
+                    "quantity": eq.quantity,
+                    "min_rental_days": eq.min_rental_days,
+                    "delivery_available": bool(eq.delivery_available),
+                    "avg_rating": float(eq.avg_rating),
+                    "review_count": eq.review_count,
+                    "specifications": eq.specifications or {},
+                    "vendor_id": str(vendor.vendor_id),
+                    "vendor_name": vendor.business_name,
+                    "category_id": str(eq.category_id),
+                    "category_name": eq.category.name if eq.category else "",
+                    "primary_image_url": img,
+                }
+            )
 
         return {
             "vendor_id": str(vendor.vendor_id),
@@ -854,6 +904,8 @@ class CatalogRepository:
             "avg_rating": 4.9,
             "review_count": 28,
             "item_count": len(eq_results),
-            "member_since": vendor.created_at.strftime("%B %Y") if vendor.created_at else "November 2024",
+            "member_since": vendor.created_at.strftime("%B %Y")
+            if vendor.created_at
+            else "November 2024",
             "equipment": eq_results,
         }

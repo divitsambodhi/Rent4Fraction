@@ -5,8 +5,8 @@ import {
   CircleDollarSign,
   Clock,
   Scale,
+  ShieldCheck,
   ShoppingBag,
-  Wallet,
 } from 'lucide-react'
 import { StatTile } from '@/components/shared/stat-tile'
 import { Button } from '@/components/ui/button'
@@ -36,7 +36,6 @@ export function AdminOverview(props: AdminOverviewProps = {}) {
   const activeVendorsCount = props.activeVendorsCount ?? live.activeVendorsCount
   const pendingApplicationsCount = props.pendingApplicationsCount ?? live.pendingApplicationsCount
   const openDisputesCount = props.openDisputesCount ?? live.openDisputesCount
-  const commissionEarned = props.commissionEarned ?? live.platformCommissionEarned
   const recentBookings = props.recentBookings ?? live.recentBookings
   const recentApplications = props.recentApplications ?? live.recentApplications
   const onNavigateSection = props.onNavigateSection || (() => {})
@@ -129,10 +128,10 @@ export function AdminOverview(props: AdminOverviewProps = {}) {
           onClick={() => onNavigateSection('disputes')}
         />
         <StatTile
-          icon={Wallet}
-          label="Commission Earned"
-          value={`₹${(commissionEarned || 84260).toLocaleString('en-IN')}`}
-          delta="10% avg rate"
+          icon={ShieldCheck}
+          label="Marketplace Model"
+          value="COD Only"
+          subtitle="0% platform fee · Moderator"
         />
       </div>
 
@@ -250,19 +249,10 @@ export function AdminOverview(props: AdminOverviewProps = {}) {
               <ChevronRight className="size-4 text-muted-foreground group-hover:text-foreground transition-colors" />
             </button>
 
-            <button
-              type="button"
-              onClick={() => onNavigateSection('payouts')}
-              className="w-full p-2.5 rounded-[8px] border border-border hover:border-brand/40 hover:bg-muted/20 transition-colors flex items-center justify-between text-left group cursor-pointer"
-            >
-              <div className="space-y-0.5">
-                <p className="text-xs font-semibold text-foreground group-hover:text-brand transition-colors">
-                  Payouts awaiting processing
-                </p>
-                <p className="text-[11px] text-muted-foreground">Forward-only batch approval</p>
-              </div>
-              <ChevronRight className="size-4 text-muted-foreground group-hover:text-foreground transition-colors" />
-            </button>
+            <div className="p-2.5 rounded-[8px] bg-muted/30 border border-border/80 text-[11px] text-muted-foreground space-y-1">
+              <span className="font-semibold text-foreground block">Governance Notice</span>
+              <span>Platform operates 100% Cash on Delivery. Zero platform commission, zero payouts.</span>
+            </div>
 
             <button
               type="button"
@@ -339,12 +329,12 @@ export function AdminOverview(props: AdminOverviewProps = {}) {
                 <div>
                   <span className="font-semibold text-foreground">{v.business_name}</span>
                   <p className="text-[11px] text-muted-foreground">
-                    {v.city} · GST: {v.gst || 'Not provided'}
+                    {v.city} · GST: {v.gst || 'Optional / Not provided'}
                   </p>
                 </div>
                 <div className="text-right space-y-0.5">
-                  <span className="text-[11px] font-medium text-muted-foreground">
-                    {v.commission_rate}% commission
+                  <span className="text-[11px] font-medium text-emerald-600">
+                    0% platform fee
                   </span>
                   <div>
                     <StatusBadge status={v.approval_status} size="sm" />
@@ -352,6 +342,38 @@ export function AdminOverview(props: AdminOverviewProps = {}) {
                 </div>
               </div>
             ))}
+          </div>
+        </div>
+      </div>
+
+      {/* SYSTEM CONFIGURATION & GOVERNANCE STATUS */}
+      <div className="p-5 rounded-[14px] border border-border bg-muted/20 space-y-3">
+        <div className="flex items-center gap-2 text-foreground font-semibold text-sm">
+          <ShieldCheck className="size-4.5 text-brand" />
+          <span>Active System Configuration & Moderation Governance</span>
+        </div>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 text-xs">
+          <div className="p-3 rounded-lg bg-surface border border-border/80 space-y-1">
+            <span className="text-[11px] text-muted-foreground block font-medium">Payment Protocol</span>
+            <span className="font-bold text-emerald-600 flex items-center gap-1.5">
+              Cash on Delivery (COD) Only
+            </span>
+            <p className="text-[10px] text-muted-foreground">PAYMENTS_ONLINE_ENABLED=false</p>
+          </div>
+          <div className="p-3 rounded-lg bg-surface border border-border/80 space-y-1">
+            <span className="text-[11px] text-muted-foreground block font-medium">Vendor Acceptance Window</span>
+            <span className="font-bold text-foreground">24 Hours Timeout</span>
+            <p className="text-[10px] text-muted-foreground">Auto-cancels if vendor does not respond</p>
+          </div>
+          <div className="p-3 rounded-lg bg-surface border border-border/80 space-y-1">
+            <span className="text-[11px] text-muted-foreground block font-medium">Abuse Protection: Pending Cap</span>
+            <span className="font-bold text-foreground">Max 3 Pending Orders</span>
+            <p className="text-[10px] text-muted-foreground">Prevents spam COD reservations</p>
+          </div>
+          <div className="p-3 rounded-lg bg-surface border border-border/80 space-y-1">
+            <span className="text-[11px] text-muted-foreground block font-medium">Abuse Protection: No-Shows</span>
+            <span className="font-bold text-foreground">Max 2 No-Shows</span>
+            <p className="text-[10px] text-muted-foreground">Blocks customers who fail delivery</p>
           </div>
         </div>
       </div>

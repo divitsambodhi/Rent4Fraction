@@ -222,16 +222,21 @@ export function DisputeSheet({
               )}
 
               {/* Live Preview Sentence */}
-              <div className="p-3 rounded-xl bg-muted/40 border border-border text-xs text-foreground font-medium">
-                Preview:{' '}
-                <strong className="text-destructive font-semibold">
-                  ₹{evalResult.deductedFromDeposit.toLocaleString('en-IN')}
-                </strong>{' '}
-                will be deducted from the deposit;{' '}
-                <strong className="text-emerald-600 dark:text-emerald-400 font-semibold">
-                  ₹{estimatedRefund.toLocaleString('en-IN')}
-                </strong>{' '}
-                refunded to the customer.
+              <div className="p-3 rounded-xl bg-muted/40 border border-border text-xs text-foreground font-medium space-y-1">
+                <div>
+                  Mediation Ruling:{' '}
+                  <strong className="text-destructive font-semibold">
+                    ₹{evalResult.deductedFromDeposit.toLocaleString('en-IN')}
+                  </strong>{' '}
+                  recommended damage deduction;{' '}
+                  <strong className="text-emerald-600 dark:text-emerald-400 font-semibold">
+                    ₹{estimatedRefund.toLocaleString('en-IN')}
+                  </strong>{' '}
+                  recommended deposit cash refund.
+                </div>
+                <p className="text-[10px] text-muted-foreground">
+                  Informational mediation guidance for vendor and customer. Platform never handles funds or executes gateway deductions.
+                </p>
               </div>
 
               {/* Required Resolution Note */}

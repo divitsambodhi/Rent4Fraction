@@ -99,4 +99,3 @@ def get_my_reviews(
     user = _get_user(db, current_user)
     service = SocialService(db)
     return service.get_my_reviews(user)
-

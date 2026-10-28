@@ -2,11 +2,12 @@ from __future__ import annotations
 
 from typing import Any
 
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, Header, status
 from sqlalchemy.orm import Session
 
 from app.core.db import get_db
 from app.core.deps import CurrentUser, require_customer
+from app.integrations.razorpay import PaymentGateway, get_payment_gateway
 from app.models.accounts import User
 from app.schemas.booking import (
     CheckoutQuoteRequest,
@@ -14,7 +15,12 @@ from app.schemas.booking import (
     CouponValidateRequest,
     CouponValidationResponse,
 )
+from app.schemas.checkout import (
+    CheckoutOrderCreateRequest,
+    CheckoutOrderResponse,
+)
 from app.services.booking import BookingService
+from app.services.checkout import create_checkout_order
 
 router = APIRouter(prefix="/api/v1/checkout", tags=["Checkout"])
 
@@ -23,6 +29,31 @@ def _get_user(db: Session, current_user: CurrentUser) -> User:
     user = db.query(User).filter(User.user_id == current_user.user_id).first()
     assert user is not None
     return user
+
+
+@router.post(
+    "/orders",
+    response_model=CheckoutOrderResponse,
+    status_code=status.HTTP_201_CREATED,
+    operation_id="create_checkout_order",
+    summary="Create booking, reserve equipment and generate Razorpay order",
+)
+def place_checkout_order(
+    payload: CheckoutOrderCreateRequest,
+    idempotency_key: str = Header(..., alias="Idempotency-Key"),
+    current_user: CurrentUser = Depends(require_customer),
+    db: Session = Depends(get_db),
+    gateway: PaymentGateway = Depends(get_payment_gateway),
+) -> Any:
+    user = _get_user(db, current_user)
+    result = create_checkout_order(
+        db=db,
+        user=user,
+        payload=payload,
+        idempotency_key=idempotency_key,
+        gateway=gateway,
+    )
+    return result
 
 
 @router.post(

@@ -24,11 +24,15 @@ def export_openapi() -> None:
     app = create_app()
     openapi_schema = app.openapi()
     output_path = os.path.join(server_root, "openapi.json")
+    docs_output_path = os.path.join(server_root, "docs", "openapi.json")
 
     with open(output_path, "w", encoding="utf-8") as f:
         json.dump(openapi_schema, f, indent=2)
 
-    print(f"Successfully exported OpenAPI schema to {output_path}")
+    with open(docs_output_path, "w", encoding="utf-8") as f:
+        json.dump(openapi_schema, f, indent=2)
+
+    print(f"Successfully exported OpenAPI schema to {output_path} and {docs_output_path}")
 
 
 if __name__ == "__main__":

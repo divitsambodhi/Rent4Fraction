@@ -82,4 +82,3 @@ def mark_all_notifications_read(
     user = _get_user(db, current_user)
     service = SocialService(db)
     return service.mark_all_notifications_read(user)
-
