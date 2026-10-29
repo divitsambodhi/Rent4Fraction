@@ -1,3 +1,4 @@
+import { CloudImage } from '@/components/shared/cloud-image'
 import { useEffect, useRef, useState, useCallback } from 'react'
 import {
   ChevronLeft,
@@ -202,10 +203,14 @@ export function HeroCarousel() {
       <div className="relative overflow-hidden rounded-[20px] sm:rounded-[24px] border border-border/80 bg-neutral-950 min-h-[480px] sm:min-h-[520px] md:min-h-[560px] flex flex-col justify-between shadow-xl">
         {/* Atmospheric Artwork Background with Transition */}
         <div className="absolute inset-0 z-0">
-          <img
+          <CloudImage
             src={slide.bgImage}
             alt={slide.categoryBadge}
-            className="w-full h-full object-cover object-center transition-all duration-700 ease-out"
+            preset="hero"
+            aspectRatio="auto"
+            priority={current === 0}
+            className="w-full h-full"
+            imgClassName="w-full h-full object-cover object-center transition-all duration-700 ease-out"
           />
           {/* Neutral dark scrim over photo for crisp text legibility */}
           <div

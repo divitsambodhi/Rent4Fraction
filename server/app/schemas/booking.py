@@ -131,6 +131,7 @@ class DeliveryTrackerData(BaseModel):
     tracking_info: str | None = None
     delivered_by: str | None = None
     delivery_proof_url: str | None = None
+    delivery_proof_public_id: str | None = None
     failure_reason: str | None = None
     updated_at: str = ""
 

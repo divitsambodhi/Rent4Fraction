@@ -33,6 +33,13 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     if settings is None:
         settings = get_settings()
 
+    # Hard production configuration guards
+    if settings.is_production and settings.STORAGE_PROVIDER == "fake":
+        raise RuntimeError(
+            "FATAL CONFIGURATION ERROR: STORAGE_PROVIDER cannot be 'fake' in production (ENV=prod). "
+            "Configure STORAGE_PROVIDER=cloudinary with production Cloudinary credentials."
+        )
+
     # Configure structured logging
     setup_logging(log_level=settings.LOG_LEVEL)
 

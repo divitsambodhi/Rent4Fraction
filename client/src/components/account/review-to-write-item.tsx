@@ -1,3 +1,4 @@
+import { CloudImage } from '@/components/shared/cloud-image'
 import { useState } from 'react'
 import { AppLink } from '@/components/shared/app-link'
 import { Button } from '@/components/ui/button'
@@ -35,10 +36,13 @@ export function ReviewToWriteItem({
           to={`/equipment/${item.equipment_id}`}
           className="size-16 rounded-[12px] bg-muted/40 border border-border/70 overflow-hidden shrink-0 flex items-center justify-center p-1"
         >
-          <img
+          <CloudImage
             src={item.equipment_image}
             alt={item.equipment_name}
-            className="w-full h-full object-contain"
+            preset="thumb"
+            aspectRatio="1/1"
+            className="size-full rounded-none"
+            imgClassName="w-full h-full object-contain"
           />
         </AppLink>
 

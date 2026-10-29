@@ -17,7 +17,8 @@ from app.core.errors import (
 )
 from app.core.money import quantize_money
 from app.core.time import utc_now
-from app.integrations.storage import get_storage_client, verify_storage_path_for_entity
+from app.integrations.storage import get_storage_client, get_storage_provider, verify_storage_path_for_entity
+from app.models.storage import PendingUpload
 from app.models.accounts import User, Vendor
 from app.models.catalog import (
     Availability,
@@ -763,6 +764,8 @@ class VendorService:
                         dr_data = {
                             "report_id": str(dr.report_id),
                             "description": dr.description,
+                        "evidence_url": getattr(dr, "evidence_url", None),
+                        "evidence_public_id": getattr(dr, "evidence_public_id", None),
                             "damage_cost": float(dr.damage_cost),
                             "final_cost": float(dr.final_cost) if dr.final_cost is not None else None,
                             "status": dr.status.value,
@@ -802,6 +805,7 @@ class VendorService:
                 "delivered_by": vo.deliveries.delivered_by,
                 "tracking_info": vo.deliveries.tracking_info,
                 "proof_url": vo.deliveries.proof_url,
+                "proof_public_id": getattr(vo.deliveries, "proof_public_id", None),
             }
 
         # Return details
@@ -1069,33 +1073,64 @@ class VendorService:
         self.db.add(eq)
         self.db.flush()
 
-        # Handle images
+        # Handle images (max 8 per equipment)
+        if len(payload.images) > 8:
+            raise ValidationFailedError("Maximum 8 images allowed per equipment listing.")
+
         storage = get_storage_client()
+        provider = get_storage_provider()
         has_primary = False
         for idx, img_p in enumerate(payload.images):
-            # Verify path
-            verify_storage_path_for_entity(
-                storage_path=img_p.storage_path,
-                vendor_id=vendor_id,
-                expected_purpose="equipment_image",
-                storage=storage,
-            )
+            if img_p.public_id:
+                meta = provider.verify_asset(img_p.public_id, asset_type="upload")
+                url = meta.secure_url
+                pub_id = img_p.public_id
+                version_val = meta.version
+                fmt_val = meta.format
+                bytes_val = meta.bytes
+                w_val = meta.width
+                h_val = meta.height
+                pending = self.db.query(PendingUpload).filter(PendingUpload.public_id == img_p.public_id).first()
+                if pending:
+                    pending.status = "attached"
+                    pending.entity_id = eq.equipment_id
+            else:
+                if img_p.storage_path:
+                    verify_storage_path_for_entity(
+                        storage_path=img_p.storage_path,
+                        vendor_id=vendor_id,
+                        expected_purpose="equipment_image",
+                        storage=storage,
+                    )
+                url = img_p.url or f"https://res.cloudinary.com/fake-cloud/image/upload/{img_p.storage_path or 'placeholder'}"
+                pub_id = None
+                version_val = None
+                fmt_val = None
+                bytes_val = img_p.size_bytes
+                w_val = img_p.width
+                h_val = img_p.height
+
             is_prim = 1 if (img_p.is_primary or (idx == 0 and not has_primary)) else 0
             if is_prim:
                 has_primary = True
-            url = img_p.url or storage.get_public_url(img_p.storage_path)
 
             img_row = EquipmentImage(
                 equipment_id=eq.equipment_id,
                 url=url,
+                provider="cloudinary",
+                public_id=pub_id,
+                version=version_val,
+                format=fmt_val,
+                bytes=bytes_val,
+                alt_text=img_p.alt_text,
                 storage_path=img_p.storage_path,
                 is_primary=is_prim,
                 sort_order=img_p.sort_order if img_p.sort_order is not None else idx,
-                width=img_p.width,
-                height=img_p.height,
+                width=w_val,
+                height=h_val,
                 placeholder_color=img_p.placeholder_color,
                 content_type=img_p.content_type,
-                size_bytes=img_p.size_bytes,
+                size_bytes=bytes_val,
             )
             self.db.add(img_row)
 
@@ -1168,35 +1203,78 @@ class VendorService:
                 current_specs["includes"] = payload.includes
             eq.specifications = current_specs
 
-        # Images
+        # Images (max 8 per equipment)
         if payload.images is not None:
+            if len(payload.images) > 8:
+                raise ValidationFailedError("Maximum 8 images allowed per equipment listing.")
+
             storage = get_storage_client()
-            # Remove old images
+            provider = get_storage_provider()
+
+            # Clean up removed images from Cloudinary (best effort)
+            kept_pub_ids = {p.public_id for p in payload.images if p.public_id}
+            old_images = self.db.query(EquipmentImage).filter(EquipmentImage.equipment_id == equipment_id).all()
+            for old_img in old_images:
+                if old_img.public_id and old_img.public_id not in kept_pub_ids:
+                    try:
+                        provider.delete_asset(old_img.public_id)
+                    except Exception as e:
+                        logger.warning("Could not delete removed Cloudinary asset '%s': %s", old_img.public_id, e)
+
+            # Remove old rows
             self.db.query(EquipmentImage).filter(EquipmentImage.equipment_id == equipment_id).delete()
             has_primary = False
             for idx, img_p in enumerate(payload.images):
-                verify_storage_path_for_entity(
-                    storage_path=img_p.storage_path,
-                    vendor_id=vendor_id,
-                    expected_purpose="equipment_image",
-                    storage=storage,
-                )
+                if img_p.public_id:
+                    meta = provider.verify_asset(img_p.public_id, asset_type="upload")
+                    url = meta.secure_url
+                    pub_id = img_p.public_id
+                    version_val = meta.version
+                    fmt_val = meta.format
+                    bytes_val = meta.bytes
+                    w_val = meta.width
+                    h_val = meta.height
+                    pending = self.db.query(PendingUpload).filter(PendingUpload.public_id == img_p.public_id).first()
+                    if pending:
+                        pending.status = "attached"
+                        pending.entity_id = equipment_id
+                else:
+                    if img_p.storage_path:
+                        verify_storage_path_for_entity(
+                            storage_path=img_p.storage_path,
+                            vendor_id=vendor_id,
+                            expected_purpose="equipment_image",
+                            storage=storage,
+                        )
+                    url = img_p.url or f"https://res.cloudinary.com/fake-cloud/image/upload/{img_p.storage_path or 'placeholder'}"
+                    pub_id = None
+                    version_val = None
+                    fmt_val = None
+                    bytes_val = img_p.size_bytes
+                    w_val = img_p.width
+                    h_val = img_p.height
+
                 is_prim = 1 if (img_p.is_primary or (idx == 0 and not has_primary)) else 0
                 if is_prim:
                     has_primary = True
-                url = img_p.url or storage.get_public_url(img_p.storage_path)
 
                 img_row = EquipmentImage(
                     equipment_id=equipment_id,
                     url=url,
+                    provider="cloudinary",
+                    public_id=pub_id,
+                    version=version_val,
+                    format=fmt_val,
+                    bytes=bytes_val,
+                    alt_text=img_p.alt_text,
                     storage_path=img_p.storage_path,
                     is_primary=is_prim,
                     sort_order=img_p.sort_order if img_p.sort_order is not None else idx,
-                    width=img_p.width,
-                    height=img_p.height,
+                    width=w_val,
+                    height=h_val,
                     placeholder_color=img_p.placeholder_color,
                     content_type=img_p.content_type,
-                    size_bytes=img_p.size_bytes,
+                    size_bytes=bytes_val,
                 )
                 self.db.add(img_row)
 
@@ -1681,7 +1759,16 @@ class VendorService:
         if payload.delivery_fee is not None:
             v.delivery_fee = quantize_money(payload.delivery_fee)
 
-        if payload.logo_storage_path is not None:
+        if payload.logo_public_id is not None:
+            provider = get_storage_provider()
+            meta = provider.verify_asset(payload.logo_public_id, asset_type="upload")
+            v.logo_public_id = payload.logo_public_id
+            v.logo_version = meta.version
+            v.logo_url = meta.secure_url
+            pending = self.db.query(PendingUpload).filter(PendingUpload.public_id == payload.logo_public_id).first()
+            if pending:
+                pending.status = "attached"
+        elif payload.logo_storage_path is not None:
             storage = get_storage_client()
             verify_storage_path_for_entity(
                 storage_path=payload.logo_storage_path,
@@ -1690,7 +1777,8 @@ class VendorService:
                 storage=storage,
             )
             v.logo_storage_path = payload.logo_storage_path
-            v.logo_url = storage.get_public_url(payload.logo_storage_path)
+            v.logo_url = f"https://res.cloudinary.com/fake-cloud/image/upload/{payload.logo_storage_path}"
+
 
         self.db.flush()
         return self._format_profile(v)
@@ -1716,6 +1804,8 @@ class VendorService:
             gst_number=v.gst_number or "",
             logo=v.logo_url,
             logo_url=v.logo_url or "/images/vendors/placeholder.png",
+            logo_public_id=v.logo_public_id,
+            logo_version=v.logo_version,
             logo_storage_path=v.logo_storage_path,
             approval_status=v.approval_status.value,
             member_since=v.created_at.strftime("%B %Y") if v.created_at else "2026",

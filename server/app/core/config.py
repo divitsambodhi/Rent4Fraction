@@ -40,7 +40,13 @@ class Settings(BaseSettings):
     RAZORPAY_KEY_SECRET: str | None = None
     RAZORPAY_WEBHOOK_SECRET: str | None = None
 
-    # Cloud Storage
+    # Image Storage (Cloudinary replaces Firebase Storage)
+    STORAGE_PROVIDER: Literal["fake", "cloudinary"] = "fake"
+    CLOUDINARY_CLOUD_NAME: str = "fake-cloud"
+    CLOUDINARY_API_KEY: str = "fake-key"
+    CLOUDINARY_API_SECRET: str = "fake-secret"
+    CLOUDINARY_UPLOAD_PRESET_PUBLIC: str = "rent4fraction_public"
+    CLOUDINARY_UPLOAD_PRESET_PRIVATE: str = "rent4fraction_private"
     STORAGE_BUCKET: str | None = None
 
     # COD Policies & Market Governance

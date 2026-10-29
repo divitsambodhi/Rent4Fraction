@@ -37,6 +37,7 @@ export interface MarkDeliveredPayload {
   deliveredBy: string
   deliveredAt: string
   proofPhotoUrl?: string // Required for delivery; optional/note for pickup
+  proofPublicId?: string
   notes?: string
 }
 

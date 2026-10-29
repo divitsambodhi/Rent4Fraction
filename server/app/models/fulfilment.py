@@ -90,6 +90,8 @@ class Delivery(Base):
     tracking_info: Mapped[str | None] = mapped_column(Text, nullable=True)
     delivered_by: Mapped[str | None] = mapped_column(String(255), nullable=True)
     proof_url: Mapped[str | None] = mapped_column(String(500), nullable=True)
+    proof_public_id: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    proof_version: Mapped[int | None] = mapped_column(Integer, nullable=True)
     created_at: Mapped[datetime] = mapped_column(
         DateTime, server_default=func.now(), nullable=False
     )
@@ -183,6 +185,8 @@ class DamageReport(Base):
         default=DamageReportStatus.reported,
     )
     images_notes: Mapped[str | None] = mapped_column(Text, nullable=True)
+    evidence_public_id: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    evidence_version: Mapped[int | None] = mapped_column(Integer, nullable=True)
     dispute_reason: Mapped[str | None] = mapped_column(Text, nullable=True)
     disputed_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
     resolution_note: Mapped[str | None] = mapped_column(Text, nullable=True)

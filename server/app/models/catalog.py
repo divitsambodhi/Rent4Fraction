@@ -136,6 +136,12 @@ class EquipmentImage(Base):
         nullable=False,
     )
     url: Mapped[str] = mapped_column(String(500), nullable=False)
+    provider: Mapped[str] = mapped_column(String(20), nullable=False, default="cloudinary")
+    public_id: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    version: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    format: Mapped[str | None] = mapped_column(String(10), nullable=True)
+    bytes: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    alt_text: Mapped[str | None] = mapped_column(String(255), nullable=True)
     storage_path: Mapped[str | None] = mapped_column(String(500), nullable=True)
     is_primary: Mapped[int] = mapped_column(TINYINT(1), nullable=False, default=0)
     sort_order: Mapped[int] = mapped_column(Integer, nullable=False, default=0)

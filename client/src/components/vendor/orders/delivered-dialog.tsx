@@ -46,6 +46,7 @@ export function DeliveredDialog({
         deliveredBy,
         deliveredAt: new Date(deliveredAt).toISOString(),
         proofPhotoUrl: proofImages[0]?.url,
+        proofPublicId: proofImages[0]?.public_id,
         notes,
       })
       onOpenChange(false)
@@ -61,7 +62,7 @@ export function DeliveredDialog({
       open={open}
       onOpenChange={onOpenChange}
       overlayId="delivered-dialog"
-      title={`${isPickup ? 'Confirm Pickup Handover' : 'Mark Order Delivered'} · ${orderId}`}
+      title={`${isPickup ? 'Confirm Pickup Handover' : 'Mark Order Delivered'} - ${orderId}`}
       description={
         isPickup
           ? 'Record that the customer has received the equipment.'
@@ -131,6 +132,8 @@ export function DeliveredDialog({
             images={proofImages}
             onChange={setProofImages}
             maxImages={1}
+            kind="delivery_proof"
+            entityId={orderId}
           />
           <p className="text-[11px] text-muted-foreground">
             Photograph equipment placed at venue or handover desk.

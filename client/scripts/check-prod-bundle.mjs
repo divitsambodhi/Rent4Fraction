@@ -1,7 +1,8 @@
 /**
  * Production Bundle Guard (`scripts/check-prod-bundle.mjs`)
  * Ensures production client bundle contains zero Razorpay references,
- * zero placeholder lorem ipsum, and zero leaked test emails.
+ * zero placeholder lorem ipsum, zero leaked test emails,
+ * zero Cloudinary api_secret leaks, and zero legacy Firebase Storage references.
  */
 import fs from 'node:fs'
 import path from 'node:path'
@@ -22,6 +23,9 @@ const FORBIDDEN_PATTERNS = [
   { name: 'Lorem Ipsum Placeholder', regex: /lorem\s+ipsum/gi },
   { name: 'Dolor Sit Amet Placeholder', regex: /dolor\s+sit\s+amet/gi },
   { name: 'Example.com Domain', regex: /[a-zA-Z0-9._%+-]+@example\.com/gi },
+  { name: 'Cloudinary api_secret leak', regex: /api_secret\s*[:=]/gi },
+  { name: 'CLOUDINARY_API_SECRET string leak', regex: /CLOUDINARY_API_SECRET/gi },
+  { name: 'Firebase Storage Domain reference', regex: /firebasestorage\.googleapis\.com/gi },
 ]
 
 const files = fs.readdirSync(distDir).filter((f) => f.endsWith('.js'))
@@ -45,10 +49,9 @@ for (const file of files) {
 }
 
 if (violationsCount > 0) {
-  console.error(`\n🚨 Production bundle check FAILED: ${violationsCount} forbidden pattern(s) detected.`)
+  console.error(`\n❌ Production bundle check FAILED: ${violationsCount} forbidden pattern(s) detected.`)
   process.exit(1)
 }
 
-console.log(`\n✅ Production bundle check PASSED: Clean bundle with zero dormant gateway or placeholder leaks.\n`)
+console.log(`\n✅ Production bundle check PASSED: Clean bundle with zero dormant gateway, placeholder, or secret leaks.\n`)
 process.exit(0)
-

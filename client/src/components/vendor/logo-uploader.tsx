@@ -1,39 +1,41 @@
-import { useRef, useState } from 'react'
+import { useRef } from 'react'
 import { Button } from '@/components/ui/button'
 import { Icon } from '@/components/ui/icon'
-import { processImageUpload } from '@/lib/image-processing'
+import { useSignedUpload } from '@/hooks/use-signed-upload'
+import { CloudImage } from '@/components/shared/cloud-image'
 import { toast } from 'sonner'
 
 interface LogoUploaderProps {
   logoUrl?: string
+  logoPublicId?: string
   initials?: string
-  onLogoChange: (url: string) => void
+  onLogoChange: (url: string, publicId?: string) => void
   disabled?: boolean
 }
 
 export function LogoUploader({
   logoUrl,
+  logoPublicId,
   initials = 'SS',
   onLogoChange,
   disabled = false,
 }: LogoUploaderProps) {
   const fileInputRef = useRef<HTMLInputElement>(null)
-  const [isProcessing, setIsProcessing] = useState(false)
+  const { upload, isUploading, progress } = useSignedUpload({
+    kind: 'vendor_logo',
+  })
 
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
     if (!file) return
 
-    setIsProcessing(true)
     try {
-      // Downscale logo to max 800px on the long side with EXIF correction
-      const processed = await processImageUpload(file, 800, 0.85)
-      onLogoChange(processed.dataUrl)
+      const res = await upload(file, 'vendor_logo')
+      onLogoChange(res.secure_url, res.public_id)
       toast.success('Logo uploaded and optimized.')
     } catch (err) {
       toast.error(err instanceof Error ? err.message : 'Logo upload failed.')
     } finally {
-      setIsProcessing(false)
       if (fileInputRef.current) {
         fileInputRef.current.value = ''
       }
@@ -41,18 +43,27 @@ export function LogoUploader({
   }
 
   const handleRemove = () => {
-    onLogoChange('')
+    onLogoChange('', '')
     if (fileInputRef.current) {
       fileInputRef.current.value = ''
     }
   }
 
+  const hasLogo = Boolean(logoUrl || logoPublicId)
+
   return (
     <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
       {/* Visual Avatar / Logo Box */}
       <div className="size-20 rounded-2xl border-2 border-border bg-muted/30 flex items-center justify-center overflow-hidden shrink-0 shadow-xs relative">
-        {logoUrl ? (
-          <img src={logoUrl} alt="Business logo" className="size-full object-cover" />
+        {hasLogo ? (
+          <CloudImage
+            publicId={logoPublicId}
+            src={logoUrl}
+            alt="Business logo"
+            preset="logo"
+            aspectRatio="1/1"
+            className="size-full rounded-none"
+          />
         ) : (
           <span className="font-serif font-bold text-xl text-brand">{initials}</span>
         )}
@@ -65,7 +76,7 @@ export function LogoUploader({
           accept="image/*"
           capture="environment"
           onChange={handleFileChange}
-          disabled={disabled || isProcessing}
+          disabled={disabled || isUploading}
           className="hidden"
           id="vendor-logo-input"
         />
@@ -74,23 +85,28 @@ export function LogoUploader({
           <Button
             type="button"
             variant="outline"
-            disabled={disabled || isProcessing}
+            disabled={disabled || isUploading}
             onClick={() => fileInputRef.current?.click()}
             className="text-xs h-11 sm:h-9 px-4 gap-1.5 cursor-pointer"
           >
-            {isProcessing ? (
-              <Icon name="loader" size={14} className="animate-spin" />
+            {isUploading ? (
+              <>
+                <Icon name="loader" size={14} className="animate-spin" />
+                <span>Uploading {progress > 0 ? `${progress}%` : '...'}</span>
+              </>
             ) : (
-              <Icon name="upload" size={14} />
+              <>
+                <Icon name="upload" size={14} />
+                <span>{hasLogo ? 'Change logo' : 'Upload logo'}</span>
+              </>
             )}
-            <span>{isProcessing ? 'Optimizing...' : logoUrl ? 'Change logo' : 'Upload logo'}</span>
           </Button>
 
-          {logoUrl && (
+          {hasLogo && (
             <Button
               type="button"
               variant="ghost"
-              disabled={disabled || isProcessing}
+              disabled={disabled || isUploading}
               onClick={handleRemove}
               className="text-xs h-11 sm:h-9 px-3 text-danger hover:text-danger hover:bg-danger/10 gap-1.5 cursor-pointer"
             >
@@ -101,7 +117,7 @@ export function LogoUploader({
         </div>
 
         <p className="text-[11px] text-muted-foreground">
-          Auto-scaled square photo up to 1600px.
+          Auto-scaled square photo up to 800px (max 2 MB).
         </p>
       </div>
     </div>

@@ -53,6 +53,7 @@ from app.models.platform import (
     SchemaMigration,
 )
 from app.models.social import Message, Notification, Review
+from app.models.storage import PendingUpload
 
 __all__ = [
     # Accounts
@@ -104,6 +105,8 @@ __all__ = [
     "Review",
     "Notification",
     "Message",
+    # Storage
+    "PendingUpload",
     # Platform
     "SchemaMigration",
     "IdempotencyKey",

@@ -40,6 +40,7 @@ class MarkDeliveredPayload(BaseModel):
     delivered_by: str
     delivered_at: datetime | None = None
     proof_photo_storage_path: str | None = None
+    proof_public_id: str | None = None
     notes: str | None = None
 
 

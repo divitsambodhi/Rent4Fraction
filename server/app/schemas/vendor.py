@@ -205,8 +205,13 @@ class StatusUpdateRequest(BaseModel):
 # Inventory & Equipment Schemas
 # -----------------------------------------------------------------------------
 class ImagePayload(BaseModel):
-    storage_path: str
+    public_id: str | None = None
+    storage_path: str | None = None
     url: str | None = None
+    version: int | None = None
+    format: str | None = None
+    bytes: int | None = None
+    alt_text: str | None = None
     is_primary: bool = False
     sort_order: int = 0
     width: int | None = None
@@ -432,6 +437,8 @@ class VendorProfileResponse(BaseModel):
     gst_number: str
     logo: str | None = None
     logo_url: str
+    logo_public_id: str | None = None
+    logo_version: int | None = None
     logo_storage_path: str | None = None
     approval_status: str
     member_since: str
@@ -456,6 +463,8 @@ class UpdateVendorProfileRequest(BaseModel):
     phone: str | None = None
     gst_number: str | None = Field(default=None, pattern=r"^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z]{1}[1-9A-Z]{1}Z[0-9A-Z]{1}$")
     delivery_fee: Decimal | None = Field(default=None, ge=Decimal("0.00"))
+    logo_public_id: str | None = None
+    logo_version: int | None = None
     logo_storage_path: str | None = None
 
 
@@ -465,6 +474,7 @@ class UpdateVendorProfileRequest(BaseModel):
 class RecordCashRequest(BaseModel):
     amount: Decimal = Field(..., ge=Decimal("0.00"), description="Cash collected from customer at delivery")
     notes: str | None = None
+    proof_public_id: str | None = None
     proof_photo_storage_path: str | None = None
 
 

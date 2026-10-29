@@ -443,14 +443,16 @@ class LifecycleService:
         assert_action_allowed(vo, role, "mark_delivered", items, reports)
 
         is_pickup = vo.fulfilment_type == "pickup"
+        proof_ref = getattr(payload, "proof_public_id", None) or payload.proof_photo_storage_path
         if not is_pickup:
-            if not payload.proof_photo_storage_path or not payload.proof_photo_storage_path.strip():
+            if not proof_ref or not proof_ref.strip():
                 raise ValidationFailedError("Proof of delivery storage path is required for delivery fulfillment.")
-            # Verify private prefix
-            expected_prefix = f"private/delivery-proofs/{vo.vendor_id}/{vo.vendor_order_id}/"
-            if not payload.proof_photo_storage_path.startswith(expected_prefix):
+            from app.core.config import settings
+            expected_cloudinary = f"{settings.ENV}/delivery_proof/{vo.vendor_id}/"
+            expected_legacy = f"private/delivery-proofs/{vo.vendor_id}/"
+            if not (proof_ref.startswith(expected_cloudinary) or proof_ref.startswith(expected_legacy)):
                 raise ValidationFailedError(
-                    f"Delivery proof path must start with vendor private prefix: {expected_prefix}"
+                    f"Delivery proof path must start with vendor private prefix: {expected_cloudinary}"
                 )
 
         delivery = self.db.query(Delivery).filter(Delivery.vendor_order_id == vendor_order_id).first()
@@ -461,15 +463,23 @@ class LifecycleService:
                 status=DeliveryStatus.delivered,
                 delivered_by=payload.delivered_by,
                 delivery_date=payload.delivered_at or utc_now(),
-                proof_url=payload.proof_photo_storage_path,
+                proof_url=proof_ref,
+                proof_public_id=proof_ref,
             )
             self.db.add(delivery)
         else:
             delivery.status = DeliveryStatus.delivered
             delivery.delivered_by = payload.delivered_by
             delivery.delivery_date = payload.delivered_at or utc_now()
-            if payload.proof_photo_storage_path:
-                delivery.proof_url = payload.proof_photo_storage_path
+            if proof_ref:
+                delivery.proof_url = proof_ref
+                delivery.proof_public_id = proof_ref
+
+        if proof_ref:
+            from app.models.storage import PendingUpload
+            self.db.query(PendingUpload).filter(
+                PendingUpload.public_id == proof_ref
+            ).update({"status": "attached"})
 
         from_status = vo.status.value
         vo.status = VendorOrderStatus.delivered

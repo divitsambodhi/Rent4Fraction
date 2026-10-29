@@ -1,3 +1,4 @@
+import { CloudImage } from '@/components/shared/cloud-image'
 import { AppLink } from '@/components/shared/app-link'
 import { StarRating } from '@/components/shared/star-rating'
 import { ExternalLink, MessageSquare } from 'lucide-react'
@@ -27,10 +28,13 @@ export function MyReviewCard({ review, onOpenBooking }: MyReviewCardProps) {
             to={`/equipment/${review.equipment_id}`}
             className="size-12 rounded-[10px] bg-muted/40 border border-border/80 overflow-hidden shrink-0 flex items-center justify-center p-1"
           >
-            <img
+            <CloudImage
               src={review.equipment_image}
               alt={review.equipment_name}
-              className="w-full h-full object-contain"
+              preset="thumb"
+              aspectRatio="1/1"
+              className="size-full rounded-none"
+              imgClassName="w-full h-full object-contain"
             />
           </AppLink>
 

@@ -2,13 +2,16 @@ import { useRef, useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { Icon } from '@/components/ui/icon'
 import { ConfirmDialog } from '@/components/account/confirm-dialog'
-import { processImageUpload } from '@/lib/image-processing'
+import { CloudImage } from '@/components/shared/cloud-image'
+import { useSignedUpload, type UploadKind } from '@/hooks/use-signed-upload'
 import { toast } from 'sonner'
 import { cn } from '@/lib/utils'
 
 export interface UploadedImage {
   id: string
   url: string
+  public_id?: string
+  version?: number
   isPrimary: boolean
   alt?: string
 }
@@ -18,6 +21,8 @@ interface ImageUploaderProps {
   onChange: (images: UploadedImage[]) => void
   disabled?: boolean
   maxImages?: number
+  kind?: UploadKind
+  entityId?: string
 }
 
 export function ImageUploader({
@@ -25,17 +30,22 @@ export function ImageUploader({
   onChange,
   disabled = false,
   maxImages = 8,
+  kind = 'equipment_image',
+  entityId,
 }: ImageUploaderProps) {
   const fileInputRef = useRef<HTMLInputElement>(null)
   const [isDragging, setIsDragging] = useState(false)
-  const [isProcessing, setIsProcessing] = useState(false)
   const [imageToRemove, setImageToRemove] = useState<UploadedImage | null>(null)
+
+  const { upload, isUploading, progress } = useSignedUpload({
+    kind,
+    entityId,
+  })
 
   const processFiles = async (fileList: FileList | null) => {
     if (!fileList || fileList.length === 0) return
 
     const files = Array.from(fileList)
-    setIsProcessing(true)
     const newItems: UploadedImage[] = []
 
     try {
@@ -46,15 +56,17 @@ export function ImageUploader({
         }
 
         try {
-          const processed = await processImageUpload(file, 1600, 0.8)
+          const res = await upload(file, kind, entityId)
           const item: UploadedImage = {
-            id: `img-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
-            url: processed.dataUrl,
+            id: res.public_id,
+            url: res.secure_url,
+            public_id: res.public_id,
+            version: res.version,
             isPrimary: images.length === 0 && newItems.length === 0,
           }
           newItems.push(item)
         } catch (err) {
-          toast.error(`${file.name}: ${err instanceof Error ? err.message : 'Processing failed'}`)
+          toast.error(`${file.name}: ${err instanceof Error ? err.message : 'Upload failed'}`)
         }
       }
 
@@ -64,17 +76,16 @@ export function ImageUploader({
           combined[0].isPrimary = true
         }
         onChange(combined)
-        toast.success(`Processed & added ${newItems.length} image(s).`)
+        toast.success(`Uploaded & added ${newItems.length} image(s).`)
       }
     } finally {
-      setIsProcessing(false)
       if (fileInputRef.current) fileInputRef.current.value = ''
     }
   }
 
   const handleDragOver = (e: React.DragEvent) => {
     e.preventDefault()
-    if (!disabled) setIsDragging(true)
+    if (!disabled && !isUploading) setIsDragging(true)
   }
 
   const handleDragLeave = () => {
@@ -84,7 +95,7 @@ export function ImageUploader({
   const handleDrop = (e: React.DragEvent) => {
     e.preventDefault()
     setIsDragging(false)
-    if (disabled) return
+    if (disabled || isUploading) return
     processFiles(e.dataTransfer.files)
   }
 
@@ -133,7 +144,7 @@ export function ImageUploader({
             Equipment photography
           </label>
           <span className="text-[11px] text-muted-foreground">
-            First image is primary. Auto-downscaled and EXIF-corrected.
+            First image is primary. Auto-downscaled, EXIF-stripped, and Cloudinary-stored.
           </span>
         </div>
         <span className="text-xs font-semibold tabular-nums text-muted-foreground">
@@ -146,13 +157,13 @@ export function ImageUploader({
         onDragOver={handleDragOver}
         onDragLeave={handleDragLeave}
         onDrop={handleDrop}
-        onClick={() => fileInputRef.current?.click()}
+        onClick={() => !isUploading && fileInputRef.current?.click()}
         className={cn(
           'p-6 rounded-2xl border-2 border-dashed transition-all flex flex-col items-center justify-center text-center cursor-pointer min-h-[120px]',
           isDragging
             ? 'border-brand bg-brand/5 scale-[1.01]'
             : 'border-border bg-muted/20 hover:border-brand/40 hover:bg-muted/30',
-          (disabled || isProcessing) && 'opacity-60 cursor-not-allowed',
+          (disabled || isUploading) && 'opacity-60 cursor-not-allowed',
         )}
       >
         <input
@@ -161,14 +172,14 @@ export function ImageUploader({
           accept="image/*"
           capture="environment"
           multiple
-          disabled={disabled || isProcessing || images.length >= maxImages}
+          disabled={disabled || isUploading || images.length >= maxImages}
           onChange={(e) => processFiles(e.target.files)}
           className="hidden"
           id="equipment-image-input"
         />
 
         <div className="size-10 rounded-xl bg-brand/10 text-brand flex items-center justify-center mb-2">
-          {isProcessing ? (
+          {isUploading ? (
             <Icon name="loader" size={20} className="animate-spin" />
           ) : (
             <Icon name="camera" size={20} />
@@ -176,10 +187,12 @@ export function ImageUploader({
         </div>
 
         <p className="text-xs sm:text-sm font-semibold text-foreground">
-          {isProcessing ? 'Optimizing photo...' : 'Tap to capture / upload images'}
+          {isUploading
+            ? `Uploading to Cloudinary... ${progress > 0 ? `${progress}%` : ''}`
+            : 'Tap to capture / upload images'}
         </p>
         <p className="text-[11px] text-muted-foreground mt-0.5">
-          Automatic EXIF orientation & 1600px optimization
+          Automatic EXIF orientation & 2000px optimization
         </p>
       </div>
 
@@ -196,10 +209,13 @@ export function ImageUploader({
             >
               {/* Image Preview Thumbnail */}
               <div className="aspect-4/3 w-full bg-muted/50 overflow-hidden relative">
-                <img
+                <CloudImage
+                  publicId={img.public_id}
                   src={img.url}
                   alt={`Equipment preview ${index + 1}`}
-                  className="size-full object-cover"
+                  preset="thumb"
+                  aspectRatio="4/3"
+                  className="size-full rounded-none"
                 />
 
                 {/* Primary Tag Indicator */}

@@ -430,12 +430,15 @@ class CatalogRepository:
         for eq, avail_qty in paginated_items:
             # Primary image
             primary_img = ""
+            primary_public_id = None
             for img in eq.images:
                 if img.is_primary:
-                    primary_img = img.url
+                    primary_img = img.url or ""
+                    primary_public_id = getattr(img, "public_id", None)
                     break
             if not primary_img and eq.images:
-                primary_img = eq.images[0].url
+                primary_img = eq.images[0].url or ""
+                primary_public_id = getattr(eq.images[0], "public_id", None)
 
             parent_cat_id = None
             parent_cat_name = None
@@ -463,6 +466,7 @@ class CatalogRepository:
                     "parent_category_id": parent_cat_id,
                     "parent_category_name": parent_cat_name,
                     "primary_image_url": primary_img,
+                    "primary_image_public_id": primary_public_id,
                     "available_quantity": avail_qty,
                 }
             )
@@ -511,6 +515,12 @@ class CatalogRepository:
             {
                 "image_id": str(img.image_id),
                 "url": img.url,
+                "public_id": getattr(img, "public_id", None),
+                "version": getattr(img, "version", None),
+                "width": getattr(img, "width", None),
+                "height": getattr(img, "height", None),
+                "format": getattr(img, "format", None),
+                "alt_text": getattr(img, "alt_text", None),
                 "is_primary": bool(img.is_primary),
                 "sort_order": img.sort_order,
                 "placeholder_color": "#1C1917",
@@ -519,12 +529,15 @@ class CatalogRepository:
         ]
 
         primary_url = ""
+        primary_public_id = None
         for img in sorted_images:
             if img.is_primary and img.url:
                 primary_url = img.url
+                primary_public_id = getattr(img, "public_id", None)
                 break
         if not primary_url and sorted_images and sorted_images[0].url:
             primary_url = sorted_images[0].url
+            primary_public_id = getattr(sorted_images[0], "public_id", None)
 
         # Category breadcrumbs
         category_path: list[dict[str, str]] = []
@@ -555,6 +568,7 @@ class CatalogRepository:
             else "November 2024",
             "description": v.description or "" if v else "",
             "logo_url": v.logo_url if v else None,
+            "logo_public_id": getattr(v, "logo_public_id", None) if v else None,
         }
 
         # Specifications and Includes extraction
@@ -585,6 +599,7 @@ class CatalogRepository:
             if eq.category and eq.category.parent
             else None,
             "primary_image_url": primary_url,
+            "primary_image_public_id": primary_public_id,
             "status": effective_status,
             "images": images_payload,
             "includes": includes,
@@ -772,6 +787,7 @@ class CatalogRepository:
             res: list[dict[str, Any]] = []
             for item in items:
                 img_url = item.images[0].url if item.images else ""
+                img_pid = getattr(item.images[0], "public_id", None) if item.images else None
                 res.append(
                     {
                         "equipment_id": str(item.equipment_id),
@@ -790,6 +806,7 @@ class CatalogRepository:
                         "category_id": str(item.category_id),
                         "category_name": item.category.name if item.category else "",
                         "primary_image_url": img_url,
+                        "primary_image_public_id": img_pid,
                     }
                 )
             return res

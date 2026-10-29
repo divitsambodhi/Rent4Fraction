@@ -1,3 +1,4 @@
+import { CloudImage } from '@/components/shared/cloud-image'
 import { useState, useMemo } from 'react'
 import {
   Search,
@@ -252,10 +253,13 @@ export function EquipmentSection() {
                     <td className="py-3 px-4">
                       <div className="flex items-center gap-3">
                         <div className="size-10 rounded-lg bg-muted/50 border border-border overflow-hidden shrink-0 flex items-center justify-center p-1">
-                          <img
+                          <CloudImage
                             src={item.primary_image_url}
                             alt=""
-                            className="w-full h-full object-contain"
+                            preset="thumb"
+                            aspectRatio="1/1"
+                            className="size-full rounded-none"
+                            imgClassName="w-full h-full object-contain"
                           />
                         </div>
                         <div>

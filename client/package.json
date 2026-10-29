@@ -12,7 +12,9 @@
     "check:slop": "node scripts/check-slop.mjs",
     "check:motion": "node scripts/check-motion.mjs",
     "check:mobile": "node scripts/check-mobile.mjs",
+    "check:raw-img": "node scripts/check-raw-img.mjs",
     "check:prod-bundle": "node scripts/check-prod-bundle.mjs",
+    "smoke:cloudinary": "python ../server/scripts/smoke_cloudinary.py",
     "test:mobile": "playwright test",
     "preview": "vite preview"
   },

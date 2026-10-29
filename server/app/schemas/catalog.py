@@ -45,6 +45,7 @@ class EquipmentListingItem(BaseModel):
     parent_category_id: str | None = None
     parent_category_name: str | None = None
     primary_image_url: str = ""
+    primary_image_public_id: str | None = None
     available_quantity: int | None = None
 
 
@@ -65,7 +66,13 @@ class EquipmentSearchResponse(BaseModel):
 
 class EquipmentImageSchema(BaseModel):
     image_id: str
-    url: str | None
+    url: str | None = None
+    public_id: str | None = None
+    version: int | None = None
+    width: int | None = None
+    height: int | None = None
+    format: str | None = None
+    alt_text: str | None = None
     is_primary: bool
     sort_order: int
     placeholder_color: str | None = None
@@ -81,6 +88,7 @@ class VendorSummarySchema(BaseModel):
     member_since: str
     description: str
     logo_url: str | None = None
+    logo_public_id: str | None = None
 
 
 class CategoryPathItem(BaseModel):
@@ -113,6 +121,7 @@ class EquipmentDetailResponse(BaseModel):
     parent_category_id: str | None = None
     parent_category_name: str | None = None
     primary_image_url: str = ""
+    primary_image_public_id: str | None = None
     status: str
     images: list[EquipmentImageSchema] = Field(default_factory=list)
     includes: list[str] = Field(default_factory=list)
@@ -171,6 +180,7 @@ class VendorStorefrontResponse(BaseModel):
     description: str | None = None
     city: str
     logo_url: str | None = None
+    logo_public_id: str | None = None
     avg_rating: float
     review_count: int
     item_count: int

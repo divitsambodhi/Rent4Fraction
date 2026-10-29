@@ -1,3 +1,4 @@
+import { CloudImage } from '@/components/shared/cloud-image'
 import { useState } from 'react'
 import { AppLink } from '@/components/shared/app-link'
 import { StatusBadge } from '@/components/shared/status-badge'
@@ -51,10 +52,13 @@ export function ItemRow({
           to={`/equipment/${item.equipment_id}`}
           className="size-16 rounded-[10px] bg-muted/40 border border-border/80 overflow-hidden shrink-0 flex items-center justify-center group"
         >
-          <img
+          <CloudImage
             src={item.image_url}
             alt={item.name}
-            className="w-full h-full object-contain p-1 group-hover:scale-105 transition-transform duration-200"
+            preset="thumb"
+            aspectRatio="1/1"
+            className="size-full rounded-none"
+            imgClassName="w-full h-full object-contain p-1 group-hover:scale-105 transition-transform duration-200"
           />
         </AppLink>
 

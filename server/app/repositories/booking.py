@@ -343,6 +343,7 @@ class BookingRepository:
                     "tracking_info": d.tracking_info,
                     "delivered_by": d.delivered_by,
                     "delivery_proof_url": d.proof_url,
+                    "delivery_proof_public_id": getattr(d, "proof_public_id", None),
                     "failure_reason": None,
                     "updated_at": d.updated_at.isoformat(),
                 }

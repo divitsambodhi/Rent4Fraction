@@ -1,3 +1,4 @@
+import { useState, useEffect } from 'react'
 import {
   Dialog,
   DialogContent,
@@ -6,12 +7,15 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
-import { CheckCircle2, MapPin, Truck } from 'lucide-react'
+import { CheckCircle2, MapPin, Truck, AlertCircle, Loader2 } from 'lucide-react'
+import { fetchPrivateDeliveryUrl } from '@/lib/cloudinary'
+import { CloudImage } from '@/components/shared/cloud-image'
 
 interface DeliveryProofDialogProps {
   open: boolean
   onOpenChange: (open: boolean) => void
   proofUrl?: string
+  proofPublicId?: string
   deliveredBy?: string
   scheduledWindow?: string
 }
@@ -20,9 +24,52 @@ export function DeliveryProofDialog({
   open,
   onOpenChange,
   proofUrl,
+  proofPublicId,
   deliveredBy,
   scheduledWindow,
 }: DeliveryProofDialogProps) {
+  const [resolvedUrl, setResolvedUrl] = useState<string | null>(null)
+  const [isLoading, setIsLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+
+  const effectivePublicId =
+    proofPublicId ||
+    (proofUrl &&
+    !proofUrl.startsWith('http://') &&
+    !proofUrl.startsWith('https://') &&
+    !proofUrl.startsWith('data:')
+      ? proofUrl
+      : undefined)
+
+  useEffect(() => {
+    if (!open) {
+      setResolvedUrl(null)
+      setError(null)
+      return
+    }
+
+    if (effectivePublicId) {
+      setIsLoading(true)
+      setError(null)
+      fetchPrivateDeliveryUrl(effectivePublicId)
+        .then((url) => {
+          setResolvedUrl(url)
+        })
+        .catch((err) => {
+          setError(
+            err instanceof Error
+              ? err.message
+              : 'Failed to authorize delivery proof access.'
+          )
+        })
+        .finally(() => {
+          setIsLoading(false)
+        })
+    } else if (proofUrl) {
+      setResolvedUrl(proofUrl)
+    }
+  }, [open, effectivePublicId, proofUrl])
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-md bg-surface border-border">
@@ -42,13 +89,26 @@ export function DeliveryProofDialog({
         </DialogHeader>
 
         <div className="space-y-4 pt-2">
-          {/* Proof Photo */}
-          <div className="overflow-hidden rounded-[12px] border border-border bg-muted/40 aspect-4/3 flex items-center justify-center">
-            {proofUrl ? (
-              <img
-                src={proofUrl}
+          {/* Proof Photo View */}
+          <div className="overflow-hidden rounded-[12px] border border-border bg-muted/40 aspect-4/3 flex items-center justify-center relative">
+            {isLoading ? (
+              <div className="flex flex-col items-center justify-center p-6 space-y-2 text-muted-foreground">
+                <Loader2 className="size-6 animate-spin text-brand" />
+                <p className="text-xs">Fetching secure proof verification...</p>
+              </div>
+            ) : error ? (
+              <div className="flex flex-col items-center justify-center p-6 space-y-2 text-center text-destructive">
+                <AlertCircle className="size-6" />
+                <p className="text-xs font-semibold">Access Verification Failed</p>
+                <p className="text-[11px] text-muted-foreground">{error}</p>
+              </div>
+            ) : resolvedUrl ? (
+              <CloudImage
+                src={resolvedUrl}
                 alt="Delivery proof verification"
-                className="w-full h-full object-cover"
+                preset="detail"
+                aspectRatio="4/3"
+                className="w-full h-full rounded-none"
               />
             ) : (
               <div className="text-center p-6 space-y-2">

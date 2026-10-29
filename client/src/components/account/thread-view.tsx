@@ -1,3 +1,4 @@
+import { CloudImage } from '@/components/shared/cloud-image'
 import { useEffect, useRef, useState } from 'react'
 import { AppLink } from '@/components/shared/app-link'
 import { MessageBubble } from './message-bubble'
@@ -216,10 +217,13 @@ export function ThreadView({
           to={`/equipment/${conversation.equipment_id}`}
           className="hidden sm:flex items-center gap-2 p-1.5 pr-3 rounded-lg border border-border/80 bg-muted/40 hover:bg-muted transition-colors shrink-0 max-w-[200px]"
         >
-          <img
+          <CloudImage
             src={conversation.equipment_image}
             alt=""
-            className="size-7 rounded object-contain bg-surface"
+            preset="thumb"
+            aspectRatio="1/1"
+            className="size-7 rounded"
+            imgClassName="object-contain bg-surface"
           />
           <span className="text-[11px] font-semibold text-foreground truncate">
             {conversation.equipment_name}
