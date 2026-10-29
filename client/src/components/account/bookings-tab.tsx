@@ -34,10 +34,10 @@ export function BookingsTab() {
       page,
       pageSize: 6,
     })
-      .then((res) => {
+      .then((res: any) => {
         setData(res)
       })
-      .catch((err) => {
+      .catch((err: any) => {
         setError(err instanceof Error ? err.message : 'Failed to load bookings.')
       })
       .finally(() => {

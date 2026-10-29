@@ -1,5 +1,5 @@
 import { lazy, Suspense } from 'react'
-import { createBrowserRouter, Outlet } from 'react-router-dom'
+import { createBrowserRouter } from 'react-router-dom'
 import { PublicShell } from '@/components/layout/public-shell'
 import { VendorShell } from '@/components/layout/vendor-shell'
 import { AdminShell } from '@/components/layout/admin-shell'
@@ -23,12 +23,7 @@ const VendorOrdersPage = lazy(() =>
 const AdminPage = lazy(() => import('@/pages/admin-page').then((m) => ({ default: m.AdminPage })))
 const AuthPage = lazy(() => import('@/pages/auth-page').then((m) => ({ default: m.AuthPage })))
 const NotFoundPage = lazy(() => import('@/pages/not-found-page').then((m) => ({ default: m.NotFoundPage })))
-const VendorDashboardPreview = lazy(() =>
-  import('@/pages/preview/vendor-dashboard-preview').then((m) => ({ default: m.VendorDashboardPreview }))
-)
-const AdminDashboardPreview = lazy(() =>
-  import('@/pages/preview/admin-dashboard-preview').then((m) => ({ default: m.AdminDashboardPreview }))
-)
+
 
 // Prefetch triggers for next likely route chunk (Task D4)
 export function prefetchCatalog() {
@@ -82,16 +77,6 @@ function AdminRootLayout() {
   )
 }
 
-function PreviewLayout() {
-  return (
-    <>
-      <ScrollManager />
-      <Suspense fallback={<PageFallback />}>
-        <Outlet />
-      </Suspense>
-    </>
-  )
-}
 
 export const router = createBrowserRouter([
   {
@@ -222,22 +207,6 @@ export const router = createBrowserRouter([
             <NotFoundPage />
           </Suspense>
         ),
-      },
-    ],
-  },
-
-  // Preview Layout Routes
-  {
-    path: '_preview',
-    element: <PreviewLayout />,
-    children: [
-      {
-        path: 'vendor',
-        element: <VendorDashboardPreview />,
-      },
-      {
-        path: 'admin',
-        element: <AdminDashboardPreview />,
       },
     ],
   },

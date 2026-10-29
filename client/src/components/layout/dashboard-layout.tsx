@@ -29,7 +29,6 @@ import {
 import { AppLink, useAppPathname, useAppSearchParams } from '@/components/shared/app-link'
 import { useAuth } from '@/providers/auth-provider'
 import { useTheme } from '@/providers/theme-provider'
-import { DevRoleSwitcher } from '@/components/shared/dev-role-switcher'
 import { cn } from '@/lib/utils'
 
 export interface NavItem {
@@ -387,8 +386,6 @@ export function DashboardLayout({
           </div>
         </main>
       </div>
-
-      <DevRoleSwitcher />
     </div>
   )
 }

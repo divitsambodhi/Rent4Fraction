@@ -1,8 +1,8 @@
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect } from 'react'
 import { FilterBar } from '@/components/shared/filter-bar'
 import { DataTable, type Column } from '@/components/shared/data-table'
 import { Button } from '@/components/ui/button'
-import { getAllMockUsers, toggleMockUserStatus } from '@/lib/auth/mock-accounts'
+import { getAdminUsers, toggleAdminUserStatus as toggleMockUserStatus } from '@/lib/api/admin'
 import { UserSheet } from './user-sheet'
 import type { AdminUser } from '@/types/admin'
 import { CheckCircle2, XCircle, ExternalLink } from 'lucide-react'
@@ -26,9 +26,10 @@ export function UsersSection({
 }: UsersSectionProps) {
   const [version, setVersion] = useState(0)
 
-  const allUsers: AdminUser[] = useMemo(() => {
-    return getAllMockUsers()
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+  const [allUsers, setAllUsers] = useState<AdminUser[]>([])
+
+  useEffect(() => {
+    getAdminUsers().then((res) => setAllUsers(res as any))
   }, [version])
 
   const counts = useMemo(() => {

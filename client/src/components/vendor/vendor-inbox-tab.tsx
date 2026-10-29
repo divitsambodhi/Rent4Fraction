@@ -4,7 +4,7 @@ import { ConversationListItem } from '@/components/account/conversation-list-ite
 import { ThreadView } from '@/components/account/thread-view'
 import { NotificationsPane } from '@/components/account/notifications-pane'
 import { useAppSearchParams } from '@/components/shared/app-link'
-import { getVendorConversations, getVendorNotifications } from '@/lib/api/vendor-store'
+import { getConversations as getVendorConversations, getNotifications as getVendorNotifications } from '@/lib/api/account'
 import type { Conversation } from '@/types/account'
 import { cn } from '@/lib/utils'
 
@@ -35,15 +35,15 @@ export function VendorInboxTab() {
     }, { replace: !pushHistory })
   }, [setSearchParams])
 
-  const loadData = useCallback(() => {
+  const loadData = useCallback(async () => {
     setLoading(true)
-    const rawConvs = getVendorConversations('1')
+    const rawConvs = await getVendorConversations()
     const filtered = searchQuery
       ? rawConvs.filter(
-          (c) =>
-            c.vendor_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-            c.equipment_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-            c.last_message.toLowerCase().includes(searchQuery.toLowerCase()),
+          (c: any) =>
+            (c.vendor_name || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
+            (c.equipment_name || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
+            (c.last_message || '').toLowerCase().includes(searchQuery.toLowerCase()),
         )
       : rawConvs
 
@@ -51,12 +51,12 @@ export function VendorInboxTab() {
     setLoading(false)
 
     // If invalid threadId provided, clear param
-    if (threadId && !filtered.some((c) => c.conversation_id === threadId)) {
+    if (threadId && !filtered.some((c: any) => c.conversation_id === threadId)) {
       updateQuery({ thread: null })
     }
 
-    const notifs = getVendorNotifications('1')
-    setUnreadNotifsCount(notifs.filter((n) => !n.read).length)
+    const notifs = await getVendorNotifications()
+    setUnreadNotifsCount(notifs.filter((n: any) => !n.read).length)
   }, [searchQuery, threadId, updateQuery])
 
   useEffect(() => {

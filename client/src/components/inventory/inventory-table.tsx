@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import {
   Archive,
   CalendarDays,
@@ -27,8 +27,7 @@ import { Switch } from '@/components/ui/switch'
 import { StatusBadge } from '@/components/shared/status-badge'
 import { ConfirmDialog } from '@/components/account/confirm-dialog'
 import { resolveCommission } from '@/lib/pricing'
-import { getAdminCategories } from '@/lib/api/admin-store'
-import { getStoredVendorProfiles } from '@/lib/api/vendor-store'
+import { getAdminCategories } from '@/lib/api/admin'
 import type { InventoryItem } from '@/types/vendor'
 import { cn } from '@/lib/utils'
 
@@ -68,8 +67,11 @@ export function InventoryTable({
   const [itemToArchive, setItemToArchive] = useState<InventoryItem | null>(null)
   const totalPages = Math.max(1, Math.ceil(totalCount / pageSize))
   const allSelected = items.length > 0 && items.every((i) => selectedIds.includes(i.id))
-  const categories = getAdminCategories()
-  const vendorProfiles = getStoredVendorProfiles()
+  const [categories, setCategories] = useState<any[]>([])
+  useEffect(() => {
+    getAdminCategories().then((res) => setCategories(res || []))
+  }, [])
+  const vendorProfiles: Record<string, any> = {}
 
   const handleConfirmArchive = () => {
     if (itemToArchive) {
@@ -196,7 +198,7 @@ export function InventoryTable({
 
                         <td className="px-3 py-2 whitespace-nowrap">
                           {(() => {
-                            const cat = categories.find((c) => c.id === item.category_id || c.name === item.category)
+                            const cat = categories.find((c: any) => c.id === item.category_id || c.name === item.category)
                             const vendor = vendorProfiles[item.vendor_id]
                             const resolved = resolveCommission(item, cat, vendor)
                             return (
@@ -432,7 +434,7 @@ export function InventoryTable({
                       <span className="text-[10px] text-muted-foreground block">Commission</span>
                       <span className="font-bold text-foreground tabular-nums">
                         {(() => {
-                          const cat = categories.find((c) => c.id === item.category_id || c.name === item.category)
+                          const cat = categories.find((c: any) => c.id === item.category_id || c.name === item.category)
                           const vendor = vendorProfiles[item.vendor_id]
                           return resolveCommission(item, cat, vendor).rate
                         })()}%

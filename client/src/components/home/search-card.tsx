@@ -10,7 +10,7 @@ import {
 } from '@/components/ui/select'
 import { useAppNavigate } from '@/components/shared/app-link'
 import { DateRangePicker } from '@/components/catalog/date-range-picker'
-import { MOCK_CATEGORIES } from '@/lib/api/mock-data'
+import { CANONICAL_CATEGORIES as MOCK_CATEGORIES } from '@/lib/api'
 
 export function SearchCard() {
   const navigate = useAppNavigate()

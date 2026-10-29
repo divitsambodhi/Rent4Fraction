@@ -467,14 +467,15 @@ def test_checkout_quote_and_coupon_validation(api_test_setup: dict[str, Any]) ->
     assert quote["subtotal"] == 7500.0
     # 10% coupon = 750
     assert quote["discount"] == 750.0
-    # taxable = 6750, 18% tax = 1215
-    assert quote["tax"] == 1215.0
+    # In COD mode (PAYMENTS_ONLINE_ENABLED=False), platform tax is 0.0
+    expected_tax = 0.0
+    assert quote["tax"] == expected_tax
     # delivery fee = 300
     assert quote["delivery_fee"] == 300.0
     # security deposit = 10000
     assert quote["security_deposit"] == 10000.0
-    # total = 7500 - 750 + 1215 + 300 + 10000 = 18265.0
-    assert quote["total"] == 18265.0
+    # total = 7500 - 750 + expected_tax + 300 + 10000 = 17050.0
+    assert quote["total"] == 7500.0 - 750.0 + expected_tax + 300.0 + 10000.0
 
 
 @pytest.mark.unit

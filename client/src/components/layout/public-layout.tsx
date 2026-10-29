@@ -2,7 +2,6 @@ import React from 'react'
 import { useLocation } from 'react-router-dom'
 import { Navbar } from './navbar'
 import { Footer } from './footer'
-import { DevRoleSwitcher } from '@/components/shared/dev-role-switcher'
 
 interface PublicLayoutProps {
   children: React.ReactNode
@@ -19,7 +18,6 @@ export function PublicLayout({ children }: PublicLayoutProps) {
     return (
       <div className="min-h-dvh bg-background text-foreground antialiased selection:bg-brand selection:text-white relative">
         {children}
-        <DevRoleSwitcher />
       </div>
     )
   }
@@ -46,7 +44,6 @@ export function PublicLayout({ children }: PublicLayoutProps) {
       <Footer />
 
       {/* Non-intrusive Dev Role Switcher */}
-      <DevRoleSwitcher />
     </div>
   )
 }

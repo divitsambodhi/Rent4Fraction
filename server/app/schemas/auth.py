@@ -22,6 +22,7 @@ def compute_avatar_initials(name: str) -> str:
 
 
 class UserProfileInput(BaseModel):
+    model_config = ConfigDict(extra="forbid")
     name: str = Field(..., min_length=2, max_length=80, description="Full name (2-80 characters)")
     phone: str | None = Field(
         None, description="Optional 10-digit Indian phone number starting with 6-9"
@@ -51,6 +52,7 @@ class UserProfileInput(BaseModel):
 
 
 class VendorBusinessInput(BaseModel):
+    model_config = ConfigDict(extra="forbid")
     business_name: str = Field(
         ..., min_length=2, max_length=255, description="Registered legal business name"
     )
@@ -94,6 +96,7 @@ class VendorBusinessInput(BaseModel):
 
 
 class RegisterRequest(BaseModel):
+    model_config = ConfigDict(extra="forbid")
     role: Literal["customer", "vendor"] = Field(
         ..., description="Registration role: 'customer' or 'vendor' only"
     )

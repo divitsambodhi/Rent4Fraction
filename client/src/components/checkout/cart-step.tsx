@@ -10,8 +10,6 @@ import {
 import { CartPeriodGroup } from './cart-period-group'
 import { AvailabilityIssuesBanner } from './availability-issues-banner'
 import { CouponBox } from './coupon-box'
-import { TestCouponsPanel } from './test-coupons-panel'
-import { DemoCartButton } from './demo-cart-button'
 import { EmptyCart } from './empty-cart'
 import type { CartPeriod, CartLine, Coupon } from '@/types/checkout'
 import type { LineAvailabilityResult } from '@/lib/api/cart'
@@ -31,7 +29,7 @@ interface CartStepProps {
   onSaveForLater: (cartItemId: string) => void
   onApplyCoupon: (coupon: Coupon) => void
   onRemoveCoupon: () => void
-  onLoadDemoItems: () => void
+  onLoadDemoItems?: () => void
   onContinue: () => void
 }
 
@@ -50,11 +48,10 @@ export function CartStep({
   onSaveForLater,
   onApplyCoupon,
   onRemoveCoupon,
-  onLoadDemoItems,
   onContinue,
 }: CartStepProps) {
   if (periods.length === 0) {
-    return <EmptyCart onLoadDemoItems={onLoadDemoItems} />
+    return <EmptyCart />
   }
 
   // All lines across all periods
@@ -62,12 +59,11 @@ export function CartStep({
 
   return (
     <div className="space-y-6">
-      {/* Dev toolbar row */}
+      {/* Review notice row */}
       <div className="flex items-center justify-between pb-1">
         <span className="text-xs text-muted-foreground font-medium">
           Review your items and rental periods
         </span>
-        <DemoCartButton onLoadDemo={onLoadDemoItems} />
       </div>
 
       {/* Availability Issues Banner */}
@@ -97,15 +93,14 @@ export function CartStep({
         ))}
       </div>
 
-      {/* Coupon box & test panel */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2">
+      {/* Coupon box */}
+      <div className="max-w-md pt-2">
         <CouponBox
           subtotal={subtotal}
           appliedCoupon={appliedCoupon}
           onApplyCoupon={onApplyCoupon}
           onRemoveCoupon={onRemoveCoupon}
         />
-        <TestCouponsPanel onSelectCoupon={onApplyCoupon} />
       </div>
 
       {/* Navigation Actions (Desktop / In-page) */}

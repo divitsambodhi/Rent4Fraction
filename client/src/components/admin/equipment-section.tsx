@@ -1,5 +1,5 @@
 import { CloudImage } from '@/components/shared/cloud-image'
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect } from 'react'
 import {
   Search,
   X,
@@ -11,16 +11,15 @@ import { Badge } from '@/components/ui/badge'
 import {
   EntitySheet,
 } from '@/components/shared/entity-sheet'
-import { getAllStoredEquipment, updateEquipmentCommissionRate } from '@/lib/api/equipment-store'
-import { getAdminCategories } from '@/lib/api/admin-store'
-import { getStoredVendorProfiles } from '@/lib/api/vendor-store'
+import { getAdminEquipment, updateEquipmentCommission, getAdminCategories } from '@/lib/api/admin'
 import { resolveCommission, type CommissionSource } from '@/lib/pricing'
 import { formatINR } from '@/lib/format'
 import type { InventoryItem } from '@/types'
 import { toast } from 'sonner'
 
 export function EquipmentSection() {
-  const [items, setItems] = useState<InventoryItem[]>(() => getAllStoredEquipment())
+  const [items, setItems] = useState<InventoryItem[]>([])
+  const [categories, setCategories] = useState<any[]>([])
   const [search, setSearch] = useState('')
   const [statusFilter, setStatusFilter] = useState<'all' | 'active' | 'inactive' | 'out_of_stock' | 'archived'>('all')
   const [categoryFilter, setCategoryFilter] = useState<string>('all')
@@ -30,32 +29,41 @@ export function EquipmentSection() {
   const [editingItem, setEditingItem] = useState<InventoryItem | null>(null)
   const [overrideInput, setOverrideInput] = useState<string>('')
 
-  const categories = useMemo(() => getAdminCategories(), [])
-  const vendorProfiles = useMemo(() => getStoredVendorProfiles(), [])
+  const loadData = async () => {
+    const [fetchedItems, fetchedCats] = await Promise.all([
+      getAdminEquipment(),
+      getAdminCategories(),
+    ])
+    setItems((fetchedItems || []) as unknown as InventoryItem[])
+    setCategories(fetchedCats || [])
+  }
+
+  useEffect(() => {
+    loadData()
+  }, [])
 
   // Resolve effective commission for all items
   const itemsWithCommission = useMemo(() => {
     return items.map((item) => {
-      const cat = categories.find((c) => c.id === item.category_id || c.name === item.category_name)
-      const vendor = vendorProfiles[item.vendor_id]
-      const resolved = resolveCommission(item, cat, vendor)
+      const cat = categories.find((c: any) => c.id === item.category_id || c.name === item.category_name)
+      const resolved = resolveCommission(item, cat, undefined)
       return {
         ...item,
         effectiveCommission: resolved.rate,
         commissionSource: resolved.source,
       }
     })
-  }, [items, categories, vendorProfiles])
+  }, [items, categories])
 
   // Filtered list
   const filtered = useMemo(() => {
-    return itemsWithCommission.filter((it) => {
+    return itemsWithCommission.filter((it: any) => {
       if (search.trim()) {
         const q = search.toLowerCase().trim()
         const match =
-          it.name.toLowerCase().includes(q) ||
-          it.vendor_name.toLowerCase().includes(q) ||
-          it.category_name.toLowerCase().includes(q)
+          (it.name || '').toLowerCase().includes(q) ||
+          (it.vendor_name || '').toLowerCase().includes(q) ||
+          (it.category_name || '').toLowerCase().includes(q)
         if (!match) return false
       }
 
@@ -83,18 +91,17 @@ export function EquipmentSection() {
   // Live preview of effective rate for the item currently being edited
   const livePreview = useMemo(() => {
     if (!editingItem) return null
-    const cat = categories.find((c) => c.id === editingItem.category_id || c.name === editingItem.category_name)
-    const vendor = vendorProfiles[editingItem.vendor_id]
+    const cat = categories.find((c: any) => c.id === editingItem.category_id || c.name === editingItem.category_name)
 
     const parsedRate = overrideInput.trim() !== '' && !isNaN(Number(overrideInput))
       ? Math.max(0, Math.min(100, parseFloat(overrideInput)))
       : null
 
     const mockItem = { ...editingItem, commission_rate: parsedRate }
-    return resolveCommission(mockItem, cat, vendor)
-  }, [editingItem, overrideInput, categories, vendorProfiles])
+    return resolveCommission(mockItem, cat, undefined)
+  }, [editingItem, overrideInput, categories])
 
-  const handleSaveCommission = () => {
+  const handleSaveCommission = async () => {
     if (!editingItem) return
 
     const parsedRate = overrideInput.trim() !== '' && !isNaN(Number(overrideInput))
@@ -102,8 +109,8 @@ export function EquipmentSection() {
       : null
 
     try {
-      updateEquipmentCommissionRate(editingItem.equipment_id, parsedRate)
-      setItems(getAllStoredEquipment())
+      await updateEquipmentCommission(editingItem.equipment_id, parsedRate)
+      await loadData()
       toast.success(
         parsedRate !== null
           ? `Commission override set to ${parsedRate}% for ${editingItem.name}`
@@ -169,7 +176,7 @@ export function EquipmentSection() {
           )}
         </div>
 
-        {/* Status Pill Group (Radio semantics: clicking active keeps it selected) */}
+        {/* Status Pill Group */}
         <div role="radiogroup" aria-label="Filter by status" className="flex items-center gap-1.5 overflow-x-auto pb-1 md:pb-0">
           {(['all', 'active', 'inactive', 'out_of_stock'] as const).map((st) => (
             <button
@@ -215,7 +222,7 @@ export function EquipmentSection() {
           className="h-9 px-2 text-xs border border-border rounded-[6px] bg-surface text-foreground"
         >
           <option value="all">All categories</option>
-          {categories.map((c) => (
+          {categories.map((c: any) => (
             <option key={c.id} value={c.id}>{c.name}</option>
           ))}
         </select>
@@ -248,7 +255,7 @@ export function EquipmentSection() {
                   </td>
                 </tr>
               ) : (
-                filtered.map((item) => (
+                filtered.map((item: any) => (
                   <tr key={item.equipment_id} className="hover:bg-muted/20 transition-colors">
                     <td className="py-3 px-4">
                       <div className="flex items-center gap-3">

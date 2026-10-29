@@ -9,7 +9,7 @@ import {
   addAvailabilityBlock,
   getAvailability,
   removeAvailabilityBlock,
-} from '@/lib/api/equipment-store'
+} from '@/lib/api/inventory'
 import type { AvailabilityBlock, AvailabilityReason } from '@/types/vendor'
 import type { BlockedRange } from '@/types'
 import { toast } from 'sonner'

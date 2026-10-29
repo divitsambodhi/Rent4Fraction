@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect } from 'react'
 import { FilterBar } from '@/components/shared/filter-bar'
 import { DataTable, type Column } from '@/components/shared/data-table'
 import { StatTile } from '@/components/shared/stat-tile'
@@ -8,8 +8,8 @@ import { ConfirmDialog } from '@/components/account/confirm-dialog'
 import {
   getAdminPayouts,
   updatePayoutStatus,
-  type AdminPayoutRow,
-} from '@/lib/api/admin-store'
+} from '@/lib/api/admin'
+import type { AdminPayoutRow } from '@/types/admin'
 import { MarkPaidDialog } from './mark-paid-dialog'
 import { formatRupees } from '@/lib/pricing'
 import {
@@ -38,10 +38,18 @@ export function PayoutsSection({
   const [selectedIds, setSelectedIds] = useState<string[]>([])
   const [activePayoutForPayment, setActivePayoutForPayment] = useState<AdminPayoutRow | null>(null)
   const [bulkProcessingOpen, setBulkProcessingOpen] = useState(false)
+  const [allPayouts, setAllPayouts] = useState<AdminPayoutRow[]>([])
 
-  const allPayouts = useMemo(() => {
-    return getAdminPayouts()
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+  useEffect(() => {
+    getAdminPayouts().then((res) => {
+      const normalized = (res || []).map((p: any) => ({
+        ...p,
+        gross: p.gross ?? p.gross_amount ?? 0,
+        net: p.net ?? p.net_amount ?? 0,
+        commission: p.commission ?? p.commission_amount ?? 0,
+      }))
+      setAllPayouts(normalized)
+    })
   }, [version])
 
   const totals = useMemo(() => {
@@ -53,17 +61,17 @@ export function PayoutsSection({
     let paidVal = 0
     let commissionTotal = 0
 
-    allPayouts.forEach((p) => {
-      commissionTotal += p.commission
+    allPayouts.forEach((p: any) => {
+      commissionTotal += p.commission || 0
       if (p.status === 'pending') {
         toProcessCount++
-        toProcessVal += p.net
+        toProcessVal += p.net || 0
       } else if (p.status === 'processing') {
         processingCount++
-        processingVal += p.net
+        processingVal += p.net || 0
       } else if (p.status === 'paid') {
         paidCount++
-        paidVal += p.net
+        paidVal += p.net || 0
       }
     })
 
@@ -79,16 +87,16 @@ export function PayoutsSection({
   }, [allPayouts])
 
   const filteredPayouts = useMemo(() => {
-    return allPayouts.filter((p) => {
+    return allPayouts.filter((p: any) => {
       if (statusFilter !== 'all' && p.status !== statusFilter) {
         return false
       }
       if (searchQuery.trim()) {
         const q = searchQuery.toLowerCase()
-        const matchId = p.payout_id.toLowerCase().includes(q)
-        const matchVendor = p.vendor_name.toLowerCase().includes(q)
-        const matchOrder = p.order_id.toLowerCase().includes(q)
-        const matchBooking = p.booking_id.toLowerCase().includes(q)
+        const matchId = (p.payout_id || '').toLowerCase().includes(q)
+        const matchVendor = (p.vendor_name || '').toLowerCase().includes(q)
+        const matchOrder = (p.order_id || '').toLowerCase().includes(q)
+        const matchBooking = (p.booking_id || '').toLowerCase().includes(q)
         if (!matchId && !matchVendor && !matchOrder && !matchBooking) {
           return false
         }
@@ -98,20 +106,20 @@ export function PayoutsSection({
   }, [allPayouts, statusFilter, searchQuery])
 
   // Single transition: pending -> processing
-  const handleMarkProcessing = (payoutId: string) => {
-    updatePayoutStatus(payoutId, 'processing')
+  const handleMarkProcessing = async (payoutId: string) => {
+    await updatePayoutStatus(payoutId, 'processing')
     toast.success(`Payout ${payoutId} moved to Processing batch`)
     setVersion((v) => v + 1)
   }
 
   // Bulk transition to processing
-  const handleBulkProcessingConfirm = () => {
-    selectedIds.forEach((id) => {
-      const p = allPayouts.find((item) => item.payout_id === id)
+  const handleBulkProcessingConfirm = async () => {
+    for (const id of selectedIds) {
+      const p = allPayouts.find((item: any) => item.payout_id === id)
       if (p && p.status === 'pending') {
-        updatePayoutStatus(id, 'processing')
+        await updatePayoutStatus(id, 'processing')
       }
-    })
+    }
     toast.success(`${selectedIds.length} payouts transitioned to Processing`)
     setSelectedIds([])
     setBulkProcessingOpen(false)
@@ -143,9 +151,9 @@ export function PayoutsSection({
     {
       id: 'gross',
       header: 'Gross Order',
-      accessor: (p) => (
+      accessor: (p: any) => (
         <span className="font-mono text-xs text-foreground">
-          {formatRupees(p.gross)}
+          {formatRupees(p.gross ?? p.gross_amount ?? 0)}
         </span>
       ),
       sortable: true,
@@ -153,19 +161,21 @@ export function PayoutsSection({
     {
       id: 'commission',
       header: 'Commission',
-      accessor: (p) => (
+      accessor: (p: any) => (
         <div className="text-xs font-mono">
-          <span className="text-muted-foreground">{formatRupees(p.commission)}</span>
-          <span className="text-[10px] text-muted-foreground/80 ml-1">({p.commission_rate}%)</span>
+          <span className="text-muted-foreground">{formatRupees(p.commission ?? p.commission_amount ?? 0)}</span>
+          {p.commission_rate !== undefined && (
+            <span className="text-[10px] text-muted-foreground/80 ml-1">({p.commission_rate}%)</span>
+          )}
         </div>
       ),
     },
     {
       id: 'net',
       header: 'Net Vendor Payout',
-      accessor: (p) => (
+      accessor: (p: any) => (
         <span className="font-mono font-bold text-xs text-foreground">
-          {formatRupees(p.net)}
+          {formatRupees(p.net ?? p.net_amount ?? 0)}
         </span>
       ),
       sortable: true,
@@ -179,7 +189,7 @@ export function PayoutsSection({
     {
       id: 'actions',
       header: 'Action',
-      accessor: (p) => {
+      accessor: (p: any) => {
         if (p.status === 'pending') {
           return (
             <Button
@@ -292,12 +302,9 @@ export function PayoutsSection({
           onOpenChange={(open) => !open && setActivePayoutForPayment(null)}
           payoutId={activePayoutForPayment.payout_id}
           vendorName={activePayoutForPayment.vendor_name}
-          amount={activePayoutForPayment.net}
-          onConfirm={async (paidDate, reference) => {
-            updatePayoutStatus(activePayoutForPayment.payout_id, 'paid', {
-              paid_at: paidDate,
-              utr_number: reference,
-            })
+          amount={(activePayoutForPayment as any).net ?? activePayoutForPayment.net_amount ?? 0}
+          onConfirm={async (_paidDate, reference) => {
+            await updatePayoutStatus(activePayoutForPayment.payout_id, 'paid', reference)
             setVersion((v) => v + 1)
             setActivePayoutForPayment(null)
           }}

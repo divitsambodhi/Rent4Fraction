@@ -940,6 +940,12 @@ def get_vendor_profile(
     operation_id="update_vendor_profile",
     summary="Update vendor business profile; rejected/suspended vendors receive 403",
 )
+@router.put(
+    "/profile",
+    response_model=VendorProfileResponse,
+    operation_id="update_vendor_profile_put_alias",
+    include_in_schema=False,
+)
 def update_vendor_profile(
     payload: UpdateVendorProfileRequest,
     current_user: CurrentUser = Depends(require_vendor),

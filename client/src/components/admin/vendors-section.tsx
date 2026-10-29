@@ -1,10 +1,13 @@
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect } from 'react'
 import { FilterBar } from '@/components/shared/filter-bar'
 import { DataTable, type Column } from '@/components/shared/data-table'
 import { StatusBadge } from '@/components/shared/status-badge'
 import { Button } from '@/components/ui/button'
-import { getStoredVendorProfiles, updateVendorProfile } from '@/lib/api/vendor-store'
-import { updateVendorApprovalStatus } from '@/lib/api/admin-store'
+import {
+  getAdminVendors,
+  updateVendorApprovalStatus,
+  updateVendorCommission,
+} from '@/lib/api/admin'
 import { VendorReviewSheet } from './vendor-review-sheet'
 import type { VendorProfile } from '@/types/vendor'
 import { ExternalLink } from 'lucide-react'
@@ -27,11 +30,12 @@ export function VendorsSection({
   onSelectVendor,
 }: VendorsSectionProps) {
   const [vendorListVersion, setVendorListVersion] = useState(0)
+  const [allVendors, setAllVendors] = useState<VendorProfile[]>([])
 
-  const allVendors: VendorProfile[] = useMemo(() => {
-    const profiles = getStoredVendorProfiles()
-    return Object.values(profiles)
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+  useEffect(() => {
+    getAdminVendors().then((res) => {
+      setAllVendors((res || []) as unknown as VendorProfile[])
+    })
   }, [vendorListVersion])
 
   const counts = useMemo(() => {
@@ -51,10 +55,10 @@ export function VendorsSection({
       }
       if (searchQuery.trim()) {
         const q = searchQuery.toLowerCase()
-        const matchName = vendor.business_name.toLowerCase().includes(q)
-        const matchCity = vendor.city?.toLowerCase().includes(q)
-        const matchOwner = vendor.owner_name?.toLowerCase().includes(q)
-        const matchGst = vendor.gst_number?.toLowerCase().includes(q)
+        const matchName = (vendor.business_name || '').toLowerCase().includes(q)
+        const matchCity = (vendor.city || '').toLowerCase().includes(q)
+        const matchOwner = (vendor.owner_name || '').toLowerCase().includes(q)
+        const matchGst = (vendor.gst_number || '').toLowerCase().includes(q)
         if (!matchName && !matchCity && !matchOwner && !matchGst) {
           return false
         }
@@ -75,7 +79,7 @@ export function VendorsSection({
       accessor: (vendor: VendorProfile) => (
         <div className="flex items-center gap-3">
           <div className="size-9 rounded-full bg-brand/10 text-brand font-bold text-xs flex items-center justify-center shrink-0 border border-brand/20">
-            {vendor.business_name.slice(0, 2).toUpperCase()}
+            {(vendor.business_name || 'V').slice(0, 2).toUpperCase()}
           </div>
           <div className="min-w-0">
             <div className="font-semibold text-foreground truncate">{vendor.business_name}</div>
@@ -168,23 +172,23 @@ export function VendorsSection({
         onOpenChange={(open) => !open && onSelectVendor(null)}
         vendor={selectedVendor}
         onApprove={async (id) => {
-          updateVendorApprovalStatus(id, 'approved')
+          await updateVendorApprovalStatus(id, 'approved')
           setVendorListVersion((v) => v + 1)
         }}
         onReject={async (id, reason) => {
-          updateVendorApprovalStatus(id, 'rejected', reason)
+          await updateVendorApprovalStatus(id, 'rejected', reason)
           setVendorListVersion((v) => v + 1)
         }}
         onSuspend={async (id, reason) => {
-          updateVendorApprovalStatus(id, 'suspended', reason)
+          await updateVendorApprovalStatus(id, 'suspended', reason)
           setVendorListVersion((v) => v + 1)
         }}
         onReinstate={async (id) => {
-          updateVendorApprovalStatus(id, 'approved')
+          await updateVendorApprovalStatus(id, 'approved')
           setVendorListVersion((v) => v + 1)
         }}
         onUpdateCommission={async (id, rate) => {
-          updateVendorProfile({ commission_rate: rate }, id)
+          await updateVendorCommission(id, rate)
           setVendorListVersion((v) => v + 1)
         }}
       />

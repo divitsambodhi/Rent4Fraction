@@ -136,64 +136,7 @@ export const CANONICAL_CATEGORIES: CanonicalCategory[] = [
   },
 ]
 
-export const CANONICAL_VENDORS: CanonicalVendor[] = [
-  {
-    id: '1',
-    name: 'Sargam Sound Systems',
-    city: 'Bengaluru',
-    rating: 4.8,
-    review_count: 142,
-    item_count: 11,
-    verified: true,
-    initials: 'SS',
-    tagline: 'Crisp sound and dependable event setups for celebrations big and small.',
-    description: 'Specialists in concert sound, acoustic staging, and touring audio setups across Karnataka and Maharashtra.',
-    memberSince: '2023',
-    categoryIds: ['1', '2', '3'],
-  },
-  {
-    id: '2',
-    name: 'Lumina Lighting Co.',
-    city: 'Mumbai',
-    rating: 4.7,
-    review_count: 98,
-    item_count: 8,
-    verified: true,
-    initials: 'LL',
-    tagline: 'Thoughtful lighting that turns ordinary spaces into memorable rooms.',
-    description: 'Design-led architectural lighting, intelligent moving heads, ambient festoon, and subtle stage illumination.',
-    memberSince: '2022',
-    categoryIds: ['4', '5'],
-  },
-  {
-    id: '3',
-    name: 'RoyalSeat Furniture',
-    city: 'Delhi',
-    rating: 4.9,
-    review_count: 180,
-    item_count: 9,
-    verified: true,
-    initials: 'RF',
-    tagline: 'Beautiful, comfortable furniture for weddings, dinners, and gatherings.',
-    description: 'Finely crafted banquet chairs, cocktail tables, lounge furniture, and podium stages for corporate and wedding galas.',
-    memberSince: '2021',
-    categoryIds: ['6', '7'],
-  },
-  {
-    id: '4',
-    name: 'Shamiyana Tents & Decor',
-    city: 'Jaipur',
-    rating: 4.6,
-    review_count: 115,
-    item_count: 8,
-    verified: true,
-    initials: 'ST',
-    tagline: 'Warm decor and practical shelter for outdoor moments.',
-    description: 'All-weather pagoda canopies, festive marquees, elegant drapery, and rustic decorative accents for open-air events.',
-    memberSince: '2023',
-    categoryIds: ['8', '5'],
-  },
-]
+export const CANONICAL_VENDORS: CanonicalVendor[] = []
 
 /**
  * Resolves category or group ID to an array of matching individual category IDs.

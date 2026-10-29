@@ -51,7 +51,7 @@ export function VerifyEmailPanel({
       await mockAuthService.reloadUser()
       const currentUser = mockAuthService.getCurrentUser()
       if (currentUser) {
-        currentUser.email_verified = true
+        // Reloaded user has updated emailVerified state
       }
       onVerified()
     } catch {

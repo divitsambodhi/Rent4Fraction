@@ -1,6 +1,9 @@
 import { AppLink } from '@/components/shared/app-link'
+import { useAuth } from '@/providers/auth-provider'
 
 export function Footer() {
+  const { role } = useAuth()
+
   return (
     <footer className="border-t border-border bg-surface text-foreground py-6 sm:py-8 transition-colors">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-5">
@@ -39,9 +42,11 @@ export function Footer() {
             <AppLink to="/help?tab=contact" className="hover:text-brand transition-colors">
               Contact support
             </AppLink>
-            <AppLink to="/vendor" className="hover:text-brand transition-colors">
-              Vendor portal
-            </AppLink>
+            {role !== 'customer' && (
+              <AppLink to="/vendor" className="hover:text-brand transition-colors">
+                Vendor portal
+              </AppLink>
+            )}
             <AppLink to="/admin" className="hover:text-brand transition-colors">
               Admin console
             </AppLink>

@@ -1,12 +1,13 @@
 from __future__ import annotations
 
-from pydantic import BaseModel, Field
+from pydantic import ConfigDict, BaseModel, Field
 
 
 # -----------------------------------------------------------------------------
 # Messages & Conversations Schemas
 # -----------------------------------------------------------------------------
 class MessageSendRequest(BaseModel):
+    model_config = ConfigDict(extra="forbid")
     vendor_id: str | None = None
     receiver_id: int | None = None
     equipment_id: int | str | None = None
@@ -99,6 +100,7 @@ class SuccessResponse(BaseModel):
 # Reviews Schemas
 # -----------------------------------------------------------------------------
 class ReviewCreateRequest(BaseModel):
+    model_config = ConfigDict(extra="forbid")
     booking_item_id: int | str | None = None
     booking_id: int | str | None = None
     equipment_id: int | str | None = None

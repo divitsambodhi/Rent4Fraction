@@ -3,14 +3,12 @@ import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { Icon } from '@/components/ui/icon'
-import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { FormField } from '@/components/shared/form-field'
 import { PasswordInput } from './password-input'
 import { FormAlert } from './form-alert'
 import { ForgotPasswordDialog } from './forgot-password-dialog'
-import { DemoAccountsPanel } from './demo-accounts-panel'
 import { GoogleSignInButton } from './google-sign-in-button'
 import { useAuth } from '@/providers/auth-provider'
 import { useAppNavigate } from '@/components/shared/app-link'
@@ -28,7 +26,7 @@ const loginSchema = z.object({
   rememberMe: z.boolean(),
 })
 
-type LoginFormValues = z.infer<typeof loginSchema>
+type LoginFormData = z.infer<typeof loginSchema>
 
 export interface LoginFormProps {
   onSwitchMode: (mode: AuthMode) => void
@@ -36,9 +34,8 @@ export interface LoginFormProps {
 }
 
 export function LoginForm({ onSwitchMode, redirectParam }: LoginFormProps) {
-  const { login } = useAuth()
   const navigate = useAppNavigate()
-
+  const { login } = useAuth()
   const [formError, setFormError] = useState<string | null>(null)
   const [forgotPasswordOpen, setForgotPasswordOpen] = useState(false)
   const [typedEmail, setTypedEmail] = useState('')
@@ -46,37 +43,25 @@ export function LoginForm({ onSwitchMode, redirectParam }: LoginFormProps) {
   const {
     register,
     handleSubmit,
-    setValue,
     watch,
     formState: { errors, isSubmitting },
-  } = useForm<LoginFormValues>({
+  } = useForm<LoginFormData>({
     resolver: zodResolver(loginSchema),
-    mode: 'onBlur',
-    reValidateMode: 'onChange',
     defaultValues: {
       email: '',
       password: '',
-      rememberMe: false,
+      rememberMe: true,
     },
   })
 
   const currentEmail = watch('email')
 
-  const onSubmit = async (values: LoginFormValues) => {
+  const onSubmit = async (data: LoginFormData) => {
     setFormError(null)
     try {
-      const user = await login(values.email, values.password, values.rememberMe)
-
-      // Clear password from form state
-      setValue('password', '')
-
-      // Success toast
-      const firstName = user.name.split(' ')[0] || user.name
-      toast.success(`Logged in as ${firstName}`)
-
-      // Destination calculation
+      const user = await login(data.email, data.password)
       const sanitized = sanitizeRedirect(redirectParam)
-      if (user.role === 'customer') {
+      if (sanitized) {
         navigate(sanitized || '/')
       } else {
         navigate(getHomeForRole(user.role))
@@ -85,12 +70,6 @@ export function LoginForm({ onSwitchMode, redirectParam }: LoginFormProps) {
       const errCode = (err as { code?: string })?.code || 'auth/unknown'
       setFormError(mapAuthError(errCode))
     }
-  }
-
-  const handleFillDemo = (email: string, pass: string) => {
-    setValue('email', email, { shouldValidate: true })
-    setValue('password', pass, { shouldValidate: true })
-    setFormError(null)
   }
 
   return (
@@ -111,9 +90,6 @@ export function LoginForm({ onSwitchMode, redirectParam }: LoginFormProps) {
           onDismiss={() => setFormError(null)}
         />
       )}
-
-      {/* DEV ONLY demo credentials */}
-      <DemoAccountsPanel onFill={handleFillDemo} />
 
       {/* Google Social Sign-In */}
       <div className="space-y-3">

@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from pydantic import BaseModel, EmailStr, Field
+from pydantic import ConfigDict, BaseModel, EmailStr, Field
 
 
 class FAQItemResponse(BaseModel):
@@ -17,6 +17,7 @@ class FAQResponse(BaseModel):
 
 
 class ContactFormRequest(BaseModel):
+    model_config = ConfigDict(extra="forbid")
     name: str = Field(min_length=2, max_length=100)
     email: EmailStr
     subject: str = Field(min_length=3, max_length=200)

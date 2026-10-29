@@ -8,6 +8,7 @@ from app.core.config import Settings, get_settings
 from app.core.errors import register_exception_handlers
 from app.core.logging import setup_logging
 from app.core.middleware import RequestContextMiddleware
+from app.core.rate_limit import RateLimitMiddleware
 from app.routers.account import router as account_router
 from app.routers.addresses import router as addresses_router
 from app.routers.admin import router as admin_router
@@ -79,6 +80,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     register_exception_handlers(app)
 
     # Register Custom Middlewares
+    app.add_middleware(RateLimitMiddleware)
     app.add_middleware(
         RequestContextMiddleware,
         is_production=settings.is_production,

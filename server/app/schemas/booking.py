@@ -2,13 +2,14 @@ from __future__ import annotations
 
 from typing import Any
 
-from pydantic import BaseModel, Field
+from pydantic import ConfigDict, BaseModel, Field
 
 
 # -----------------------------------------------------------------------------
 # Coupon & Checkout Quote Schemas
 # -----------------------------------------------------------------------------
 class CouponValidateRequest(BaseModel):
+    model_config = ConfigDict(extra="forbid")
     code: str
     subtotal: float = Field(ge=0)
 
@@ -21,6 +22,7 @@ class CouponValidationResponse(BaseModel):
 
 
 class CheckoutQuoteRequest(BaseModel):
+    model_config = ConfigDict(extra="forbid")
     period: str | None = None
     period_key: str | None = None
     coupon_code: str | None = None
@@ -87,10 +89,12 @@ class BookingListResponse(BaseModel):
 
 
 class BookingCancelRequest(BaseModel):
+    model_config = ConfigDict(extra="forbid")
     reason: str | None = None
 
 
 class DamageReportRespondRequest(BaseModel):
+    model_config = ConfigDict(extra="forbid")
     action: str = Field(pattern=r"^(accept|dispute)$")
     dispute_reason: str | None = None
 

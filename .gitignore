@@ -243,3 +243,9 @@ firebase-service-account*.json
 **/firebase-service-account*.json
 
 
+
+# Agent & Private Docs
+.agents/
+.cursor/
+_private_docs/
+!client/.env.example

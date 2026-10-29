@@ -1,8 +1,10 @@
 import { ArrowRight, UserCheck, Wrench } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { AppLink } from '@/components/shared/app-link'
+import { useAuth } from '@/providers/auth-provider'
 
 export function HowItWorksTab() {
+  const { role } = useAuth()
   const customerSteps = [
     {
       title: 'Search & pick dates',
@@ -124,14 +126,16 @@ export function HowItWorksTab() {
             ))}
           </div>
 
-          <div className="pt-2">
-            <AppLink to="/auth?mode=vendor-signup">
-              <Button variant="outline" className="w-full text-xs gap-1.5">
-                <span>Apply as equipment vendor</span>
-                <ArrowRight className="size-3.5" />
-              </Button>
-            </AppLink>
-          </div>
+          {role === 'visitor' && (
+            <div className="pt-2">
+              <AppLink to="/auth?mode=vendor">
+                <Button variant="outline" className="w-full text-xs gap-1.5">
+                  <span>Apply as equipment vendor</span>
+                  <ArrowRight className="size-3.5" />
+                </Button>
+              </AppLink>
+            </div>
+          )}
         </div>
       </div>
     </div>

@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { AlertCircle, Calendar, Plus } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { DateRangePicker } from '@/components/catalog/date-range-picker'
-import { validateBlockUnits } from '@/lib/api/equipment-store'
+import { validateBlockUnits } from '@/lib/api/inventory'
 import type { AvailabilityReason } from '@/types/vendor'
 
 interface BlockFormProps {

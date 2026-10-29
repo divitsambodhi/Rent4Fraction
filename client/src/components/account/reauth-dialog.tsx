@@ -10,7 +10,8 @@ import {
 import { Button } from '@/components/ui/button'
 import { PasswordInput } from '@/components/auth/password-input'
 import { Lock, Loader2 } from 'lucide-react'
-import { mockAuthService } from '@/lib/auth'
+import { auth } from '@/lib/firebase'
+import { EmailAuthProvider, reauthenticateWithCredential } from 'firebase/auth'
 import { toast } from 'sonner'
 
 interface ReauthDialogProps {
@@ -32,7 +33,9 @@ export function ReauthDialog({ open, onOpenChange, onSuccess }: ReauthDialogProp
     setError(null)
 
     try {
-      await mockAuthService.reauthenticate(password)
+      if (!auth.currentUser || !auth.currentUser.email) throw new Error('Not logged in');
+      const cred = EmailAuthProvider.credential(auth.currentUser.email, password);
+      await reauthenticateWithCredential(auth.currentUser, cred);
       toast.success('Identity verified')
       onOpenChange(false)
       onSuccess()

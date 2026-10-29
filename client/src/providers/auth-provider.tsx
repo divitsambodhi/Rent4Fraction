@@ -1,57 +1,55 @@
-import React, { createContext, useContext, useEffect, useState, useCallback } from 'react'
-import { toast } from 'sonner'
+import React, { createContext, useContext, useEffect, useState, useMemo } from 'react'
 import {
+  onAuthStateChanged,
   signInWithEmailAndPassword,
   createUserWithEmailAndPassword,
   signOut as firebaseSignOut,
+  updateProfile as updateFirebaseProfile,
   signInWithPopup,
   signInWithRedirect,
-  onAuthStateChanged,
+  getRedirectResult,
   setPersistence,
   browserLocalPersistence,
   browserSessionPersistence,
-  updateProfile as updateFirebaseProfile,
   type User as FirebaseUser,
 } from 'firebase/auth'
+import { auth, googleProvider } from '@/lib/firebase'
+import { apiClient } from '@/lib/api/client'
 import type {
-  AuthStatus,
   AuthUser,
   CustomerSignUpData,
-  UserRole,
   VendorSignUpData,
 } from '@/types/auth'
-import { env } from '@/lib/config/env'
-import { auth, googleProvider } from '@/lib/firebase'
-import { apiClient, ApiError } from '@/lib/api/client'
-import { INITIAL_MOCK_ACCOUNTS } from '@/lib/auth/mock-accounts'
-import { mockAuthService } from '@/lib/auth/auth-service'
+import type { UserRole } from '@/types'
+import { toast } from 'sonner'
 import { CompleteProfileDialog } from '@/components/auth/complete-profile-dialog'
 
 export interface CompleteRegistrationData {
   role: 'customer' | 'vendor'
   name: string
   phone: string
-  business?: VendorSignUpData
+  business?: {
+    business_name: string
+    business_address: string
+    city: string
+    gst_number?: string
+    description?: string
+  }
 }
 
-export interface AuthContextType {
-  role: UserRole
+interface AuthContextType {
   user: AuthUser | null
-  status: AuthStatus
-  login: (
-    emailOrUser: string | AuthUser,
-    password?: string,
-    rememberMe?: boolean
-  ) => Promise<AuthUser>
-  loginWithGoogle: () => Promise<AuthUser | { needsProfile: true; email: string; name: string }>
+  role: UserRole
+  status: 'loading' | 'ready'
+  login: (email: string, password?: string, rememberMe?: boolean) => Promise<AuthUser>
+  loginWithGoogle: (initialRole?: 'customer' | 'vendor') => Promise<AuthUser | { needsProfile: true; email: string; name: string }>
   signupCustomer: (data: CustomerSignUpData) => Promise<AuthUser>
   signupVendor: (data: VendorSignUpData) => Promise<AuthUser>
+  needsProfileUser: { email: string; name: string; initialRole?: 'customer' | 'vendor' } | null
+  setNeedsProfileUser: (user: { email: string; name: string; initialRole?: 'customer' | 'vendor' } | null) => void
   completeRegistration: (data: CompleteRegistrationData) => Promise<AuthUser>
   updateProfile: (data: { name: string; phone?: string | null }) => Promise<AuthUser>
   logout: () => void
-  setRole: (role: UserRole) => void
-  needsProfileUser: { email: string; name: string } | null
-  setNeedsProfileUser: (user: { email: string; name: string } | null) => void
 }
 
 const AUTH_STORAGE_KEY = 'r4f-auth-user-v1'
@@ -59,36 +57,61 @@ const AUTH_STORAGE_KEY = 'r4f-auth-user-v1'
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
-  const [status, setStatus] = useState<AuthStatus>('loading')
-  const [user, setUser] = useState<AuthUser | null>(null)
-  const [devRole, setDevRole] = useState<UserRole>('visitor')
-  const [needsProfileUser, setNeedsProfileUser] = useState<{ email: string; name: string } | null>(null)
-
-  // Fetch backend user profile for authenticated Firebase session
-  const fetchBackendUserProfile = useCallback(async (fbUser: FirebaseUser): Promise<AuthUser | null> => {
+  const [user, setUser] = useState<AuthUser | null>(() => {
+    if (typeof window === 'undefined') return null
     try {
-      const backendUser = await apiClient.get<AuthUser>('/api/v1/auth/me')
-      return backendUser
-    } catch (err: unknown) {
-      if (err instanceof ApiError && err.status === 403 && err.code === 'user_not_registered') {
-        // User is logged into Firebase but not registered in backend database
-        setNeedsProfileUser({
-          email: fbUser.email || '',
-          name: fbUser.displayName || '',
-        })
-        return null
-      }
-      console.warn('[Auth] Failed to fetch backend profile:', err)
+      const cached = localStorage.getItem(AUTH_STORAGE_KEY)
+      return cached ? JSON.parse(cached) : null
+    } catch {
       return null
     }
-  }, [])
+  })
 
-  // Listen to Firebase Auth state in real mode or localStorage in mock mode
+  const [status, setStatus] = useState<'loading' | 'ready'>('loading')
+  const [needsProfileUser, setNeedsProfileUser] = useState<{ email: string; name: string; initialRole?: 'customer' | 'vendor' } | null>(null)
+
+  // Fetch verified profile from backend database
+  const fetchBackendUserProfile = async (fbUser: FirebaseUser): Promise<AuthUser | null> => {
+    try {
+      const token = await fbUser.getIdToken()
+      return await apiClient.get<AuthUser>('/api/v1/auth/me', {
+        headers: { Authorization: `Bearer ${token}` },
+      })
+    } catch {
+      return null
+    }
+  }
+
+  // Firebase auth state subscription
   useEffect(() => {
-    if (env.API_MODE === 'real') {
-      const unsubscribe = onAuthStateChanged(auth, async (fbUser) => {
-        if (fbUser) {
-          const profile = await fetchBackendUserProfile(fbUser)
+    let mounted = true
+
+    // Check redirect result from Google Social Sign-In
+    getRedirectResult(auth)
+      .then(async (result) => {
+        if (result && result.user && mounted) {
+          const profile = await fetchBackendUserProfile(result.user)
+          if (profile) {
+            setUser(profile)
+            localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(profile))
+          } else {
+            setNeedsProfileUser({
+              email: result.user.email || '',
+              name: result.user.displayName || '',
+            })
+          }
+        }
+      })
+      .catch((err) => {
+        console.warn('Redirect sign-in resolution error:', err)
+      })
+
+    const unsubscribe = onAuthStateChanged(auth, async (fbUser) => {
+      if (!mounted) return
+
+      if (fbUser) {
+        const profile = await fetchBackendUserProfile(fbUser)
+        if (mounted) {
           if (profile) {
             setUser(profile)
             try {
@@ -96,58 +119,69 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             } catch {
               // Ignore
             }
+          } else {
+            setUser(null)
           }
-        } else {
+          setStatus('ready')
+        }
+      } else {
+        if (mounted) {
           setUser(null)
           try {
             localStorage.removeItem(AUTH_STORAGE_KEY)
           } catch {
             // Ignore
           }
+          setStatus('ready')
         }
-        setStatus('ready')
-      })
-
-      return () => unsubscribe()
-    } else {
-      // Mock mode: restore local session
-      try {
-        const raw = localStorage.getItem(AUTH_STORAGE_KEY)
-        if (raw) {
-          const parsed = JSON.parse(raw) as AuthUser
-          setUser(parsed)
-        }
-      } catch {
-        // Ignore
-      } finally {
-        setStatus('ready')
       }
+    })
+
+    return () => {
+      mounted = false
+      unsubscribe()
     }
-  }, [fetchBackendUserProfile])
+  }, [])
 
-  // Email/Password login
-  const login = async (
-    emailOrUser: string | AuthUser,
-    password?: string,
-    rememberMe = false
-  ): Promise<AuthUser> => {
-    if (typeof emailOrUser !== 'string') {
-      setUser(emailOrUser)
-      try {
-        localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(emailOrUser))
-      } catch {
-        // Ignore
+  // Derived role: strictly from the server user record, or 'visitor'
+  const role: UserRole = useMemo(() => {
+    if (!user) return 'visitor'
+    return (user.role as UserRole) || 'customer'
+  }, [user])
+
+  // Login
+  const login = async (email: string, password?: string, rememberMe = true): Promise<AuthUser> => {
+    await setPersistence(auth, rememberMe ? browserLocalPersistence : browserSessionPersistence)
+    const cred = await signInWithEmailAndPassword(auth, email, password || '')
+    const profile = await fetchBackendUserProfile(cred.user)
+    if (!profile) {
+      throw new Error('Account exists in Firebase but not registered in database. Please complete registration.')
+    }
+    setUser(profile)
+    try {
+      localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(profile))
+    } catch {
+      // Ignore
+    }
+    return profile
+  }
+
+  // Google Social Sign-In
+  const loginWithGoogle = async (initialRole: 'customer' | 'vendor' = 'customer'): Promise<AuthUser | { needsProfile: true; email: string; name: string }> => {
+    let cred
+    try {
+      cred = await signInWithPopup(auth, googleProvider)
+    } catch (popupErr: unknown) {
+      const errCode = (popupErr as { code?: string })?.code
+      if (errCode === 'auth/popup-blocked' || errCode === 'auth/cancelled-popup-request') {
+        await signInWithRedirect(auth, googleProvider)
+        return { needsProfile: true, email: '', name: '' }
       }
-      return emailOrUser
+      throw popupErr
     }
 
-    if (env.API_MODE === 'real') {
-      await setPersistence(auth, rememberMe ? browserLocalPersistence : browserSessionPersistence)
-      const cred = await signInWithEmailAndPassword(auth, emailOrUser, password || '')
-      const profile = await fetchBackendUserProfile(cred.user)
-      if (!profile) {
-        throw new Error('Account exists in Firebase but not registered in database. Please complete registration.')
-      }
+    const profile = await fetchBackendUserProfile(cred.user)
+    if (profile) {
       setUser(profile)
       try {
         localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(profile))
@@ -155,128 +189,69 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         // Ignore
       }
       return profile
-    } else {
-      const mockUser = await mockAuthService.signInWithEmail(emailOrUser, password || '')
-      setUser(mockUser)
-      try {
-        localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(mockUser))
-      } catch {
-        // Ignore
-      }
-      return mockUser
     }
-  }
 
-  // Google Social Sign-In
-  const loginWithGoogle = async (): Promise<AuthUser | { needsProfile: true; email: string; name: string }> => {
-    if (env.API_MODE === 'real') {
-      let cred
-      try {
-        cred = await signInWithPopup(auth, googleProvider)
-      } catch (popupErr: unknown) {
-        const errCode = (popupErr as { code?: string })?.code
-        if (errCode === 'auth/popup-blocked' || errCode === 'auth/cancelled-popup-request') {
-          // Fallback to redirect
-          await signInWithRedirect(auth, googleProvider)
-          return { needsProfile: true, email: '', name: '' }
-        }
-        throw popupErr
-      }
+    setNeedsProfileUser({
+      email: cred.user.email || '',
+      name: cred.user.displayName || '',
+      initialRole,
+    })
 
-      const profile = await fetchBackendUserProfile(cred.user)
-      if (profile) {
-        setUser(profile)
-        try {
-          localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(profile))
-        } catch {
-          // Ignore
-        }
-        return profile
-      }
-
-      return {
-        needsProfile: true,
-        email: cred.user.email || '',
-        name: cred.user.displayName || '',
-      }
-    } else {
-      // Mock mode Google login
-      const mockCustomer = INITIAL_MOCK_ACCOUNTS['aarav@eventpro.in'].user
-      setUser(mockCustomer)
-      return mockCustomer
+    return {
+      needsProfile: true,
+      email: cred.user.email || '',
+      name: cred.user.displayName || '',
     }
   }
 
   // Customer Signup
   const signupCustomer = async (data: CustomerSignUpData): Promise<AuthUser> => {
-    if (env.API_MODE === 'real') {
-      const cred = await createUserWithEmailAndPassword(auth, data.email, data.password)
-      await updateFirebaseProfile(cred.user, { displayName: data.name })
+    const cred = await createUserWithEmailAndPassword(auth, data.email, data.password)
+    await updateFirebaseProfile(cred.user, { displayName: data.name })
 
-      const newProfile = await apiClient.post<AuthUser>('/api/v1/auth/register', {
-        role: 'customer',
-        profile: {
-          name: data.name,
-          phone: data.phone || '',
-        },
-      })
-      setUser(newProfile)
-      try {
-        localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(newProfile))
-      } catch {
-        // Ignore
-      }
-      return newProfile
-    } else {
-      const mockUser = await mockAuthService.signUpCustomer(data)
-      setUser(mockUser)
-      try {
-        localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(mockUser))
-      } catch {
-        // Ignore
-      }
-      return mockUser
+    const newProfile = await apiClient.post<AuthUser>('/api/v1/auth/register', {
+      role: 'customer',
+      profile: {
+        name: data.name,
+        phone: data.phone || '',
+      },
+    })
+    setUser(newProfile)
+    try {
+      localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(newProfile))
+    } catch {
+      // Ignore
     }
+    return newProfile
   }
 
   // Vendor Signup
   const signupVendor = async (data: VendorSignUpData): Promise<AuthUser> => {
-    if (env.API_MODE === 'real') {
-      const cred = await createUserWithEmailAndPassword(auth, data.email, data.password)
-      await updateFirebaseProfile(cred.user, { displayName: data.name })
+    const cred = await createUserWithEmailAndPassword(auth, data.email, data.password)
+    await updateFirebaseProfile(cred.user, { displayName: data.name })
 
-      const newProfile = await apiClient.post<AuthUser>('/api/v1/auth/register', {
-        role: 'vendor',
-        profile: {
-          name: data.name,
-          phone: data.phone,
-        },
-        business: {
-          business_name: data.business_name,
-          address: data.business_address,
-          city: data.city,
-          phone: data.phone,
-          gst_number: data.gst_number || undefined,
-          description: data.description || undefined,
-        },
-      })
-      setUser(newProfile)
-      try {
-        localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(newProfile))
-      } catch {
-        // Ignore
-      }
-      return newProfile
-    } else {
-      const mockUser = await mockAuthService.signUpVendor(data)
-      setUser(mockUser)
-      try {
-        localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(mockUser))
-      } catch {
-        // Ignore
-      }
-      return mockUser
+    const newProfile = await apiClient.post<AuthUser>('/api/v1/auth/register', {
+      role: 'vendor',
+      profile: {
+        name: data.name,
+        phone: data.phone,
+      },
+      business: {
+        business_name: data.business_name,
+        address: data.business_address,
+        city: data.city,
+        phone: data.phone,
+        gst_number: data.gst_number || undefined,
+        description: data.description || undefined,
+      },
+    })
+    setUser(newProfile)
+    try {
+      localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(newProfile))
+    } catch {
+      // Ignore
     }
+    return newProfile
   }
 
   // Complete profile after first Google Sign-In
@@ -312,103 +287,61 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   // Update profile
   const updateProfile = async (data: { name: string; phone?: string | null }): Promise<AuthUser> => {
-    if (env.API_MODE === 'real') {
-      await apiClient.patch('/api/v1/auth/profile', data)
-      if (auth.currentUser && data.name) {
-        await updateFirebaseProfile(auth.currentUser, { displayName: data.name })
-      }
-      if (user) {
-        const updated = { ...user, name: data.name, phone: data.phone || null }
-        setUser(updated)
-        try {
-          localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(updated))
-        } catch {
-          // Ignore
-        }
-        return updated
-      }
-      throw new Error('No user is currently logged in')
-    } else {
-      const updated = await mockAuthService.updateProfile(data)
+    await apiClient.patch('/api/v1/auth/profile', data)
+    if (auth.currentUser && data.name) {
+      await updateFirebaseProfile(auth.currentUser, { displayName: data.name })
+    }
+    if (user) {
+      const updated = { ...user, name: data.name, phone: data.phone || null }
       setUser(updated)
+      try {
+        localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(updated))
+      } catch {
+        // Ignore
+      }
       return updated
     }
+    throw new Error('No user is currently logged in')
   }
 
   // Logout
   const logout = () => {
     setUser(null)
-    setDevRole('visitor')
     setNeedsProfileUser(null)
     try {
       localStorage.removeItem(AUTH_STORAGE_KEY)
     } catch {
       // Ignore
     }
-    if (env.API_MODE === 'real') {
-      firebaseSignOut(auth).catch(() => {})
-    } else {
-      mockAuthService.signOut().catch(() => {})
-    }
+    firebaseSignOut(auth).catch(() => {})
     toast.info("You've been logged out", {
       description: 'Your session has ended.',
     })
   }
 
-  // Dev role switcher (only active in dev mode when in mock mode or for role switching preview)
-  const setRole = (newRole: UserRole) => {
-    if (newRole === 'visitor') {
-      setUser(null)
-      try {
-        localStorage.removeItem(AUTH_STORAGE_KEY)
-      } catch {
-        // Ignore
-      }
-      setDevRole('visitor')
-    } else {
-      const mockKey =
-        newRole === 'customer'
-          ? 'aarav@eventpro.in'
-          : newRole === 'vendor'
-          ? 'sargam@eventpro.in'
-          : 'admin@eventpro.in'
-      const acc = INITIAL_MOCK_ACCOUNTS[mockKey]
-      if (acc) {
-        login(acc.user)
-      } else {
-        setDevRole(newRole)
-      }
-    }
-  }
-
-  const activeRole: UserRole = user ? user.role : devRole
-
   return (
     <AuthContext.Provider
       value={{
-        role: activeRole,
         user,
+        role,
         status,
         login,
         loginWithGoogle,
         signupCustomer,
         signupVendor,
+        needsProfileUser,
+        setNeedsProfileUser,
         completeRegistration,
         updateProfile,
         logout,
-        setRole,
-        needsProfileUser,
-        setNeedsProfileUser,
       }}
     >
       {children}
-      <CompleteProfileDialog />
+
+      {needsProfileUser && <CompleteProfileDialog />}
     </AuthContext.Provider>
   )
 }
-
-// Backwards-compatible alias
-export const MockAuthProvider = AuthProvider
 
 export function useAuth() {
   const context = useContext(AuthContext)

@@ -237,6 +237,10 @@ export interface VendorProfile {
   suspension_reason?: string
   approved_by?: string
   approved_at?: string
+  payout_method?: string
+  bank_account_number?: string
+  bank_ifsc?: string
+  upi_id?: string
 }
 
 export interface AvailabilityBlock {

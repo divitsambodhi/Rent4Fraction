@@ -8,7 +8,7 @@ import type {
 import {
   CANONICAL_CATEGORIES,
   CANONICAL_VENDORS,
-} from './canonical-ids'
+} from '@/lib/api/canonical-ids'
 
 export const MOCK_CATEGORIES: Category[] = CANONICAL_CATEGORIES.map((c) => ({
   id: c.id,

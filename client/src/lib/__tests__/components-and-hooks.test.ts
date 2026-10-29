@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest'
-import { loadAccountState } from '@/lib/api/account-store'
-import { submitReview } from '@/lib/api/account'
-import { getUnifiedEquipmentRating } from '@/lib/api/selectors'
+import { loadAccountState } from '@/test-support/account-store'
+import { submitReview } from '@/test-support/mock-account-api'
+import { getUnifiedEquipmentRating } from '@/test-support/selectors'
 import { stepRange } from '@/components/catalog/date-range-picker'
 
 // In-memory storage shim for Node test runner

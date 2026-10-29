@@ -6,13 +6,13 @@ import {
   getVendorReviews,
   getVendorProfile,
   updateVendorProfile,
-} from '../api/vendor-store'
+} from '@/test-support/vendor-store'
 import {
   validateBlockUnits,
   checkCanArchiveEquipment,
   createInitialEquipmentState,
   saveStoredEquipmentState,
-} from '../api/equipment-store'
+} from '@/test-support/equipment-store'
 
 describe('Vendor Logic & Math Invariants', () => {
   beforeEach(() => {
@@ -85,7 +85,7 @@ describe('Vendor Logic & Math Invariants', () => {
 
     it('verifies earnings series totals match payout calculations', () => {
       const o30d = getVendorOverview('30d', '1')
-      const totalSeriesNet = o30d.earnings_series.reduce((sum, pt) => sum + pt.net, 0)
+      const totalSeriesNet = o30d.earnings_series.reduce((sum: number, pt: any) => sum + pt.net, 0)
       expect(totalSeriesNet).toBe(o30d.kpis.net_earnings)
     })
   })
@@ -97,7 +97,7 @@ describe('Vendor Logic & Math Invariants', () => {
       expect(tiles.total_earned_net).toBe(tiles.pending + tiles.processing + tiles.paid_out)
 
       // Every individual payout item satisfies net = gross - commission
-      payoutsRes.items.forEach((p) => {
+      payoutsRes.items.forEach((p: any) => {
         expect(Number((p.gross - p.commission_amount).toFixed(2))).toBe(p.net)
       })
     })

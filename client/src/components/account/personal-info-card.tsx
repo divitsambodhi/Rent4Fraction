@@ -1,7 +1,8 @@
 import { useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { useAuth } from '@/providers/auth-provider'
-import { mockAuthService } from '@/lib/auth'
+import { auth } from '@/lib/firebase'
+import { sendEmailVerification } from 'firebase/auth'
 import { CheckCircle2, Edit, Loader2, Mail } from 'lucide-react'
 import { toast } from 'sonner'
 
@@ -9,8 +10,8 @@ export function PersonalInfoCard() {
   const { user, updateProfile } = useAuth()
 
   const [isEditing, setIsEditing] = useState(false)
-  const [name, setName] = useState(user?.name || 'Aarav Mehta')
-  const [phone, setPhone] = useState(user?.phone || '9876543210')
+  const [name, setName] = useState(user?.name || '')
+  const [phone, setPhone] = useState(user?.phone || '')
   const [saving, setSaving] = useState(false)
   const [cooldown, setCooldown] = useState(0)
   const [sendingVerify, setSendingVerify] = useState(false)
@@ -44,7 +45,7 @@ export function PersonalInfoCard() {
     if (cooldown > 0 || sendingVerify) return
     setSendingVerify(true)
     try {
-      await mockAuthService.sendEmailVerification()
+      if (auth.currentUser) await sendEmailVerification(auth.currentUser)
       toast.success('Verification email sent', {
         description: `Check your inbox at ${user?.email}.`,
       })

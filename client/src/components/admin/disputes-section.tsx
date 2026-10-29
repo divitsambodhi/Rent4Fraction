@@ -1,9 +1,9 @@
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect } from 'react'
 import { FilterBar } from '@/components/shared/filter-bar'
 import { DataTable, type Column } from '@/components/shared/data-table'
 import { StatusBadge } from '@/components/shared/status-badge'
 import { Button } from '@/components/ui/button'
-import { getAdminDisputes, resolveAdminDispute } from '@/lib/api/admin-store'
+import { getAdminDisputes, resolveAdminDispute } from '@/lib/api/admin'
 import { DisputeSheet } from './dispute-sheet'
 import type { AdminDispute } from '@/types/admin'
 import { formatRupees } from '@/lib/pricing'
@@ -27,10 +27,10 @@ export function DisputesSection({
   onSelectDispute,
 }: DisputesSectionProps) {
   const [version, setVersion] = useState(0)
+  const [allDisputes, setAllDisputes] = useState<AdminDispute[]>([])
 
-  const allDisputes = useMemo(() => {
-    return getAdminDisputes()
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+  useEffect(() => {
+    getAdminDisputes().then((res) => setAllDisputes(res as unknown as AdminDispute[]))
   }, [version])
 
   const counts = useMemo(() => {
@@ -172,7 +172,7 @@ export function DisputesSection({
         onOpenChange={(open) => !open && onSelectDispute(null)}
         dispute={selectedDispute}
         onResolve={async (reportId, outcome, finalAmount, note) => {
-          resolveAdminDispute(reportId, outcome, finalAmount, note)
+          await resolveAdminDispute(reportId, outcome, finalAmount, note)
           setVersion((v) => v + 1)
         }}
       />

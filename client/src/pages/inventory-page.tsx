@@ -13,14 +13,12 @@ import { BulkActionBar } from '@/components/inventory/bulk-action-bar'
 import { EquipmentFormSheet } from '@/components/inventory/equipment-form-sheet'
 import { AvailabilityDialog } from '@/components/inventory/availability-dialog'
 import {
-  checkCanArchiveEquipment,
   duplicateInventoryItem,
-  getAllStoredEquipment,
+  fetchVendorInventory,
   getInventoryItemById,
-  queryInventory,
   saveInventoryItem,
   setInventoryItemStatuses,
-} from '@/lib/api/equipment-store'
+} from '@/lib/api/inventory'
 import { getCategoryTree } from '@/lib/api'
 import type { EquipmentStatus, InventoryItem, VendorApprovalStatus } from '@/types/vendor'
 
@@ -60,39 +58,87 @@ export function InventoryPage() {
     ? (sortParam as SortOption)
     : 'updated'
 
-  // Query inventory
-  const { items: inventoryItems, total: totalCount } = queryInventory(
-    {
-      q: qParam,
-      status: statusParam,
-      category: categoryParam,
-      stock: stockParam === 'low' ? 'low' : 'all',
+  const [inventoryItems, setInventoryItems] = useState<InventoryItem[]>([])
+  const [totalCount, setTotalCount] = useState(0)
+  const [stats, setStats] = useState({ total: 0, active: 0, lowStock: 0, outOfStock: 0 })
+  const [statusCounts, setStatusCounts] = useState({
+    all: 0,
+    active: 0,
+    inactive: 0,
+    out_of_stock: 0,
+    archived: 0,
+  })
+  const [itemToEdit, setItemToEdit] = useState<InventoryItem | null>(null)
+  const [availabilityItem, setAvailabilityItem] = useState<InventoryItem | null>(null)
+  const [refreshIndex, setRefreshIndex] = useState(0)
+
+  // Fetch real inventory from backend
+  useEffect(() => {
+    let active = true
+    fetchVendorInventory({
+      q: qParam || undefined,
+      status: statusParam !== 'all' ? statusParam : undefined,
+      category_id: categoryParam !== 'all' ? parseInt(categoryParam, 10) : undefined,
+      stock: stockParam === 'low' ? 'low' : undefined,
       sort: resolvedSort,
       page: pageParam,
       pageSize: 10,
-    },
-    '1',
-  )
+    }).then((res) => {
+      if (!active) return
+      setInventoryItems(res.items || [])
+      setTotalCount(res.total || 0)
+      if (res.stats) {
+        setStats({
+          total: res.stats.total || 0,
+          active: res.stats.active || 0,
+          lowStock: res.stats.low_stock || 0,
+          outOfStock: res.stats.out_of_stock || 0,
+        })
+        setStatusCounts({
+          all: res.stats.total || 0,
+          active: res.stats.active || 0,
+          inactive: res.stats.inactive || 0,
+          out_of_stock: res.stats.out_of_stock || 0,
+          archived: res.stats.archived || 0,
+        })
+      }
+    })
+    return () => {
+      active = false
+    }
+  }, [qParam, statusParam, categoryParam, stockParam, resolvedSort, pageParam, refreshIndex])
 
-  // All items for stats strip
-  const allVendorItems = getAllStoredEquipment().filter(
-    (e) => e.vendor_id === '1' && e.status !== 'archived',
-  )
-  const stats = {
-    total: allVendorItems.length,
-    active: allVendorItems.filter((i) => i.status === 'active').length,
-    lowStock: allVendorItems.filter((i) => i.quantity > 0 && i.quantity <= 2).length,
-    outOfStock: allVendorItems.filter((i) => i.quantity === 0).length,
-  }
+  // Load item for editing
+  useEffect(() => {
+    if (!equipmentParam || equipmentParam === 'new') {
+      setItemToEdit(null)
+      return
+    }
+    const found = inventoryItems.find((i) => i.id === equipmentParam || i.equipment_id === equipmentParam)
+    if (found) {
+      setItemToEdit(found)
+    } else {
+      getInventoryItemById(equipmentParam).then((item) => {
+        setItemToEdit(item)
+      })
+    }
+  }, [equipmentParam, inventoryItems])
 
-  // Status counts for pills
-  const statusCounts = {
-    all: allVendorItems.length,
-    active: allVendorItems.filter((i) => i.status === 'active').length,
-    inactive: allVendorItems.filter((i) => i.status === 'inactive').length,
-    out_of_stock: allVendorItems.filter((i) => i.quantity === 0).length,
-    archived: getAllStoredEquipment().filter((e) => e.vendor_id === '1' && e.status === 'archived').length,
-  }
+  // Load item for availability dialog
+  useEffect(() => {
+    if (!availabilityParam) {
+      setAvailabilityItem(null)
+      return
+    }
+    const found = inventoryItems.find((i) => i.id === availabilityParam || i.equipment_id === availabilityParam)
+    if (found) {
+      setAvailabilityItem(found)
+    } else {
+      getInventoryItemById(availabilityParam).then((item) => {
+        setAvailabilityItem(item)
+      })
+    }
+  }, [availabilityParam, inventoryItems])
 
   // URL State Helpers
   const updateParams = useCallback((updates: Record<string, string | null>, pushHistory = false) => {
@@ -109,21 +155,12 @@ export function InventoryPage() {
     }, { replace: !pushHistory })
   }, [setSearchParams])
 
-  // Open item for edit or check bad ID
-  const itemToEdit = equipmentParam && equipmentParam !== 'new'
-    ? getInventoryItemById(equipmentParam)
-    : null
-
   // If bad ID provided, clear it
   useEffect(() => {
     if (equipmentParam && equipmentParam !== 'new' && !itemToEdit) {
-      updateParams({ equipment: null })
-      toast.error('Requested equipment could not be found.')
+      // Only clear if not loading
     }
-  }, [equipmentParam, itemToEdit, updateParams])
-
-  // Availability target item
-  const availabilityItem = availabilityParam ? getInventoryItemById(availabilityParam) : null
+  }, [equipmentParam, itemToEdit])
 
   // Selection handlers
   const handleToggleSelect = (id: string) => {
@@ -143,95 +180,86 @@ export function InventoryPage() {
   }
 
   // Status changes & archiving with rules
-  const handleToggleStatus = (id: string, currentStatus: string) => {
+  const handleToggleStatus = async (id: string, currentStatus: string) => {
     const nextStatus = currentStatus === 'active' ? 'inactive' : 'active'
-    setInventoryItemStatuses([id], nextStatus as EquipmentStatus)
+    await setInventoryItemStatuses([id], nextStatus as EquipmentStatus)
+    setRefreshIndex((r) => r + 1)
 
     if (nextStatus === 'inactive') {
-      toast("Listing deactivated. Deactivating it won't cancel existing bookings.", {
-        action: {
-          label: 'Undo',
-          onClick: () => setInventoryItemStatuses([id], 'active'),
-        },
-      })
+      toast("Listing deactivated. Deactivating it won't cancel existing bookings.")
     } else {
       toast.success('Listing activated.')
     }
   }
 
-  const handleArchive = (id: string) => {
-    const canArchive = checkCanArchiveEquipment(id)
-    if (!canArchive) {
+  const handleArchive = async (id: string) => {
+    try {
+      await setInventoryItemStatuses([id], 'archived')
+      setRefreshIndex((r) => r + 1)
+      toast.success('Equipment archived.')
+    } catch {
       toast.error('This equipment has active or upcoming rentals and cannot be archived.')
-      return
     }
-    setInventoryItemStatuses([id], 'archived')
-    toast('Equipment archived.', {
-      action: {
-        label: 'Undo',
-        onClick: () => setInventoryItemStatuses([id], 'active'),
-      },
-    })
   }
 
   // Bulk Actions
   const handleBulkActivate = async () => {
-    setInventoryItemStatuses(selectedIds, 'active')
+    await setInventoryItemStatuses(selectedIds, 'active')
     toast.success(`Activated ${selectedIds.length} listings.`)
     setSelectedIds([])
+    setRefreshIndex((r) => r + 1)
   }
 
   const handleBulkDeactivate = async () => {
-    setInventoryItemStatuses(selectedIds, 'inactive')
-    toast(`Deactivated ${selectedIds.length} listings. Deactivating them won't cancel existing bookings.`, {
-      action: {
-        label: 'Undo',
-        onClick: () => setInventoryItemStatuses(selectedIds, 'active'),
-      },
-    })
+    await setInventoryItemStatuses(selectedIds, 'inactive')
+    toast(`Deactivated ${selectedIds.length} listings.`)
     setSelectedIds([])
+    setRefreshIndex((r) => r + 1)
   }
 
   const handleBulkArchive = async () => {
-    // Check all selected items
-    const blockedItems = selectedIds.filter((id) => !checkCanArchiveEquipment(id))
-    if (blockedItems.length > 0) {
-      toast.error(`${blockedItems.length} item(s) have active bookings and cannot be archived.`)
-      return
+    try {
+      await setInventoryItemStatuses(selectedIds, 'archived')
+      toast(`Archived ${selectedIds.length} listings.`)
+      setSelectedIds([])
+      setRefreshIndex((r) => r + 1)
+    } catch {
+      toast.error('Some selected equipment has active bookings and cannot be archived.')
     }
-
-    setInventoryItemStatuses(selectedIds, 'archived')
-    toast(`Archived ${selectedIds.length} listings.`, {
-      action: {
-        label: 'Undo',
-        onClick: () => setInventoryItemStatuses(selectedIds, 'active'),
-      },
-    })
-    setSelectedIds([])
   }
 
   // Duplicate equipment
-  const handleDuplicate = (id: string) => {
-    const cloned = duplicateInventoryItem(id)
-    if (cloned) {
-      toast.success(`Created duplicate "${cloned.name}".`)
+  const handleDuplicate = async (id: string) => {
+    try {
+      const cloned = await duplicateInventoryItem(id)
+      if (cloned) {
+        toast.success(`Created duplicate "${cloned.name}".`)
+        setRefreshIndex((r) => r + 1)
+      }
+    } catch {
+      toast.error('Failed to duplicate equipment.')
     }
   }
 
   // Save equipment from sheet
   const handleSaveEquipment = async (data: Partial<InventoryItem>, andAddAnother = false) => {
-    saveInventoryItem(data, '1')
-    toast.success(equipmentParam === 'new' ? 'Equipment listing created.' : 'Equipment listing saved.')
-    const next = new URLSearchParams(searchParams)
-    if (andAddAnother) {
-      next.set('equipment', 'new')
-    } else {
-      next.delete('equipment')
+    try {
+      await saveInventoryItem(data)
+      toast.success(equipmentParam === 'new' ? 'Equipment listing created.' : 'Equipment listing saved.')
+      setRefreshIndex((r) => r + 1)
+      const next = new URLSearchParams(searchParams)
+      if (andAddAnother) {
+        next.set('equipment', 'new')
+      } else {
+        next.delete('equipment')
+      }
+      setSearchParams(next)
+    } catch (err: any) {
+      toast.error(err?.message || 'Failed to save equipment listing.')
     }
-    setSearchParams(next)
   }
 
-  const businessName = user?.vendor?.business_name || 'Sargam Sound Systems'
+  const businessName = user?.vendor?.business_name || 'My Storefront'
   const approvalStatus: VendorApprovalStatus = user?.vendor?.approval_status || 'approved'
 
   return (

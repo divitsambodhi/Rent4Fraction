@@ -3,7 +3,7 @@ import { FilterBar } from '@/components/shared/filter-bar'
 import { DataTable, type Column } from '@/components/shared/data-table'
 import { StatusBadge } from '@/components/shared/status-badge'
 import { Button } from '@/components/ui/button'
-import { loadAccountState } from '@/lib/api/account-store'
+import { getAdminBookings } from '@/lib/api/admin'
 import { BookingDetailSheet } from '@/components/account/booking-detail-sheet'
 import type { BookingDetail } from '@/types/account'
 import { formatRupees } from '@/lib/pricing'
@@ -27,13 +27,13 @@ export function BookingsSection({
   onSelectBooking,
 }: BookingsSectionProps) {
   const [version, setVersion] = useState(0)
+  const [allBookings, setAllBookings] = useState<any[]>([])
 
-  const accountState = useMemo(() => {
-    return loadAccountState()
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+  useMemo(() => {
+    getAdminBookings().then((res) => {
+      setAllBookings(res || [])
+    })
   }, [version])
-
-  const allBookings = accountState.bookings
 
   const counts = useMemo(() => {
     return {
@@ -78,7 +78,7 @@ export function BookingsSection({
       header: 'Customer & Event',
       accessor: (b) => (
         <div className="text-xs">
-          <div className="font-semibold text-foreground">{b.delivery_address?.name || 'Aarav Mehta'}</div>
+          <div className="font-semibold text-foreground">{(b as any).customer_name || b.delivery_address?.name || 'Customer'}</div>
           <div className="text-muted-foreground truncate max-w-[180px]">{b.event_name || 'Event Rental'}</div>
         </div>
       ),

@@ -1,7 +1,7 @@
 import { RouterProvider } from 'react-router-dom'
 import { Toaster } from 'sonner'
 import { ThemeProvider, useTheme } from '@/providers/theme-provider'
-import { MockAuthProvider } from '@/providers/auth-provider'
+import { AuthProvider } from '@/providers/auth-provider'
 import { WishlistProvider } from '@/providers/wishlist-provider'
 import { CartProvider } from '@/providers/cart-provider'
 import { router } from './routes'
@@ -10,7 +10,7 @@ function AppContent() {
   const { resolvedTheme } = useTheme()
 
   return (
-    <MockAuthProvider>
+    <AuthProvider>
       <WishlistProvider>
         <CartProvider>
           <RouterProvider router={router} />
@@ -25,7 +25,7 @@ function AppContent() {
           />
         </CartProvider>
       </WishlistProvider>
-    </MockAuthProvider>
+    </AuthProvider>
   )
 }
 

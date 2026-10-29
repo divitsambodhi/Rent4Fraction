@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from pydantic import BaseModel, Field
+from pydantic import ConfigDict, BaseModel, Field
 
 
 # -----------------------------------------------------------------------------
@@ -56,6 +56,7 @@ class CartResponse(BaseModel):
 
 
 class CartItemCreateRequest(BaseModel):
+    model_config = ConfigDict(extra="forbid")
     equipment_id: int | str
     quantity: int = Field(default=1, ge=1, le=50)
     start_date: str
@@ -63,12 +64,14 @@ class CartItemCreateRequest(BaseModel):
 
 
 class CartItemUpdateRequest(BaseModel):
+    model_config = ConfigDict(extra="forbid")
     quantity: int | None = Field(default=None, ge=1, le=50)
     start_date: str | None = None
     end_date: str | None = None
 
 
 class CartApplyDatesRequest(BaseModel):
+    model_config = ConfigDict(extra="forbid")
     start_date: str
     end_date: str
 
@@ -108,6 +111,7 @@ class WishlistItemResponse(BaseModel):
 # Address Schemas
 # -----------------------------------------------------------------------------
 class AddressCreateRequest(BaseModel):
+    model_config = ConfigDict(extra="forbid")
     label: str | None = None
     line1: str = Field(min_length=3, max_length=255)
     line2: str | None = Field(default=None, max_length=255)
@@ -121,6 +125,7 @@ class AddressCreateRequest(BaseModel):
 
 
 class AddressUpdateRequest(BaseModel):
+    model_config = ConfigDict(extra="forbid")
     label: str | None = None
     line1: str | None = Field(default=None, min_length=3, max_length=255)
     line2: str | None = Field(default=None, max_length=255)
@@ -153,6 +158,7 @@ class AddressResponse(BaseModel):
 # Profile & Badges Schemas
 # -----------------------------------------------------------------------------
 class UpdateProfileRequest(BaseModel):
+    model_config = ConfigDict(extra="forbid")
     name: str | None = Field(default=None, min_length=2, max_length=100)
     phone: str | None = Field(default=None, pattern=r"^[6-9][0-9]{9}$")
 

@@ -11,7 +11,7 @@ import {
   CART_STORAGE_KEY,
 } from '@/lib/api/cart'
 import { groupByPeriod, rentalDays } from '@/lib/pricing'
-import { MOCK_EQUIPMENT } from '@/lib/api/mock-data'
+
 import { toast } from 'sonner'
 
 export type CartItem = CartLine
@@ -99,7 +99,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     const days = rentalDays(from, to)
 
     const eqId = String(input.equipment_id)
-    const mock = MOCK_EQUIPMENT.find((e) => String(e.equipment_id) === eqId)
+    const mock = null as any
 
     const compositeId = `${eqId}_${from}_${to}`
 

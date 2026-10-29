@@ -16,22 +16,22 @@ const WishlistContext = createContext<WishlistContextType | undefined>(undefined
 
 export function WishlistProvider({ children }: { children: React.ReactNode }) {
   const [wishlist, setWishlist] = useState<string[]>(() => {
-    if (typeof window === 'undefined') return ['eq-01', 'eq-04']
+    if (typeof window === 'undefined') return []
     try {
       const saved = localStorage.getItem(WISHLIST_KEY)
-      return saved ? JSON.parse(saved) : ['eq-01', 'eq-04']
+      return saved ? JSON.parse(saved) : []
     } catch {
-      return ['eq-01', 'eq-04']
+      return []
     }
   })
 
   const [cartCount, setCartCount] = useState<number>(() => {
-    if (typeof window === 'undefined') return 2
+    if (typeof window === 'undefined') return 0
     try {
       const saved = localStorage.getItem(CART_KEY)
-      return saved ? Number(saved) : 2
+      return saved ? Number(saved) : 0
     } catch {
-      return 2
+      return 0
     }
   })
 

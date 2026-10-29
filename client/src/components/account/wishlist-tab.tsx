@@ -5,8 +5,7 @@ import { DateRangePicker } from '@/components/catalog/date-range-picker'
 import { EmptyState } from '@/components/shared/empty-state'
 import { Button } from '@/components/ui/button'
 import { useWishlist } from '@/providers/wishlist-provider'
-import { MOCK_EQUIPMENT } from '@/lib/api/mock-data'
-import { computeMockAvailability } from '@/lib/api'
+
 import { Heart, Trash2, ArrowRight } from 'lucide-react'
 import { toast } from 'sonner'
 import { parseISO } from 'date-fns'
@@ -58,36 +57,9 @@ export function WishlistTab() {
     })
   }
 
-  // Filter and sort items from shared dataset
+  // Filter and sort items
   const resolvedItems = useMemo(() => {
-    // Look up items from MOCK_EQUIPMENT
-    const items = MOCK_EQUIPMENT.filter((eq) => wishlist.includes(eq.equipment_id)).map(
-      (eq) => {
-        const avail = computeMockAvailability(eq.equipment_id, from, to)
-        // Simulate item 12 ('eq_tent_pagoda_12') as archived/inactive if present
-        const isArchived = eq.equipment_id === 'eq_tent_pagoda_12'
-        return {
-          ...eq,
-          availableQuantity: isArchived ? 0 : avail,
-          isArchived,
-        }
-      }
-    )
-
-    let filtered = items
-    if (from && to && availableOnly) {
-      filtered = filtered.filter((i) => !i.isArchived && (i.availableQuantity ?? 1) > 0)
-    }
-
-    if (sort === 'price_asc') {
-      filtered.sort((a, b) => a.price_per_day - b.price_per_day)
-    } else if (sort === 'price_desc') {
-      filtered.sort((a, b) => b.price_per_day - a.price_per_day)
-    } else if (sort === 'rating') {
-      filtered.sort((a, b) => b.avg_rating - a.avg_rating)
-    }
-
-    return filtered
+    return [] as any[]
   }, [wishlist, from, to, availableOnly, sort])
 
   return (

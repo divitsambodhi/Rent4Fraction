@@ -4,7 +4,7 @@ from datetime import date
 from decimal import Decimal
 from typing import Any, Literal
 
-from pydantic import BaseModel, Field
+from pydantic import ConfigDict, BaseModel, Field
 
 from app.models.catalog import EquipmentStatus
 from app.services.lifecycle.types import (
@@ -182,14 +182,17 @@ class VendorOrderListResponse(BaseModel):
 
 
 class DeclineOrderRequest(BaseModel):
+    model_config = ConfigDict(extra="forbid")
     reason: str = Field(..., min_length=10)
 
 
 class DeliveryFailedRequest(BaseModel):
+    model_config = ConfigDict(extra="forbid")
     reason: str = Field(..., min_length=5)
 
 
 class StatusUpdateRequest(BaseModel):
+    model_config = ConfigDict(extra="forbid")
     action: LifecycleAction
     reason: str | None = None
     schedule_delivery: ScheduleDeliveryPayload | None = None
@@ -222,6 +225,7 @@ class ImagePayload(BaseModel):
 
 
 class CreateEquipmentRequest(BaseModel):
+    model_config = ConfigDict(extra="forbid")
     category_id: int
     name: str = Field(..., min_length=2, max_length=255)
     description: str | None = Field(default=None, max_length=2000)
@@ -236,6 +240,7 @@ class CreateEquipmentRequest(BaseModel):
 
 
 class UpdateEquipmentRequest(BaseModel):
+    model_config = ConfigDict(extra="forbid")
     category_id: int | None = None
     name: str | None = Field(default=None, min_length=2, max_length=255)
     description: str | None = Field(default=None, max_length=2000)
@@ -251,6 +256,7 @@ class UpdateEquipmentRequest(BaseModel):
 
 
 class BulkStatusRequest(BaseModel):
+    model_config = ConfigDict(extra="forbid")
     equipment_ids: list[int]
     status: Literal["active", "inactive", "archived"]
 
@@ -305,6 +311,7 @@ class InventoryListResponse(BaseModel):
 # Availability Blocks Schemas
 # -----------------------------------------------------------------------------
 class CreateAvailabilityBlockRequest(BaseModel):
+    model_config = ConfigDict(extra="forbid")
     start_date: date
     end_date: date
     units: int = Field(default=1, ge=1)
@@ -420,6 +427,7 @@ class VendorReviewsResult(BaseModel):
 
 
 class ReviewReplyRequest(BaseModel):
+    model_config = ConfigDict(extra="forbid")
     reply_text: str = Field(..., min_length=1, max_length=500)
 
 
@@ -437,6 +445,9 @@ class VendorProfileResponse(BaseModel):
     gst_number: str
     logo: str | None = None
     logo_url: str
+    gst: str | None = None
+    logo: str | None = None
+    logo_url: str | None = None
     logo_public_id: str | None = None
     logo_version: int | None = None
     logo_storage_path: str | None = None
@@ -456,6 +467,7 @@ class VendorProfileResponse(BaseModel):
 
 
 class UpdateVendorProfileRequest(BaseModel):
+    model_config = ConfigDict(extra="forbid")
     business_name: str | None = Field(default=None, min_length=2, max_length=255)
     description: str | None = Field(default=None, max_length=500)
     address: str | None = None
@@ -472,6 +484,7 @@ class UpdateVendorProfileRequest(BaseModel):
 # COD Actions Schemas
 # -----------------------------------------------------------------------------
 class RecordCashRequest(BaseModel):
+    model_config = ConfigDict(extra="forbid")
     amount: Decimal = Field(..., ge=Decimal("0.00"), description="Cash collected from customer at delivery")
     notes: str | None = None
     proof_public_id: str | None = None
@@ -479,11 +492,13 @@ class RecordCashRequest(BaseModel):
 
 
 class RecordNoShowRequest(BaseModel):
+    model_config = ConfigDict(extra="forbid")
     reason: str = Field(default="Customer unavailable at delivery venue", min_length=5)
     notes: str | None = None
 
 
 class RecordDepositSettlementRequest(BaseModel):
+    model_config = ConfigDict(extra="forbid")
     deposit_refunded: Decimal = Field(..., ge=Decimal("0.00"), description="Cash refunded to customer upon clean return")
     damage_deductions: Decimal = Field(default=Decimal("0.00"), ge=Decimal("0.00"), description="Deductions withheld for damages")
     notes: str | None = None

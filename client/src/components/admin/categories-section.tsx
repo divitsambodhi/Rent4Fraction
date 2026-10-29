@@ -1,12 +1,12 @@
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect } from 'react'
 import { FilterBar } from '@/components/shared/filter-bar'
 import { Button } from '@/components/ui/button'
 import {
   getAdminCategories,
   saveAdminCategory,
   toggleAdminCategoryActive,
-  type ManagedCategory,
-} from '@/lib/api/admin-store'
+} from '@/lib/api/admin'
+import type { ManagedCategory } from '@/types/admin'
 import { CategoryFormSheet } from './category-form-sheet'
 import {
   Folder,
@@ -37,22 +37,22 @@ export function CategoriesSection({
   onSearchChange,
 }: CategoriesSectionProps) {
   const [version, setVersion] = useState(0)
+  const [categories, setCategories] = useState<ManagedCategory[]>([])
 
-  const categories = useMemo(() => {
-    return getAdminCategories()
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+  useEffect(() => {
+    getAdminCategories().then((res) => setCategories(res))
   }, [version])
 
   const counts = useMemo(() => {
     return {
       all: categories.length,
-      active: categories.filter((c) => c.is_active).length,
-      inactive: categories.filter((c) => !c.is_active).length,
+      active: categories.filter((c: ManagedCategory) => c.is_active).length,
+      inactive: categories.filter((c: ManagedCategory) => !c.is_active).length,
     }
   }, [categories])
 
   const filteredCategories = useMemo(() => {
-    return categories.filter((cat) => {
+    return categories.filter((cat: ManagedCategory) => {
       if (statusFilter === 'active' && !cat.is_active) return false
       if (statusFilter === 'inactive' && cat.is_active) return false
       if (searchQuery.trim()) {
@@ -67,7 +67,7 @@ export function CategoriesSection({
 
   const groups = useMemo(() => {
     const map: Record<string, { groupId: string; groupName: string; items: ManagedCategory[] }> = {}
-    filteredCategories.forEach((cat) => {
+    filteredCategories.forEach((cat: ManagedCategory) => {
       const gId = cat.groupId || '101'
       const gName = cat.groupName || 'Sound'
       if (!map[gId]) {
@@ -78,9 +78,9 @@ export function CategoriesSection({
     return Object.values(map)
   }, [filteredCategories])
 
-  const handleToggleActive = (cat: ManagedCategory) => {
+  const handleToggleActive = async (cat: ManagedCategory) => {
     const nextState = !cat.is_active
-    toggleAdminCategoryActive(cat.id, nextState)
+    await toggleAdminCategoryActive(cat.id, nextState)
     toast.success(
       nextState
         ? `Category "${cat.name}" activated`
@@ -90,7 +90,7 @@ export function CategoriesSection({
   }
 
   const activeCategory = selectedCategoryId && selectedCategoryId !== 'new'
-    ? categories.find((c) => c.id === selectedCategoryId) || null
+    ? categories.find((c: ManagedCategory) => c.id === selectedCategoryId) || null
     : null
 
   return (
@@ -233,10 +233,10 @@ export function CategoriesSection({
       <CategoryFormSheet
         open={Boolean(selectedCategoryId)}
         onOpenChange={(open) => !open && onSelectCategory(null)}
-        category={activeCategory}
-        existingCategories={categories}
+        category={activeCategory as any}
+        existingCategories={categories as any}
         onSave={async (categoryData) => {
-          saveAdminCategory({
+          await saveAdminCategory({
             ...activeCategory,
             ...categoryData,
             name: categoryData.name || 'New Category',

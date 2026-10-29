@@ -4,7 +4,7 @@ from datetime import datetime
 from decimal import Decimal
 from typing import Any, Literal
 
-from pydantic import BaseModel, Field
+from pydantic import ConfigDict, BaseModel, Field
 
 from app.schemas.vendor import VendorProfileResponse
 
@@ -57,19 +57,23 @@ class AdminOverviewKPIs(BaseModel):
 # Vendor Decisions & Commission Schemas
 # -----------------------------------------------------------------------------
 class RejectVendorRequest(BaseModel):
+    model_config = ConfigDict(extra="forbid")
     reason: str = Field(..., min_length=10)
 
 
 class SuspendVendorRequest(BaseModel):
+    model_config = ConfigDict(extra="forbid")
     reason: str = Field(..., min_length=5)
 
 
 class ReviewVendorRequest(BaseModel):
+    model_config = ConfigDict(extra="forbid")
     decision: Literal["approved", "rejected", "suspended"]
     reason: str | None = None
 
 
 class UpdateVendorCommissionRequest(BaseModel):
+    model_config = ConfigDict(extra="forbid")
     commission_rate: Decimal | None = Field(default=None, ge=Decimal("0.00"), le=Decimal("100.00"))
 
 
@@ -84,6 +88,7 @@ class AdminVendorDetail(BaseModel):
 # Equipment Schemas
 # -----------------------------------------------------------------------------
 class UpdateEquipmentCommissionRequest(BaseModel):
+    model_config = ConfigDict(extra="forbid")
     commission_rate: Decimal | None = Field(default=None, ge=Decimal("0.00"), le=Decimal("100.00"))
 
 
@@ -108,6 +113,7 @@ class AdminEquipmentItem(BaseModel):
 # Category Schemas
 # -----------------------------------------------------------------------------
 class CreateCategoryRequest(BaseModel):
+    model_config = ConfigDict(extra="forbid")
     name: str = Field(..., min_length=2, max_length=100)
     parent_id: int | None = None
     description: str | None = None
@@ -116,6 +122,7 @@ class CreateCategoryRequest(BaseModel):
 
 
 class UpdateCategoryRequest(BaseModel):
+    model_config = ConfigDict(extra="forbid")
     name: str | None = Field(default=None, min_length=2, max_length=100)
     parent_id: int | None = None
     description: str | None = None
@@ -124,10 +131,12 @@ class UpdateCategoryRequest(BaseModel):
 
 
 class ToggleActiveRequest(BaseModel):
+    model_config = ConfigDict(extra="forbid")
     is_active: bool
 
 
 class CategoryCommissionRequest(BaseModel):
+    model_config = ConfigDict(extra="forbid")
     default_commission_rate: Decimal | None = Field(default=None, ge=Decimal("0.00"), le=Decimal("100.00"))
 
 
@@ -150,6 +159,7 @@ CouponDerivedStatus = Literal["active", "scheduled", "expired", "inactive", "lim
 
 
 class CreateCouponRequest(BaseModel):
+    model_config = ConfigDict(extra="forbid")
     code: str = Field(..., min_length=4, max_length=20, pattern=r"^[A-Za-z0-9]+$")
     type: Literal["percent", "flat"]
     value: Decimal = Field(..., gt=Decimal("0.00"))
@@ -161,6 +171,7 @@ class CreateCouponRequest(BaseModel):
 
 
 class UpdateCouponRequest(BaseModel):
+    model_config = ConfigDict(extra="forbid")
     type: Literal["percent", "flat"] | None = None
     value: Decimal | None = Field(default=None, gt=Decimal("0.00"))
     min_order_amount: Decimal | None = Field(default=None, ge=Decimal("0.00"))
@@ -236,6 +247,7 @@ class AdminDispute(BaseModel):
 
 
 class ResolveDisputeRequest(BaseModel):
+    model_config = ConfigDict(extra="forbid")
     outcome: Literal["full", "partial", "reject"]
     final_amount: Decimal = Field(default=Decimal("0.00"), ge=Decimal("0.00"))
     resolution_note: str = Field(..., min_length=10)
@@ -245,12 +257,14 @@ class ResolveDisputeRequest(BaseModel):
 # Payout Schemas
 # -----------------------------------------------------------------------------
 class UpdatePayoutStatusRequest(BaseModel):
+    model_config = ConfigDict(extra="forbid")
     status: Literal["processing", "paid"]
     paid_at: datetime | None = None
     note: str | None = None
 
 
 class BulkPayoutStatusRequest(BaseModel):
+    model_config = ConfigDict(extra="forbid")
     payout_ids: list[int]
     status: Literal["processing", "paid"]
     paid_at: datetime | None = None

@@ -7,11 +7,13 @@ from pydantic import BaseModel, ConfigDict, Field
 
 
 class PeriodInput(BaseModel):
+    model_config = ConfigDict(extra="forbid")
     start_date: date
     end_date: date
 
 
 class EventDetailsInput(BaseModel):
+    model_config = ConfigDict(extra="forbid")
     event_name: str | None = None
     event_type: str = Field(
         ..., description="Wedding, Birthday, Corporate event, Concert, Festival, Other"
@@ -81,6 +83,7 @@ class CheckoutOrderResponse(BaseModel):
 
 
 class PaymentVerifyRequest(BaseModel):
+    model_config = ConfigDict(extra="forbid")
     booking_id: int | None = None
     razorpay_order_id: str
     razorpay_payment_id: str

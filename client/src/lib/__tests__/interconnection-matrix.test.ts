@@ -4,36 +4,36 @@ import {
   saveInventoryItem,
   setInventoryItemStatuses,
   updateEquipmentCommissionRate,
-} from '@/lib/api/equipment-store'
+} from '@/test-support/equipment-store'
 import {
   getStoredVendorProfiles,
   updateVendorProfile,
-} from '@/lib/api/vendor-store'
+} from '@/test-support/vendor-store'
 import {
   getAdminCategories,
   toggleAdminCategoryActive,
   getAdminCoupons,
-} from '@/lib/api/admin-store'
+} from '@/test-support/admin-store'
 import {
   getAllMockUsers,
   toggleMockUserStatus,
-} from '@/lib/auth/mock-accounts'
+} from '@/test-support/mock-accounts'
 import {
   loadAccountState,
-} from '@/lib/api/account-store'
+} from '@/test-support/account-store'
 import {
   submitReview,
   replyToReview,
   sendMessage,
-} from '@/lib/api/account'
+} from '@/test-support/mock-account-api'
 import {
   getUnifiedVisibleEquipment,
   getUnifiedEquipmentRating,
   getUnifiedUnreadBadges,
   runUnifiedInvariantChecks,
-} from '@/lib/api/selectors'
+} from '@/test-support/selectors'
 import { calculateOrderPayoutFromItems, resolveCommission } from '@/lib/pricing'
-import { placeOrder } from '@/lib/api/cart'
+import { placeOrder } from '@/test-support/mock-cart-api'
 import { applyAction } from '@/lib/lifecycle/engine'
 import type { CartLine } from '@/types/checkout'
 

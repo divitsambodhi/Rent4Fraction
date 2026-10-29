@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect } from 'react'
 import { FilterBar } from '@/components/shared/filter-bar'
 import { DataTable, type Column } from '@/components/shared/data-table'
 import { Button } from '@/components/ui/button'
@@ -6,7 +6,7 @@ import {
   getAdminCoupons,
   saveAdminCoupon,
   toggleAdminCouponActive,
-} from '@/lib/api/admin-store'
+} from '@/lib/api/admin'
 import { CouponFormSheet } from './coupon-form-sheet'
 import { deriveCouponStatus, type CouponDerivedStatus } from '@/types/admin'
 import type { Coupon } from '@/types/checkout'
@@ -34,14 +34,14 @@ export function CouponsSection({
   onSelectCoupon,
 }: CouponsSectionProps) {
   const [version, setVersion] = useState(0)
+  const [allCoupons, setAllCoupons] = useState<Coupon[]>([])
 
-  const allCoupons = useMemo(() => {
-    return getAdminCoupons()
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+  useEffect(() => {
+    getAdminCoupons().then((res) => setAllCoupons(res as unknown as Coupon[]))
   }, [version])
 
   const couponsWithStatus: CouponWithStatus[] = useMemo(() => {
-    return allCoupons.map((c) => ({
+    return allCoupons.map((c: Coupon) => ({
       ...c,
       derivedStatus: deriveCouponStatus(c),
     }))
@@ -73,9 +73,9 @@ export function CouponsSection({
     })
   }, [couponsWithStatus, statusFilter, searchQuery])
 
-  const handleToggleActive = (coupon: Coupon) => {
+  const handleToggleActive = async (coupon: Coupon) => {
     const nextState = !coupon.is_active
-    toggleAdminCouponActive(coupon.code, nextState)
+    await toggleAdminCouponActive(coupon.code, nextState)
     toast.success(
       nextState
         ? `Coupon ${coupon.code} activated`
@@ -85,7 +85,7 @@ export function CouponsSection({
   }
 
   const activeCoupon = selectedCouponCode && selectedCouponCode !== 'new'
-    ? allCoupons.find((c) => c.code === selectedCouponCode) || null
+    ? allCoupons.find((c: Coupon) => c.code === selectedCouponCode) || null
     : null
 
   const columns: Column<CouponWithStatus>[] = [
@@ -242,7 +242,7 @@ export function CouponsSection({
         coupon={activeCoupon}
         existingCoupons={allCoupons}
         onSave={async (couponData) => {
-          saveAdminCoupon(couponData)
+          await saveAdminCoupon(couponData)
           setVersion((v) => v + 1)
           onSelectCoupon(null)
         }}

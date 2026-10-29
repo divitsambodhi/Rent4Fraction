@@ -2,7 +2,6 @@ import { useEffect } from 'react'
 import { Outlet } from 'react-router-dom'
 import { Navbar } from './navbar'
 import { Footer } from './footer'
-import { DevRoleSwitcher } from '@/components/shared/dev-role-switcher'
 import { AppLink, useAppNavigate, useAppPathname, useAppSearchParams } from '@/components/shared/app-link'
 import { useAuth } from '@/providers/auth-provider'
 import { evaluateRoutePolicy } from '@/lib/route-policy'
@@ -36,7 +35,6 @@ export function PublicShell() {
             <Forbidden requiredRoles={['customer']} />
           </main>
           <Footer />
-          <DevRoleSwitcher />
         </div>
       )
     }
@@ -50,7 +48,6 @@ export function PublicShell() {
     return (
       <div className="min-h-dvh bg-background text-foreground antialiased selection:bg-brand selection:text-white relative">
         <Outlet />
-        <DevRoleSwitcher />
       </div>
     )
   }
@@ -77,8 +74,6 @@ export function PublicShell() {
         <main id="main" className="flex-1">
           <Outlet />
         </main>
-
-        <DevRoleSwitcher />
       </div>
     )
   }
@@ -105,7 +100,6 @@ export function PublicShell() {
       <Footer />
 
       {/* Non-intrusive Dev Role Switcher */}
-      <DevRoleSwitcher />
     </div>
   )
 }

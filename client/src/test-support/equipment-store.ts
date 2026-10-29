@@ -5,7 +5,7 @@ import type {
   EquipmentStatus,
   InventoryItem,
 } from '@/types'
-import { CANONICAL_CATEGORIES, CANONICAL_VENDORS } from './canonical-ids'
+import { CANONICAL_CATEGORIES, CANONICAL_VENDORS } from '@/lib/api/canonical-ids'
 import { MOCK_EQUIPMENT } from './mock-data'
 import { loadAccountState } from './account-store'
 import type { BookingDetail, BookingItemDetail } from '@/types/account'

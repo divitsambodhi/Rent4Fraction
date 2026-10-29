@@ -9,6 +9,7 @@ export interface GoogleSignInButtonProps {
   disabled?: boolean
   className?: string
   text?: string
+  initialRole?: 'customer' | 'vendor'
 }
 
 export function GoogleSignInButton({
@@ -16,6 +17,7 @@ export function GoogleSignInButton({
   disabled = false,
   className = '',
   text = 'Continue with Google',
+  initialRole = 'customer',
 }: GoogleSignInButtonProps) {
   const { loginWithGoogle } = useAuth()
   const [loading, setLoading] = useState(false)
@@ -23,7 +25,7 @@ export function GoogleSignInButton({
   const handleGoogleSignIn = async () => {
     try {
       setLoading(true)
-      const res = await loginWithGoogle()
+      const res = await loginWithGoogle(initialRole)
       if ('needsProfile' in res && res.needsProfile) {
         toast.info('Please complete your profile to continue.', {
           description: 'A verified phone number is required for Cash on Delivery orders.',

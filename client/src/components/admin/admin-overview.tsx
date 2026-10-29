@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import {
   Building2,
   ChevronRight,
@@ -15,7 +15,8 @@ import type { BookingSummary } from '@/types/account'
 import type { VendorProfile } from '@/types/vendor'
 import { cn } from '@/lib/utils'
 
-import { getAdminOverviewKPIs } from '@/lib/api/admin-store'
+import { getAdminOverview } from '@/lib/api/admin'
+import type { AdminOverviewStats } from '@/types/admin'
 
 export interface AdminOverviewProps {
   grossBookingValue?: number
@@ -30,28 +31,47 @@ export interface AdminOverviewProps {
 }
 
 export function AdminOverview(props: AdminOverviewProps = {}) {
-  const live = getAdminOverviewKPIs()
-  const grossBookingValue = props.grossBookingValue ?? live.grossBookingValue
-  const bookingsCount = props.bookingsCount ?? live.bookingsCount
-  const activeVendorsCount = props.activeVendorsCount ?? live.activeVendorsCount
-  const pendingApplicationsCount = props.pendingApplicationsCount ?? live.pendingApplicationsCount
-  const openDisputesCount = props.openDisputesCount ?? live.openDisputesCount
-  const recentBookings = props.recentBookings ?? live.recentBookings
-  const recentApplications = props.recentApplications ?? live.recentApplications
+  const [liveData, setLiveData] = useState<AdminOverviewStats | null>(null)
+
+  useEffect(() => {
+    let active = true
+    getAdminOverview().then((res) => {
+      if (active && res) {
+        setLiveData(res)
+      }
+    })
+    return () => {
+      active = false
+    }
+  }, [])
+
+  const grossBookingValue = props.grossBookingValue ?? liveData?.grossBookingValue ?? 0
+  const bookingsCount = props.bookingsCount ?? liveData?.bookingsCount ?? 0
+  const activeVendorsCount = props.activeVendorsCount ?? liveData?.activeVendorsCount ?? 0
+  const pendingApplicationsCount = props.pendingApplicationsCount ?? liveData?.pendingApplicationsCount ?? 0
+  const openDisputesCount = props.openDisputesCount ?? liveData?.openDisputesCount ?? 0
+  const recentBookings = props.recentBookings ?? liveData?.recentBookings ?? []
+  const recentApplications = props.recentApplications ?? liveData?.recentApplications ?? []
   const onNavigateSection = props.onNavigateSection || (() => {})
 
   const [range, setRange] = useState<'7d' | '30d' | '90d' | 'ytd'>('30d')
   const [viewAsTable, setViewAsTable] = useState(false)
 
-  // Chart series (2 series: Bookings count & Booking value)
-  const chartSeries = [
-    { label: 'Week 1', bookings: 12, value: 142000 },
-    { label: 'Week 2', bookings: 18, value: 215000 },
-    { label: 'Week 3', bookings: 15, value: 180000 },
-    { label: 'Week 4', bookings: 24, value: 285000 },
-  ]
+  // Chart series from real API or honest zeroed baseline
+  const chartSeries = liveData?.chartData && liveData.chartData.length > 0
+    ? liveData.chartData.map((d: any) => ({
+        label: d.period || d.label || 'Period',
+        bookings: d.bookings_count ?? d.bookings ?? 0,
+        value: d.total_value ?? d.value ?? 0,
+      }))
+    : [
+        { label: 'Week 1', bookings: 0, value: 0 },
+        { label: 'Week 2', bookings: 0, value: 0 },
+        { label: 'Week 3', bookings: 0, value: 0 },
+        { label: 'Week 4', bookings: 0, value: 0 },
+      ]
 
-  const maxVal = Math.max(...chartSeries.map((s) => s.value))
+  const maxVal = Math.max(1, ...chartSeries.map((s) => s.value))
 
   return (
     <div className="space-y-6">
@@ -93,28 +113,28 @@ export function AdminOverview(props: AdminOverviewProps = {}) {
         <StatTile
           icon={CircleDollarSign}
           label="Gross Booking Value"
-          value={`₹${(grossBookingValue || 842600).toLocaleString('en-IN')}`}
-          delta="+14.2%"
+          value={`₹${(grossBookingValue ?? 0).toLocaleString('en-IN')}`}
+          delta={grossBookingValue > 0 ? "+14.2%" : undefined}
           deltaType="positive"
         />
         <StatTile
           icon={ShoppingBag}
           label="Total Bookings"
-          value={bookingsCount || 64}
-          delta="+8 this week"
+          value={bookingsCount ?? 0}
+          delta={bookingsCount > 0 ? `+${bookingsCount} total` : undefined}
           deltaType="positive"
         />
         <StatTile
           icon={Building2}
           label="Active Vendors"
-          value={activeVendorsCount || 28}
+          value={activeVendorsCount ?? 0}
           subtitle="Operating catalogue"
           onClick={() => onNavigateSection('vendors')}
         />
         <StatTile
           icon={Clock}
           label="Pending Applications"
-          value={pendingApplicationsCount || 2}
+          value={pendingApplicationsCount ?? 0}
           deltaType={pendingApplicationsCount > 0 ? 'negative' : 'neutral'}
           delta={pendingApplicationsCount > 0 ? 'Action needed' : undefined}
           onClick={() => onNavigateSection('vendors')}
@@ -122,7 +142,7 @@ export function AdminOverview(props: AdminOverviewProps = {}) {
         <StatTile
           icon={Scale}
           label="Open Disputes"
-          value={openDisputesCount || 2}
+          value={openDisputesCount ?? 0}
           deltaType={openDisputesCount > 0 ? 'negative' : 'neutral'}
           delta={openDisputesCount > 0 ? 'Review active' : undefined}
           onClick={() => onNavigateSection('disputes')}
@@ -288,24 +308,28 @@ export function AdminOverview(props: AdminOverviewProps = {}) {
           </div>
 
           <div className="divide-y divide-border text-xs">
-            {recentBookings.slice(0, 4).map((b) => (
-              <div key={b.booking_id} className="py-2.5 flex items-center justify-between">
-                <div>
-                  <span className="font-semibold text-foreground">{b.event_name || 'Event Rental'}</span>
-                  <p className="text-[11px] text-muted-foreground">
-                    {b.booking_id} · {b.rental_days} days · {b.delivery_city}
-                  </p>
-                </div>
-                <div className="text-right">
-                  <span className="font-semibold tabular-nums text-foreground">
-                    ₹{b.total_amount.toLocaleString('en-IN')}
-                  </span>
-                  <div className="pt-0.5">
-                    <StatusBadge status={b.status} size="sm" />
+            {recentBookings.length === 0 ? (
+              <p className="text-xs text-muted-foreground py-6 text-center">No recent bookings recorded.</p>
+            ) : (
+              recentBookings.slice(0, 4).map((b) => (
+                <div key={b.booking_id} className="py-2.5 flex items-center justify-between">
+                  <div>
+                    <span className="font-semibold text-foreground">{b.event_name || 'Event Rental'}</span>
+                    <p className="text-[11px] text-muted-foreground">
+                      {b.booking_id} · {b.rental_days} days · {b.delivery_city}
+                    </p>
+                  </div>
+                  <div className="text-right">
+                    <span className="font-semibold tabular-nums text-foreground">
+                      ₹{b.total_amount.toLocaleString('en-IN')}
+                    </span>
+                    <div className="pt-0.5">
+                      <StatusBadge status={b.status} size="sm" />
+                    </div>
                   </div>
                 </div>
-              </div>
-            ))}
+              ))
+            )}
           </div>
         </div>
 
@@ -324,24 +348,28 @@ export function AdminOverview(props: AdminOverviewProps = {}) {
           </div>
 
           <div className="divide-y divide-border text-xs">
-            {recentApplications.slice(0, 4).map((v) => (
-              <div key={v.vendor_id} className="py-2.5 flex items-center justify-between">
-                <div>
-                  <span className="font-semibold text-foreground">{v.business_name}</span>
-                  <p className="text-[11px] text-muted-foreground">
-                    {v.city} · GST: {v.gst || 'Optional / Not provided'}
-                  </p>
-                </div>
-                <div className="text-right space-y-0.5">
-                  <span className="text-[11px] font-medium text-emerald-600">
-                    0% platform fee
-                  </span>
+            {recentApplications.length === 0 ? (
+              <p className="text-xs text-muted-foreground py-6 text-center">No pending vendor applications.</p>
+            ) : (
+              recentApplications.slice(0, 4).map((v) => (
+                <div key={v.vendor_id} className="py-2.5 flex items-center justify-between">
                   <div>
-                    <StatusBadge status={v.approval_status} size="sm" />
+                    <span className="font-semibold text-foreground">{v.business_name}</span>
+                    <p className="text-[11px] text-muted-foreground">
+                      {v.city} · GST: {v.gst || 'Optional / Not provided'}
+                    </p>
+                  </div>
+                  <div className="text-right space-y-0.5">
+                    <span className="text-[11px] font-medium text-emerald-600">
+                      0% platform fee
+                    </span>
+                    <div>
+                      <StatusBadge status={v.approval_status} size="sm" />
+                    </div>
                   </div>
                 </div>
-              </div>
-            ))}
+              ))
+            )}
           </div>
         </div>
       </div>

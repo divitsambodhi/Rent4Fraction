@@ -142,9 +142,6 @@ export function useSignedUpload(defaultOptions: UseSignedUploadOptions = {}) {
         formData.append('timestamp', String(signed.timestamp))
         formData.append('signature', signed.signature)
         formData.append('public_id', signed.public_id)
-        if (signed.folder) {
-          formData.append('folder', signed.folder)
-        }
         formData.append('upload_preset', signed.upload_preset)
         formData.append('type', signed.type)
 

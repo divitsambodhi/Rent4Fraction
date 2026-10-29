@@ -2,7 +2,8 @@ import { useState } from 'react'
 import { CheckCircle2, Mail, Loader2 } from 'lucide-react'
 import { toast } from 'sonner'
 import { useAuth } from '@/providers/auth-provider'
-import { mockAuthService } from '@/lib/auth'
+import { auth } from '@/lib/firebase'
+import { sendEmailVerification } from 'firebase/auth'
 
 export function UserSummaryCard() {
   const { user } = useAuth()
@@ -13,9 +14,11 @@ export function UserSummaryCard() {
     if (cooldown > 0 || sending) return
     setSending(true)
     try {
-      await mockAuthService.sendEmailVerification()
+      if (auth.currentUser) {
+        await sendEmailVerification(auth.currentUser)
+      }
       toast.success('Verification email sent', {
-        description: `Check your inbox at ${user?.email}.`,
+        description: `Check your inbox at ${user?.email || 'your email'}.`,
       })
       setCooldown(60)
       const interval = setInterval(() => {
@@ -34,10 +37,10 @@ export function UserSummaryCard() {
     }
   }
 
-  const displayName = user?.name || 'Aarav Mehta'
-  const displayEmail = user?.email || 'aarav@eventpro.in'
-  const displayInitials = user?.avatarInitials || 'AM'
-  const isVerified = user?.email_verified ?? true
+  const displayName = user?.name || 'Customer'
+  const displayEmail = user?.email || ''
+  const displayInitials = user?.avatarInitials || 'U'
+  const isVerified = Boolean(user?.email_verified)
 
   return (
     <div className="p-3.5 rounded-[12px] bg-muted/30 border border-border/70 flex items-center gap-3">
@@ -46,36 +49,35 @@ export function UserSummaryCard() {
         {displayInitials}
       </div>
 
-      <div className="min-w-0 flex-1">
-        <div className="text-sm font-semibold text-foreground truncate">
-          {displayName}
-        </div>
-        <div className="text-xs text-muted-foreground truncate mb-1">
-          {displayEmail}
-        </div>
-
-        {isVerified ? (
-          <span className="inline-flex items-center gap-1 text-[11px] font-medium text-success bg-success/15 px-2 py-0.5 rounded-full border border-success/30">
-            <CheckCircle2 className="size-3" />
-            <span>Email verified</span>
-          </span>
-        ) : (
-          <button
-            type="button"
-            disabled={sending || cooldown > 0}
-            onClick={handleSendVerification}
-            className="inline-flex items-center gap-1 text-[11px] font-semibold text-brand bg-brand/10 hover:bg-brand/15 px-2 py-0.5 rounded-full border border-brand/20 transition-colors cursor-pointer disabled:opacity-50"
-          >
-            {sending ? (
-              <Loader2 className="size-3 animate-spin" />
-            ) : (
-              <Mail className="size-3" />
-            )}
-            <span>
-              {cooldown > 0 ? `Resend in ${cooldown}s` : 'Verify email'}
+      <div className="flex-1 min-w-0">
+        <div className="flex items-center gap-1.5 flex-wrap">
+          <span className="font-semibold text-foreground text-sm truncate">{displayName}</span>
+          {isVerified ? (
+            <span
+              className="inline-flex items-center gap-1 text-[11px] font-medium text-emerald-700 bg-emerald-50 border border-emerald-200 px-1.5 py-0.5 rounded-[6px]"
+              title="Email address verified"
+            >
+              <CheckCircle2 className="size-3" />
+              Verified
             </span>
-          </button>
-        )}
+          ) : (
+            <button
+              type="button"
+              onClick={handleSendVerification}
+              disabled={sending || cooldown > 0}
+              className="inline-flex items-center gap-1 text-[11px] font-medium text-amber-700 bg-amber-50 hover:bg-amber-100 border border-amber-200 px-2 py-0.5 rounded-[6px] transition-colors cursor-pointer disabled:opacity-60"
+              title="Click to send verification link"
+            >
+              {sending ? (
+                <Loader2 className="size-3 animate-spin" />
+              ) : (
+                <Mail className="size-3" />
+              )}
+              {cooldown > 0 ? `Resend (${cooldown}s)` : 'Verify email'}
+            </button>
+          )}
+        </div>
+        <p className="text-xs text-muted-foreground truncate">{displayEmail}</p>
       </div>
     </div>
   )

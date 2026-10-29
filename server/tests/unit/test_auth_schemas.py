@@ -111,3 +111,24 @@ def test_vendor_requires_business_payload() -> None:
             business=None,
         )
     assert "Business details are required" in str(exc_info.value)
+
+
+@pytest.mark.unit
+def test_extra_fields_forbidden_in_auth_and_profile_schemas() -> None:
+    # Prove that attempting to inject role, status, is_admin, approved raises ValidationError
+    with pytest.raises(ValidationError):
+        UserProfileInput(name="Legit User", is_admin=True)  # type: ignore
+
+    with pytest.raises(ValidationError):
+        UserProfileInput(name="Legit User", role="admin")  # type: ignore
+
+    with pytest.raises(ValidationError):
+        UserProfileInput(name="Legit User", status="approved")  # type: ignore
+
+    with pytest.raises(ValidationError):
+        RegisterRequest(
+            role="customer",
+            profile=UserProfileInput(name="Legit User"),
+            is_admin=True,  # type: ignore
+        )
+

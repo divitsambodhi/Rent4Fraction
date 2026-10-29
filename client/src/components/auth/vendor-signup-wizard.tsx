@@ -11,6 +11,7 @@ import { PasswordStrength } from './password-strength'
 import { MobileNumberInput } from './mobile-number-input'
 import { Stepper, type StepItem } from './stepper'
 import { FormAlert } from './form-alert'
+import { GoogleSignInButton } from './google-sign-in-button'
 import { useAuth } from '@/providers/auth-provider'
 import { mapAuthError } from '@/lib/auth'
 import type { AuthMode, AuthUser } from '@/types/auth'
@@ -212,6 +213,21 @@ export function VendorSignupWizard({
               <p className="text-sm text-muted-foreground">
                 Set up your primary contact credentials for managing your vendor portal.
               </p>
+            </div>
+
+            {/* Google Social Sign-In */}
+            <div className="space-y-3">
+              <GoogleSignInButton
+                text="Sign up with Google"
+                initialRole="vendor"
+                disabled={isSubmitting}
+              />
+              <div className="relative flex items-center justify-center">
+                <div className="border-t border-border w-full" />
+                <span className="bg-card px-2 text-[11px] text-muted-foreground uppercase tracking-wider relative">
+                  or register with email
+                </span>
+              </div>
             </div>
 
             {/* Name */}

@@ -3,7 +3,8 @@ import { PasswordInput } from '@/components/auth/password-input'
 import { PasswordStrength } from '@/components/auth/password-strength'
 import { Button } from '@/components/ui/button'
 import { ReauthDialog } from './reauth-dialog'
-import { mockAuthService, AuthError, mapAuthError } from '@/lib/auth'
+import { auth } from '@/lib/firebase'
+import { updatePassword } from 'firebase/auth'
 import { KeyRound, Loader2, ShieldCheck } from 'lucide-react'
 import { toast } from 'sonner'
 
@@ -15,7 +16,7 @@ export function ChangePasswordCard() {
   const [error, setError] = useState<string | null>(null)
   const [reauthOpen, setReauthOpen] = useState(false)
 
-  const executeChangePassword = async (currPass = currentPassword, newPass = newPassword) => {
+  const executeChangePassword = async (_currPass = currentPassword, newPass = newPassword) => {
     if (newPass !== confirmPassword) {
       setError('New passwords do not match.')
       return
@@ -30,19 +31,15 @@ export function ChangePasswordCard() {
     setError(null)
 
     try {
-      await mockAuthService.changePassword(currPass, newPass)
+      if (!auth.currentUser) throw new Error('Not logged in');
+      await updatePassword(auth.currentUser, newPass);
       toast.success('Password updated successfully')
       setCurrentPassword('')
       setNewPassword('')
       setConfirmPassword('')
     } catch (err: unknown) {
-      if (err instanceof AuthError) {
-        if (err.code === 'auth/requires-recent-login') {
-          // Open ReauthDialog to satisfy sensitive action
-          setReauthOpen(true)
-          return
-        }
-        setError(mapAuthError(err.code))
+      if ((err as { code?: string })?.code === 'auth/requires-recent-login') {
+        setReauthOpen(true);
       } else {
         setError('Failed to update password. Please try again.')
       }

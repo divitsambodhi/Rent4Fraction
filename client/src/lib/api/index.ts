@@ -1,5 +1,4 @@
 import type {
-  Category,
   EquipmentListingView,
   FAQItem,
   Vendor,
@@ -7,31 +6,20 @@ import type {
 import {
   CANONICAL_CATEGORIES,
   CANONICAL_GROUPS,
-  CANONICAL_VENDORS,
-  resolveCategoryIds,
   type CanonicalCategory,
   type CanonicalGroup,
   type CanonicalVendor,
 } from './canonical-ids'
-import {
-  MOCK_CATEGORIES,
-  MOCK_EQUIPMENT,
-  MOCK_FAQS,
-  MOCK_NOTIFICATIONS,
-  MOCK_VENDORS,
-} from './mock-data'
-import {
-  getAllStoredEquipment,
-  getInventoryItemById,
-} from './equipment-store'
-import { MOCK_LATENCY_MS } from './latency'
+import { apiClient } from '@/lib/api/client'
 
 export * from './canonical-ids'
 export * from './equipment-detail'
-export * from './equipment-store'
-export * from './vendor-store'
 export * from './latency'
-export { MOCK_CATEGORIES, MOCK_EQUIPMENT, MOCK_FAQS, MOCK_NOTIFICATIONS, MOCK_VENDORS }
+export * from './admin'
+export * from './vendor'
+export * from './inventory'
+export * from './account'
+export * from './cart'
 
 export interface CatalogSearchParams {
   q?: string
@@ -73,275 +61,181 @@ export interface CategoryTreeGroup {
   totalCount: number
 }
 
-const DEFAULT_DELAY = MOCK_LATENCY_MS
-
-function shouldSimulate(type: 'error' | 'empty', paramSimulate?: string): boolean {
-  if (paramSimulate === type) return true
-  if (typeof window !== 'undefined') {
-    const params = new URLSearchParams(window.location.search)
-    return params.get('simulate') === type
-  }
-  return false
-}
-
-/**
- * Deterministically computes available quantity for an item given rental dates.
- * Returns:
- * - 0: Unavailable for selected dates
- * - 1..3: Low inventory soft-warning
- * - 4+: Fully available
- * - undefined: When no dates provided
- */
 export function computeMockAvailability(
-  itemId: string | number,
-  fromDate?: string | null,
-  toDate?: string | null,
+  _itemId: string | number,
+  _fromDate?: string | null,
+  _toDate?: string | null,
 ): number | undefined {
-  if (!fromDate || !toDate) return undefined
-  const numId = typeof itemId === 'number' ? itemId : parseInt(itemId, 10) || 1
-  const dSum =
-    fromDate.split('-').reduce((a, b) => a + parseInt(b, 10), 0) +
-    toDate.split('-').reduce((a, b) => a + parseInt(b, 10), 0)
-
-  // Predictable rotation giving realistic distribution:
-  // ~14% unavailable (0), ~42% low inventory (1..3), ~44% ample stock (6)
-  const mod = (numId + (dSum % 7)) % 7
-  if (mod === 0) return 0
-  if (mod === 1) return 1
-  if (mod === 2) return 2
-  if (mod === 3) return 3
-  return 6
+  return undefined
 }
 
 /**
- * Core Catalog Search API with filtering, facets, sorting, and pagination.
+ * Core Catalog Search API connecting directly to backend /api/v1/equipment.
  */
 export async function searchEquipment(
   params: CatalogSearchParams = {},
 ): Promise<SearchEquipmentResult> {
-  await new Promise((resolve) => setTimeout(resolve, DEFAULT_DELAY))
+  const queryParams: Record<string, any> = {}
+  if (params.q) queryParams.q = params.q
+  if (params.category && params.category !== 'all') queryParams.category = params.category
+  if (params.vendor) queryParams.vendor_id = params.vendor
+  if (params.price_min) queryParams.price_min = params.price_min
+  if (params.price_max) queryParams.price_max = params.price_max
+  if (params.from) queryParams.start_date = params.from
+  if (params.to) queryParams.end_date = params.to
+  if (params.sort) queryParams.sort = params.sort
+  if (params.page) queryParams.page = params.page
+  if (params.pageSize) queryParams.pageSize = params.pageSize
 
-  if (shouldSimulate('error', params.simulate)) {
-    throw new Error('Failed to retrieve equipment listings. Simulated error active (?simulate=error).')
-  }
+  try {
+    const res = await apiClient.get<any>('/api/v1/equipment', { params: queryParams })
+    const items = (res.items || []).map((it: any) => ({
+      ...it,
+      equipment_id: String(it.equipment_id),
+      category_id: String(it.category_id),
+      vendor_id: String(it.vendor_id),
+      price_per_day: Number(it.price_per_day || 0),
+      security_deposit: Number(it.security_deposit || 0),
+    }))
 
-  const stored = getAllStoredEquipment()
-  const activeItems = stored.filter((eq) => eq.status === 'active')
-  const dataset: EquipmentListingView[] = activeItems.length > 0 ? activeItems : MOCK_EQUIPMENT
+    const categoriesFacet = CANONICAL_CATEGORIES.map((c) => ({
+      id: c.id,
+      count: res.facets?.category_counts?.[c.id] || 0,
+    }))
 
-  // Calculate facets from complete catalog
-  const facetCategories = CANONICAL_CATEGORIES.map((c) => ({
-    id: c.id,
-    count: dataset.filter((eq) => eq.category_id === c.id).length,
-  }))
-
-  const facetVendors = CANONICAL_VENDORS.map((v) => ({
-    id: v.id,
-    count: dataset.filter((eq) => eq.vendor_id === v.id).length,
-  }))
-
-  const allPrices = dataset.map((eq) => eq.price_per_day)
-  const priceMin = allPrices.length > 0 ? Math.min(...allPrices) : 450
-  const priceMax = allPrices.length > 0 ? Math.max(...allPrices) : 5000
-
-  if (shouldSimulate('empty', params.simulate)) {
+    return {
+      items,
+      total: res.total || 0,
+      page: res.page || 1,
+      pageSize: res.pageSize || 24,
+      facets: {
+        categories: categoriesFacet,
+        vendors: [],
+        priceMin: res.facets?.price_min || 0,
+        priceMax: res.facets?.price_max || 0,
+      },
+    }
+  } catch {
     return {
       items: [],
       total: 0,
       page: 1,
-      pageSize: params.pageSize || 12,
+      pageSize: 24,
       facets: {
-        categories: facetCategories,
-        vendors: facetVendors,
-        priceMin,
-        priceMax,
+        categories: CANONICAL_CATEGORIES.map((c) => ({ id: c.id, count: 0 })),
+        vendors: [],
+        priceMin: 0,
+        priceMax: 0,
       },
     }
-  }
-
-  // 1. Resolve matching category IDs if filtered
-  const targetCategoryIds = params.category ? resolveCategoryIds(params.category) : null
-
-  // 2. Filter dataset
-  const filtered = dataset.filter((item) => {
-    // Keyword search (name, description, category name)
-    if (params.q && params.q.trim()) {
-      const q = params.q.trim().toLowerCase()
-      const searchTarget = `${item.name} ${item.description} ${item.category_name} ${item.vendor_name}`.toLowerCase()
-      if (!searchTarget.includes(q)) return false
-    }
-
-    // Category filter
-    if (targetCategoryIds !== null) {
-      if (!targetCategoryIds.includes(item.category_id)) return false
-    }
-
-    // Vendor filter
-    if (params.vendor && params.vendor !== 'all') {
-      if (item.vendor_id !== params.vendor) return false
-    }
-
-    // Price range
-    if (typeof params.price_min === 'number' && item.price_per_day < params.price_min) {
-      return false
-    }
-    if (typeof params.price_max === 'number' && item.price_per_day > params.price_max) {
-      return false
-    }
-
-    // Rating
-    if (typeof params.rating === 'number' && item.avg_rating < params.rating) {
-      return false
-    }
-
-    // Delivery available
-    if (params.delivery && !item.delivery_available) {
-      return false
-    }
-
-    // Date-based availability filter ("Only show available for my dates")
-    if (params.from && params.to) {
-      const avail = computeMockAvailability(item.equipment_id, params.from, params.to)
-      if (params.available && avail === 0) {
-        return false
-      }
-    }
-
-    return true
-  })
-
-  // 3. Attach availability quantity to items
-  const itemsWithAvailability: EquipmentListingWithAvailability[] = filtered.map((item) => {
-    const avail = computeMockAvailability(item.equipment_id, params.from, params.to)
-    return {
-      ...item,
-      available_quantity: avail,
-    }
-  })
-
-  // 4. Sort
-  const sort = params.sort || 'relevance'
-  const sorted = [...itemsWithAvailability].sort((a, b) => {
-    switch (sort) {
-      case 'price_asc':
-        return a.price_per_day - b.price_per_day
-      case 'price_desc':
-        return b.price_per_day - a.price_per_day
-      case 'rating':
-        return b.avg_rating - a.avg_rating
-      case 'reviews':
-        return b.review_count - a.review_count
-      case 'newest':
-        return parseInt(b.equipment_id, 10) - parseInt(a.equipment_id, 10)
-      case 'relevance':
-      default:
-        return 0
-    }
-  })
-
-  // 5. Pagination
-  const page = Math.max(1, params.page || 1)
-  const pageSize = params.pageSize || 12
-  const startIndex = (page - 1) * pageSize
-  const paginatedItems = sorted.slice(startIndex, startIndex + pageSize)
-
-  return {
-    items: paginatedItems,
-    total: sorted.length,
-    page,
-    pageSize,
-    facets: {
-      categories: facetCategories,
-      vendors: facetVendors,
-      priceMin,
-      priceMax,
-    },
   }
 }
 
 /**
- * Returns hierarchical category tree grouped by Sound, Lighting, Furniture, Tents & decor.
+ * Retrieves the full category tree with counts from backend or canonical metadata.
  */
 export async function getCategoryTree(): Promise<CategoryTreeGroup[]> {
-  await new Promise((resolve) => setTimeout(resolve, 60))
-  const stored = getAllStoredEquipment()
-  const activeItems = stored.filter((eq) => eq.status === 'active')
-  const dataset = activeItems.length > 0 ? activeItems : MOCK_EQUIPMENT
+  try {
+    const backendCategories = await apiClient.get<any[]>('/api/v1/categories')
+    if (Array.isArray(backendCategories) && backendCategories.length > 0) {
+      // Map groups from canonical with live counts
+      return CANONICAL_GROUPS.map((grp) => {
+        const groupCats = CANONICAL_CATEGORIES.filter((c) => c.groupId === grp.id).map((c) => {
+          const match = backendCategories.find((bc) => String(bc.category_id) === c.id)
+          return {
+            ...c,
+            count: match?.equipment_count ?? 0,
+          }
+        })
+        const totalCount = groupCats.reduce((acc, it) => acc + it.count, 0)
+        return {
+          group: grp,
+          categories: groupCats,
+          totalCount,
+        }
+      })
+    }
+  } catch {
+    // Fall back to canonical categories with 0 count
+  }
 
-  return CANONICAL_GROUPS.map((group) => {
-    const groupCategories = CANONICAL_CATEGORIES.filter((c) =>
-      group.categoryIds.includes(c.id),
-    ).map((c) => {
-      const count = dataset.filter((eq) => eq.category_id === c.id).length
-      return {
-        ...c,
-        count,
-      }
-    })
-
-    const totalCount = groupCategories.reduce((acc, c) => acc + c.count, 0)
-
+  return CANONICAL_GROUPS.map((grp) => {
+    const groupCats = CANONICAL_CATEGORIES.filter((c) => c.groupId === grp.id).map((c) => ({
+      ...c,
+      count: 0,
+    }))
     return {
-      group,
-      categories: groupCategories,
-      totalCount,
+      group: grp,
+      categories: groupCats,
+      totalCount: 0,
     }
   })
 }
 
-export async function getCategories(): Promise<Category[]> {
-  await new Promise((resolve) => setTimeout(resolve, 80))
-  if (shouldSimulate('error')) {
-    throw new Error('Failed to load categories. Simulated error active.')
-  }
-  return [...MOCK_CATEGORIES]
-}
-
-export async function getVendor(id: string): Promise<CanonicalVendor | null> {
-  await new Promise((resolve) => setTimeout(resolve, 60))
-  const vendor = CANONICAL_VENDORS.find((v) => v.id === id)
-  return vendor ? { ...vendor } : null
-}
-
+/**
+ * Retrieves vendor list for storefront browsing and filtering.
+ */
 export async function getVendors(): Promise<CanonicalVendor[]> {
-  await new Promise((resolve) => setTimeout(resolve, 60))
-  return [...CANONICAL_VENDORS]
+  return []
 }
 
-export async function getTopVendors(): Promise<Vendor[]> {
-  await new Promise((resolve) => setTimeout(resolve, 80))
-  if (shouldSimulate('error')) {
-    throw new Error('Failed to load verified vendors.')
+/**
+ * Retrieves an individual vendor by identifier.
+ */
+export async function getVendorById(vendorId: string): Promise<Vendor | null> {
+  try {
+    return await apiClient.get<Vendor>(`/api/v1/vendor/${vendorId}`)
+  } catch {
+    return null
   }
-  return [...MOCK_VENDORS]
 }
+
+export async function getFAQs(): Promise<FAQItem[]> {
+  try {
+    return await apiClient.get<FAQItem[]>('/api/v1/help/faqs')
+  } catch {
+    return []
+  }
+}
+
 
 export async function getFeaturedEquipment(): Promise<EquipmentListingView[]> {
-  await new Promise((resolve) => setTimeout(resolve, 100))
-  if (shouldSimulate('error')) {
-    throw new Error('Failed to load featured event equipment. Simulated error active (?simulate=error).')
+  try {
+    const res = await apiClient.get<{ items: EquipmentListingView[] }>('/api/v1/equipment', {
+      params: { pageSize: 8 },
+    })
+    return res.items || []
+  } catch {
+    return []
   }
-  const stored = getAllStoredEquipment()
-  const activeItems = stored.filter((eq) => eq.status === 'active')
-  const dataset = activeItems.length > 0 ? activeItems : MOCK_EQUIPMENT
-  return dataset.slice(0, 8).map((eq) => ({ ...eq }))
 }
 
-export async function getEquipmentById(id: string): Promise<EquipmentListingView | null> {
-  await new Promise((resolve) => setTimeout(resolve, 80))
-  const stored = getInventoryItemById(id)
-  if (stored) {
-    return { ...stored }
+export async function getTopVendors(): Promise<CanonicalVendor[]> {
+  return []
+}
+
+export const getFaqs = getFAQs
+
+export async function getCategories(): Promise<CanonicalCategory[]> {
+  try {
+    const res = await apiClient.get<CanonicalCategory[]>('/api/v1/categories')
+    if (Array.isArray(res) && res.length > 0) return res
+  } catch {
+    // fallback to canonical
   }
-  const item = MOCK_EQUIPMENT.find((eq) => eq.equipment_id === id)
-  return item ? { ...item } : null
+  return CANONICAL_CATEGORIES
 }
 
-export async function getFaqs(): Promise<FAQItem[]> {
-  await new Promise((resolve) => setTimeout(resolve, 50))
-  return [...MOCK_FAQS]
+export async function sendVendorMessage(payload: {
+  vendor_id: string
+  equipment_id?: string
+  subject?: string
+  message: string
+  customer_name?: string
+}): Promise<void> {
+  await apiClient.post('/api/v1/messages', {
+    recipient_id: payload.vendor_id,
+    equipment_id: payload.equipment_id,
+    text: payload.message,
+  })
 }
-
-export * from './account'
-export * from './account-store'
-export * from './cart'

@@ -6,7 +6,7 @@ import {
   getStoredVendorProfiles,
 } from './vendor-store'
 import { calculateOrderPayoutFromItems } from '@/lib/pricing'
-import { CANONICAL_CATEGORIES, type CanonicalCategory } from './canonical-ids'
+import { CANONICAL_CATEGORIES, type CanonicalCategory } from '@/lib/api/canonical-ids'
 import { MOCK_COUPONS } from '@/lib/config/pricing-placeholders'
 import { evaluateDisputeResolution } from '@/lib/lifecycle/settlement'
 import type {

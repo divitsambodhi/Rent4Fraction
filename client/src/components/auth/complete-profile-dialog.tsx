@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import {
   Dialog,
   DialogContent,
@@ -17,12 +17,21 @@ export function CompleteProfileDialog() {
   const { needsProfileUser, setNeedsProfileUser, completeRegistration } = useAuth()
   const [name, setName] = useState(needsProfileUser?.name || '')
   const [phone, setPhone] = useState('')
-  const [role, setRole] = useState<'customer' | 'vendor'>('customer')
+  const [role, setRole] = useState<'customer' | 'vendor'>(needsProfileUser?.initialRole || 'customer')
   const [businessName, setBusinessName] = useState('')
   const [city, setCity] = useState('')
   const [address, setAddress] = useState('')
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
+
+  useEffect(() => {
+    if (needsProfileUser) {
+      setName(needsProfileUser.name || '')
+      if (needsProfileUser.initialRole) {
+        setRole(needsProfileUser.initialRole)
+      }
+    }
+  }, [needsProfileUser])
 
   if (!needsProfileUser) return null
 
@@ -60,10 +69,6 @@ export function CompleteProfileDialog() {
         business:
           role === 'vendor'
             ? {
-                name: name.trim(),
-                email: needsProfileUser.email,
-                phone: phone.trim(),
-                password: '',
                 business_name: businessName.trim(),
                 business_address: address.trim(),
                 city: city.trim(),
@@ -241,4 +246,3 @@ export function CompleteProfileDialog() {
     </Dialog>
   )
 }
-

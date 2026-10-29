@@ -1754,8 +1754,9 @@ class VendorService:
             v.address = payload.address.strip()
         if payload.phone is not None:
             v.phone = payload.phone.strip()
-        if payload.gst_number is not None:
-            v.gst_number = payload.gst_number.strip().upper()
+        gst_in = payload.gst_number or payload.gst
+        if gst_in is not None:
+            v.gst_number = gst_in.strip().upper()
         if payload.delivery_fee is not None:
             v.delivery_fee = quantize_money(payload.delivery_fee)
 
@@ -1768,6 +1769,8 @@ class VendorService:
             pending = self.db.query(PendingUpload).filter(PendingUpload.public_id == payload.logo_public_id).first()
             if pending:
                 pending.status = "attached"
+        elif payload.logo_url is not None or payload.logo is not None:
+            v.logo_url = (payload.logo_url or payload.logo).strip()
         elif payload.logo_storage_path is not None:
             storage = get_storage_client()
             verify_storage_path_for_entity(

@@ -10,22 +10,12 @@ import type {
 } from '@/types/checkout'
 import type {
   AddressSnapshot,
-  BookingDetail,
-  BookingItemDetail,
   BookingPaymentStatus,
   BookingStatus,
-  VendorOrder,
-  AppNotification,
 } from '@/types/account'
-import { rentalDays, lineTotal, quote, resolveCommission, calculateItemCommission } from '@/lib/pricing'
+import { rentalDays, quote } from '@/lib/pricing'
 import { MOCK_COUPONS } from '@/lib/config/pricing-placeholders'
 import { computeMockAvailability } from './index'
-import { MOCK_EQUIPMENT } from './mock-data'
-import { loadAccountState, saveAccountState } from './account-store'
-import { getAllStoredEquipment } from './equipment-store'
-import { getAdminCategories } from './admin-store'
-import { getVendorProfile } from './vendor-store'
-import { env } from '@/lib/config/env'
 import { apiClient } from '@/lib/api/client'
 
 export const CART_STORAGE_KEY = 'r4f-cart-items-v1'
@@ -34,84 +24,7 @@ export const CART_STORAGE_KEY = 'r4f-cart-items-v1'
  * Demo items: 3 items from 2 vendors on Nov 12-14, 1 item on Nov 20-22 (pickup only)
  */
 export function getDemoCartLines(): CartLine[] {
-  return [
-    {
-      cart_item_id: 'demo_line_1_2026-11-12_2026-11-14',
-      equipment_id: '1',
-      name: 'Pro Line-Array Speaker Pair',
-      category: 'Speakers',
-      category_id: '1',
-      vendor_id: '1',
-      vendor_name: 'Sargam Sound Systems',
-      price_per_day: 2500,
-      security_deposit: 10000,
-      quantity: 2,
-      start_date: '2026-11-12',
-      end_date: '2026-11-14',
-      days: 3,
-      primary_image_url: '/images/equipment/line-array-speaker.svg',
-      delivery_available: true,
-      min_rental_days: 1,
-      max_available_quantity: 6,
-    },
-    {
-      cart_item_id: 'demo_line_7_2026-11-12_2026-11-14',
-      equipment_id: '7',
-      name: 'Moving Head Light (Pair)',
-      category: 'Stage lights',
-      category_id: '4',
-      vendor_id: '2',
-      vendor_name: 'Lumina Lighting Co.',
-      price_per_day: 2800,
-      security_deposit: 7000,
-      quantity: 1,
-      start_date: '2026-11-12',
-      end_date: '2026-11-14',
-      days: 3,
-      primary_image_url: '/images/equipment/stage-lights.svg',
-      delivery_available: true,
-      min_rental_days: 1,
-      max_available_quantity: 6,
-    },
-    {
-      cart_item_id: 'demo_line_9_2026-11-12_2026-11-14',
-      equipment_id: '9',
-      name: 'Warm White Fairy Light Curtain',
-      category: 'Fairy lights',
-      category_id: '5',
-      vendor_id: '2',
-      vendor_name: 'Lumina Lighting Co.',
-      price_per_day: 600,
-      security_deposit: 2000,
-      quantity: 2,
-      start_date: '2026-11-12',
-      end_date: '2026-11-14',
-      days: 3,
-      primary_image_url: '/images/equipment/fairy-lights.svg',
-      delivery_available: true,
-      min_rental_days: 1,
-      max_available_quantity: 6,
-    },
-    {
-      cart_item_id: 'demo_line_10_2026-11-20_2026-11-22',
-      equipment_id: '10',
-      name: 'Banquet Chair (Set of 50)',
-      category: 'Chairs',
-      category_id: '6',
-      vendor_id: '3',
-      vendor_name: 'RoyalSeat Furniture',
-      price_per_day: 1500,
-      security_deposit: 5000,
-      quantity: 1,
-      start_date: '2026-11-20',
-      end_date: '2026-11-22',
-      days: 3,
-      primary_image_url: '/images/equipment/banquet-chairs.svg',
-      delivery_available: false, // Pickup only to test fulfilment disabled state
-      min_rental_days: 1,
-      max_available_quantity: 6,
-    },
-  ]
+  return []
 }
 
 /**
@@ -123,25 +36,23 @@ function normalizeCartLine(raw: Partial<CartLine>): CartLine {
   const days = raw.days || rentalDays(start_date, end_date)
   const equipment_id = String(raw.equipment_id || '1')
 
-  const mock = MOCK_EQUIPMENT.find((e) => String(e.equipment_id) === equipment_id)
-
   return {
     cart_item_id: raw.cart_item_id || `${equipment_id}_${start_date}_${end_date}`,
     equipment_id,
-    name: raw.name || mock?.name || 'Equipment Item',
-    category: raw.category || mock?.category_name || 'Equipment',
-    category_id: raw.category_id || mock?.category_id || '1',
-    vendor_id: raw.vendor_id || mock?.vendor_id || '1',
-    vendor_name: raw.vendor_name || mock?.vendor_name || 'Vendor Partner',
-    price_per_day: raw.price_per_day ?? mock?.price_per_day ?? 1000,
-    security_deposit: raw.security_deposit ?? mock?.security_deposit ?? 2000,
+    name: raw.name || 'Equipment Item',
+    category: raw.category || 'Equipment',
+    category_id: raw.category_id || '1',
+    vendor_id: raw.vendor_id || '1',
+    vendor_name: raw.vendor_name || 'Vendor Partner',
+    price_per_day: raw.price_per_day ?? 0,
+    security_deposit: raw.security_deposit ?? 0,
     quantity: Math.max(1, raw.quantity || 1),
     start_date,
     end_date,
     days,
-    primary_image_url: raw.primary_image_url || mock?.primary_image_url || '/images/equipment/line-array-speaker.svg',
-    delivery_available: raw.delivery_available ?? mock?.delivery_available ?? true,
-    min_rental_days: raw.min_rental_days ?? mock?.min_rental_days ?? 1,
+    primary_image_url: raw.primary_image_url || '',
+    delivery_available: raw.delivery_available ?? true,
+    min_rental_days: raw.min_rental_days ?? 1,
     max_available_quantity: raw.max_available_quantity ?? 6,
   }
 }
@@ -214,13 +125,9 @@ export async function moveCartLineToWishlist(cart_item_id: string): Promise<Cart
   const { updatedLines, removed } = removeCartLine(cart_item_id)
   if (removed) {
     try {
-      const state = loadAccountState()
-      if (!state.wishlistIds.includes(removed.equipment_id)) {
-        state.wishlistIds.push(removed.equipment_id)
-        saveAccountState(state)
-      }
+      await apiClient.post('/api/v1/wishlist', { equipment_id: removed.equipment_id })
     } catch (err) {
-      console.warn('Could not sync to wishlist store', err)
+      console.warn('Could not sync to wishlist endpoint', err)
     }
   }
   return updatedLines
@@ -411,338 +318,65 @@ export interface PlaceOrderInput {
  * items, payments, snapshots and notifications, and clears the ordered period lines from cart.
  */
 export async function placeOrder(input: PlaceOrderInput): Promise<PlaceOrderResult> {
-  // 1. Concurrency stand-in: re-check availability for all lines
-  const availMap = checkCartAvailability(input.lines)
-  const unavailableLines: { equipment_id: string; name: string; reason: string }[] = []
-
-  input.lines.forEach((l) => {
-    const r = availMap[l.cart_item_id]
-    if (r && r.is_blocked) {
-      unavailableLines.push({
-        equipment_id: l.equipment_id,
-        name: l.name,
-        reason: r.message || 'Item is not available in requested quantity for selected dates.',
-      })
-    }
-  })
-
-  if (unavailableLines.length > 0) {
-    return {
-      success: false,
-      booking_id: '',
-      total: 0,
-      status: 'cancelled',
-      payment_status: 'unpaid',
-      error_message: 'Some items became unavailable while completing your order.',
-      unavailable_lines: unavailableLines,
-    }
-  }
-
-  // Real API Mode Integration (skip when executing Vitest unit tests in node/jsdom)
-  const isTestEnv =
-    import.meta.env.MODE === 'test' ||
-    (typeof process !== 'undefined' && (Boolean(process.env.VITEST) || process.env.NODE_ENV === 'test'))
-  if (env.API_MODE === 'real' && !isTestEnv) {
-    // Sync cart lines to backend cart table
-    for (const line of input.lines) {
-      try {
-        await apiClient.post('/api/v1/cart/items', {
-          equipment_id: parseInt(line.equipment_id, 10),
-          quantity: line.quantity,
-          start_date: input.period.start_date,
-          end_date: input.period.end_date,
-        })
-      } catch {
-        // Line may already be present in cart
-      }
-    }
-
-    const rawId = (input.address as { id?: string | number }).id ?? '1'
-    const numericAddressId = parseInt(
-      String(rawId).replace(/\D/g, '') || '1',
-      10
-    )
-
-    const payload = {
-      period: {
+  // Sync cart lines to backend cart table
+  for (const line of input.lines) {
+    try {
+      await apiClient.post('/api/v1/cart/items', {
+        equipment_id: parseInt(line.equipment_id, 10),
+        quantity: line.quantity,
         start_date: input.period.start_date,
         end_date: input.period.end_date,
-      },
-      address_id: numericAddressId,
-      fulfilment: input.fulfilmentByVendor,
-      event: {
-        event_name: input.eventDetails.event_name,
-        event_type: input.eventDetails.event_type || 'Wedding',
-        event_date: input.eventDetails.event_date || input.period.start_date,
-        venue_address: input.eventDetails.venue_address || input.address.line1,
-        notes: input.eventDetails.notes,
-      },
-      coupon_code: input.coupon?.code || undefined,
-      payment_method: 'cod',
-    }
-
-    const res = await apiClient.post<{
-      booking_id: number
-      booking_number?: string
-      status: string
-      payment_status: string
-      total_amount: number
-    }>('/api/v1/checkout/orders', payload, {
-      idempotencyKey: `idem_order_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`,
-    })
-
-    return {
-      success: true,
-      booking_id: res.booking_number || `BK-${res.booking_id}`,
-      total: res.total_amount,
-      status: res.status as BookingStatus,
-      payment_status: res.payment_status as BookingPaymentStatus,
-    }
-  }
-
-  // 2. Compute final server-side quote (Mock Mode Fallback)
-  const finalQuote = getQuote(input.lines, input.coupon, input.fulfilmentByVendor)
-  const isSuccess = input.simulateSuccess !== false
-
-  // 3. Load account store
-  const state = loadAccountState()
-
-  // Compute next BK number
-  let maxNum = 1050
-  state.bookings.forEach((b) => {
-    const m = b.booking_id.match(/BK-(\d+)/)
-    if (m && m[1]) {
-      const n = parseInt(m[1], 10)
-      if (n > maxNum) maxNum = n
-    }
-  })
-  const nextNum = maxNum + 1
-  const bookingId = `BK-${nextNum}`
-
-  const nowIso = new Date().toISOString()
-
-  // Group items by vendor
-  const vendorMap = new Map<string, CartLine[]>()
-  input.lines.forEach((l) => {
-    const arr = vendorMap.get(l.vendor_id) || []
-    arr.push(l)
-    vendorMap.set(l.vendor_id, arr)
-  })
-
-  const vendorOrderList: VendorOrder[] = []
-  const bookingItemList: BookingItemDetail[] = []
-  let globalItemIdx = 1
-
-  let vIdx = 1
-  vendorMap.forEach((vLines, vId) => {
-    const vOrderNum = `VO-${nextNum}-${vIdx}`
-    const vName = vLines[0].vendor_name
-    const initials = vName
-      .split(' ')
-      .map((w) => w[0])
-      .join('')
-      .slice(0, 2)
-      .toUpperCase()
-
-    const vItemIds: string[] = []
-    let vSubtotal = 0
-
-    const allEq = getAllStoredEquipment()
-    const categories = getAdminCategories()
-    const vendorProf = getVendorProfile(vId)
-
-    vLines.forEach((l) => {
-      const bItemId = `BI-${nextNum}-${globalItemIdx}`
-      vItemIds.push(bItemId)
-      const lineT = lineTotal(l)
-      vSubtotal += lineT
-
-      const eq = allEq.find((e) => e.equipment_id === l.equipment_id)
-      const cat = categories.find((c) => c.id === l.category_id || c.name === l.category)
-      const { rate } = resolveCommission(eq, cat, vendorProf)
-      const { commission_amount } = calculateItemCommission(lineT, rate)
-
-      bookingItemList.push({
-        item_id: bItemId,
-        equipment_id: l.equipment_id,
-        name: l.name,
-        image_url: l.primary_image_url,
-        unit_price: l.price_per_day,
-        quantity: l.quantity,
-        days: l.days,
-        total_price: lineT,
-        status: 'pending',
-        vendor_id: vId,
-        vendor_name: vName,
-        review: null,
-        damage_report: null,
-        commission_rate: rate,
-        commission_amount,
       })
-
-      globalItemIdx++
-    })
-
-    const fulType = input.fulfilmentByVendor[vId] || 'delivery'
-
-    vendorOrderList.push({
-      vendor_order_id: vOrderNum,
-      vendor_id: vId,
-      vendor_name: vName,
-      vendor_initials: initials,
-      status: 'pending',
-      subtotal: vSubtotal,
-      item_ids: vItemIds,
-      fulfilment_type: fulType,
-      delivery: null, // Null indicates awaiting arrangement by vendor
-      return: null,
-    })
-
-    vIdx++
-  })
-
-  const paymentStatus = isSuccess
-    ? input.paymentMethod === 'cod'
-      ? 'unpaid'
-      : 'paid'
-    : 'unpaid'
-
-  const actionNeeded: string[] = []
-  if (!isSuccess) {
-    actionNeeded.push('Payment due')
-  } else if (input.paymentMethod === 'cod') {
-    actionNeeded.push('Payment on delivery')
-  }
-
-  const newBooking: BookingDetail = {
-    booking_id: bookingId,
-    event_name: input.eventDetails.event_name || `${input.eventDetails.event_type} Celebration`,
-    event_type: input.eventDetails.event_type,
-    status: 'pending',
-    payment_status: paymentStatus,
-    start_date: input.period.start_date,
-    end_date: input.period.end_date,
-    rental_days: input.period.days,
-    delivery_city: input.address.city,
-    vendor_count: vendorOrderList.length,
-    item_count: input.lines.reduce((s, l) => s + l.quantity, 0),
-    vendor_avatars: vendorOrderList.map((v) => ({
-      id: v.vendor_id,
-      name: v.vendor_name,
-      initials: v.vendor_initials,
-    })),
-    total_amount: finalQuote.total,
-    action_needed: actionNeeded,
-    created_at: nowIso,
-    delivery_address: { ...input.address },
-    price_summary: {
-      subtotal: finalQuote.subtotal,
-      discount: finalQuote.discount,
-      coupon_code: finalQuote.applied_coupon?.code,
-      tax: finalQuote.tax,
-      delivery_fee: finalQuote.delivery_fee,
-      security_deposit: finalQuote.security_deposit,
-      total: finalQuote.total,
-    },
-    deposit: {
-      held: finalQuote.security_deposit,
-      deducted: 0,
-      refunded: 0,
-      pending_refund: finalQuote.security_deposit,
-    },
-    payments: [
-      {
-        payment_id: `PAY-${nextNum}-1`,
-        booking_id: bookingId,
-        amount: finalQuote.total,
-        type: 'full',
-        method: input.paymentMethod,
-        status: isSuccess
-          ? input.paymentMethod === 'cod'
-            ? 'pending'
-            : 'success'
-          : 'failed',
-        reference: isSuccess ? `TXN_${Date.now()}` : `ATTEMPT_${Date.now()}`,
-        created_at: nowIso,
-      },
-    ],
-    vendor_orders: vendorOrderList,
-    items: bookingItemList,
-    activity: [
-      {
-        id: `ACT-${nextNum}-1`,
-        title: isSuccess ? 'Booking Placed' : 'Payment Failed',
-        description: isSuccess
-          ? 'Waiting for vendors to confirm availability.'
-          : 'Payment didn’t go through. Saved as pending booking.',
-        timestamp: nowIso,
-        type: 'order',
-      },
-    ],
-  }
-
-  // Prepend new booking so it appears first in the Hub
-  state.bookings.unshift(newBooking)
-
-  // Append notification
-  const notif: AppNotification = {
-    id: `NOTIF-${Date.now()}`,
-    type: isSuccess ? 'booking_confirmed' : 'payment_received',
-    title: isSuccess ? `Booking ${bookingId} placed` : `Payment failed for ${bookingId}`,
-    message: isSuccess
-      ? `Your rental booking for ₹${finalQuote.total.toLocaleString('en-IN')} has been placed successfully.`
-      : `Payment didn’t go through. Your booking is saved and waiting for payment.`,
-    target: {
-      tab: 'bookings',
-      booking_id: bookingId,
-    },
-    read: false,
-    created_at: nowIso,
-  }
-  state.notifications.unshift(notif)
-
-  // Append vendor notification for each vendor order
-  if (isSuccess) {
-    vendorOrderList.forEach((vo) => {
-      const vendorNotif: AppNotification = {
-        id: `NOTIF-VO-${vo.vendor_order_id}-${Date.now()}`,
-        type: 'new_order',
-        title: `New order ${vo.vendor_order_id}`,
-        message: `Booking ${bookingId} placed by customer. Action required to confirm.`,
-        target: {
-          tab: 'orders',
-          booking_id: bookingId,
-        },
-        read: false,
-        created_at: nowIso,
-      }
-      state.notifications.unshift(vendorNotif)
-    })
-  }
-
-  // If coupon used and success, increment its used count
-  if (isSuccess && input.coupon) {
-    const target = MOCK_COUPONS[input.coupon.code]
-    if (target) {
-      target.used_count++
+    } catch {
+      // Line may already be present in cart
     }
   }
 
-  // Save updated store
-  saveAccountState(state)
-
-  // Remove lines of this period from the cart, keeping all lines of other periods!
-  const currentCart = getCart()
-  const remainingCart = currentCart.filter(
-    (l) => !(l.start_date === input.period.start_date && l.end_date === input.period.end_date),
+  const rawId = (input.address as { id?: string | number }).id ?? '1'
+  const numericAddressId = parseInt(
+    String(rawId).replace(/\D/g, '') || '1',
+    10
   )
-  saveCart(remainingCart)
+
+  const payload = {
+    period: {
+      start_date: input.period.start_date,
+      end_date: input.period.end_date,
+    },
+    address_id: numericAddressId,
+    fulfilment: input.fulfilmentByVendor,
+    event: {
+      event_name: input.eventDetails.event_name,
+      event_type: input.eventDetails.event_type || 'Wedding',
+      event_date: input.eventDetails.event_date || input.period.start_date,
+      venue_address: input.eventDetails.venue_address || input.address.line1,
+      notes: input.eventDetails.notes,
+    },
+    coupon_code: input.coupon?.code || undefined,
+    payment_method: 'cod',
+  }
+
+  const res = await apiClient.post<{
+    booking_id: number
+    booking_number?: string
+    status: string
+    payment_status: string
+    total_amount: number
+  }>('/api/v1/checkout/orders', payload, {
+    idempotencyKey: `idem_order_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`,
+  })
+
+  // Remove lines of this period from local storage cart
+  const remainingLines = getCart().filter(
+    (l) => !(l.start_date === input.period.start_date && l.end_date === input.period.end_date)
+  )
+  saveCart(remainingLines)
 
   return {
-    success: isSuccess,
-    booking_id: bookingId,
-    total: finalQuote.total,
-    status: 'pending',
-    payment_status: paymentStatus,
+    success: true,
+    booking_id: res.booking_number || `BK-${res.booking_id}`,
+    total: res.total_amount,
+    status: res.status as BookingStatus,
+    payment_status: res.payment_status as BookingPaymentStatus,
   }
 }

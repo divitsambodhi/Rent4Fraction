@@ -9,9 +9,8 @@ import { ReturnsTable, type VendorReturnRowData } from '@/components/vendor/orde
 import { OrderSheet } from '@/components/vendor/orders/order-sheet'
 import { InspectionDialog } from '@/components/vendor/orders/inspection-dialog'
 import { applyAction, type InspectionPayload, type LifecycleAction } from '@/lib/lifecycle'
-import { loadAccountState, saveAccountState } from '@/lib/api/account-store'
-import { getVendorProfile } from '@/lib/api/vendor-store'
-import { getAllStoredEquipment } from '@/lib/api/equipment-store'
+import { loadAccountState, saveAccountState } from '@/lib/api/account'
+import { getAllStoredEquipment } from '@/lib/api/inventory'
 import { toast } from 'sonner'
 import type { BookingDetail, VendorOrder } from '@/types/account'
 import { cn } from '@/lib/utils'
@@ -56,18 +55,22 @@ export function VendorOrdersPage() {
     return map
   }, [])
 
-  // Vendor profile
-  const profile = useMemo(() => getVendorProfile(vendorId), [vendorId])
+  // Vendor profile defaults
+  const profile = useMemo(() => ({
+    commission_rate: 0.15,
+    business_name: user?.vendor?.business_name || 'My Storefront',
+  }), [user])
 
   // All vendor orders across bookings
   const allVendorOrders = useMemo(() => {
     const rows: VendorOrderRowData[] = []
-    accountState.bookings.forEach((booking) => {
-      booking.vendor_orders.forEach((vo) => {
-        if (vo.vendor_id === vendorId || vo.vendor_id === '1' || vo.vendor_id === 'v_sargam') {
-          const itemNames = booking.items
-            .filter((it) => vo.item_ids.includes(it.item_id))
-            .map((it) => `${it.name} ×${it.quantity}`)
+    const bookingsList = Array.isArray(accountState.bookings) ? accountState.bookings : []
+    bookingsList.forEach((booking: any) => {
+      (booking.vendor_orders || []).forEach((vo: any) => {
+        if (vo.vendor_id === vendorId) {
+          const itemNames = (booking.items || [])
+            .filter((it: any) => (vo.item_ids || []).includes(it.item_id))
+            .map((it: any) => `${it.name} ×${it.quantity}`)
             .join(', ')
 
           let nextLabel = ''
@@ -238,12 +241,12 @@ export function VendorOrdersPage() {
     }
 
     // Persist to store
-    const state = loadAccountState()
+    const state = loadAccountState() as { bookings: BookingDetail[] }
     const bIndex = state.bookings.findIndex((b) => b.booking_id === res.booking.booking_id)
     if (bIndex !== -1) {
       state.bookings[bIndex] = res.booking
       saveAccountState(state)
-      setAccountState(state)
+      setAccountState(state as any)
     }
 
     toast.success(`Order ${currentOrder.vendor_order_id} updated successfully.`)

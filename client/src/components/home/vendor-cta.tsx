@@ -9,7 +9,8 @@ import { useAuth } from '@/providers/auth-provider'
 export function VendorCTA() {
   const { role } = useAuth()
 
-  if (role === 'vendor' || role === 'admin') {
+  // Only unauthenticated visitors can see vendor onboarding CTA
+  if (role !== 'visitor') {
     return null
   }
 
