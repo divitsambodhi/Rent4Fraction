@@ -62,8 +62,6 @@ def finalize_payment_success(
     now = utc_now()
     payment.status = PaymentStatus.success
     payment.transaction_id = gateway_pay.get("id") or payment.transaction_id
-    payment.gateway_payment_id = gateway_pay.get("id") or payment.gateway_payment_id
-    payment.payment_method = gateway_pay.get("method") or payment.payment_method or "razorpay"
     payment.captured_at = now
     payment.payment_date = now
 
@@ -121,7 +119,7 @@ def finalize_payment_success(
                 booking_id=booking.booking_id,
                 actor_role="system",
                 event_type="payment_success",
-                note=f"Payment captured: ₹{payment.amount} via {payment.payment_method}",
+                note=f"Payment captured: ₹{payment.amount} via {payment.method}",
             )
         )
         logger.info(
@@ -220,17 +218,14 @@ def finalize_payment_success(
             refund_tx_id = refund_res.get("id")
             refund_row = Payment(
                 booking_id=booking.booking_id,
-                user_id=booking.user_id,
                 amount=payment.amount,
                 currency="INR",
                 type=PaymentType.refund,
                 status=PaymentStatus.success,
                 transaction_id=refund_tx_id,
                 gateway_order_id=None,
-                gateway_payment_id=payment.transaction_id,
                 gateway_refund_id=refund_tx_id,
-                refund_of_id=payment.payment_id,
-                payment_method=payment.payment_method,
+                refund_of_payment_id=payment.payment_id,
                 payment_date=now,
                 captured_at=now,
             )
@@ -383,8 +378,7 @@ class PaymentService:
                 "status": latest_payment.status.value,
                 "amount": float(latest_payment.amount),
                 "gateway_order_id": latest_payment.gateway_order_id,
-                "gateway_payment_id": latest_payment.gateway_payment_id
-                or latest_payment.transaction_id,
+                "gateway_payment_id": latest_payment.transaction_id,
                 "failure_reason": latest_payment.failure_reason,
             }
 
@@ -458,7 +452,6 @@ class PaymentService:
         # Create new Payment row
         new_payment = Payment(
             booking_id=booking.booking_id,
-            user_id=user_id,
             amount=booking.total_amount,
             currency="INR",
             type=PaymentType.full,

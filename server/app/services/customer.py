@@ -207,6 +207,7 @@ class CustomerService:
         quantity: int,
         start_date: date,
         end_date: date,
+        override_quantity: bool = False,
     ) -> dict[str, Any]:
         today = date.today()
         if start_date < today:
@@ -241,6 +242,7 @@ class CustomerService:
             quantity=quantity,
             start_date=start_date,
             end_date=end_date,
+            override_quantity=override_quantity,
         )
         self.db.commit()
         return self.get_cart(user)

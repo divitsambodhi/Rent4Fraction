@@ -15,8 +15,8 @@ from app.core.money import (
 )
 
 # Standard mock constants mirroring client/src/lib/config/pricing-placeholders.ts
-MOCK_TAX_RATE_PERCENT = Decimal("18.00")
-MOCK_DELIVERY_FEE_PER_VENDOR = Decimal("300.00")
+MOCK_TAX_RATE_PERCENT = Decimal("0.00")
+MOCK_DELIVERY_FEE_PER_VENDOR = Decimal("0.00")
 MOCK_PICKUP_FEE = Decimal("0.00")
 
 

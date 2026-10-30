@@ -33,7 +33,7 @@ function validateEnv(): AppEnv {
   const mode = (import.meta.env.VITE_API_MODE || 'real').toLowerCase()
   const apiMode: 'real' | 'mock' = mode === 'mock' ? 'mock' : 'real'
 
-  const apiBaseUrl = (import.meta.env.VITE_API_BASE_URL || 'http://127.0.0.1:8000').replace(/\/+$/, '')
+  const apiBaseUrl = (import.meta.env.VITE_API_BASE_URL ?? (isDev ? '' : '')).replace(/\/+$/, '')
 
   const firebaseApiKey = import.meta.env.VITE_FIREBASE_API_KEY || ''
   const firebaseAuthDomain = import.meta.env.VITE_FIREBASE_AUTH_DOMAIN || ''
@@ -47,7 +47,6 @@ function validateEnv(): AppEnv {
 
   if (apiMode === 'real') {
     const missing: string[] = []
-    if (!apiBaseUrl) missing.push('VITE_API_BASE_URL')
     if (!useAuthEmulator && !firebaseApiKey) missing.push('VITE_FIREBASE_API_KEY')
     if (!useAuthEmulator && !firebaseProjectId) missing.push('VITE_FIREBASE_PROJECT_ID')
 

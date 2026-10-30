@@ -15,6 +15,7 @@ from app.schemas.booking import (
     BookingListResponse,
     DamageReportResponse,
     DamageReportResponseRequest,
+    RespondDeliveryFeeRequest,
 )
 from app.schemas.checkout import RazorpayOrderBlock
 from app.services.booking import BookingService
@@ -165,4 +166,31 @@ def respond_to_damage_report(
         item_id=item_id,
         action=payload.action,
         dispute_reason=payload.dispute_reason,
+    )
+
+
+@router.post(
+    "/bookings/{booking_id}/vendor-orders/{vendor_order_id}/respond-delivery-fee",
+    operation_id="respond_to_vendor_order_delivery_fee",
+    summary="Accept vendor's quoted delivery fee or switch to self-pickup",
+)
+@router.post(
+    "/account/bookings/{booking_id}/vendor-orders/{vendor_order_id}/respond-delivery-fee",
+    operation_id="respond_to_account_vendor_order_delivery_fee_alias",
+    include_in_schema=False,
+)
+def respond_to_delivery_fee(
+    booking_id: int,
+    vendor_order_id: int,
+    payload: RespondDeliveryFeeRequest,
+    current_user: CurrentUser = Depends(require_customer),
+    db: Session = Depends(get_db),
+) -> Any:
+    user = _get_user(db, current_user)
+    service = BookingService(db)
+    return service.respond_to_delivery_fee(
+        user=user,
+        booking_id=booking_id,
+        vendor_order_id=vendor_order_id,
+        action=payload.action,
     )

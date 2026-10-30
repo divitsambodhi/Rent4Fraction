@@ -143,6 +143,11 @@ class VendorOrderItemDetail(BaseModel):
     damage_report: dict[str, Any] | None = None
 
 
+class SetDeliveryFeeRequest(BaseModel):
+    delivery_fee: float = Field(ge=0, description="Custom delivery charge calculated by vendor based on distance/location")
+    notes: str | None = Field(default=None, description="Optional notes to customer about the delivery charge")
+
+
 class VendorOrderDetailResponse(BaseModel):
     vendor_order_id: str
     order_number: str
@@ -474,10 +479,13 @@ class UpdateVendorProfileRequest(BaseModel):
     city: str | None = None
     phone: str | None = None
     gst_number: str | None = Field(default=None, pattern=r"^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z]{1}[1-9A-Z]{1}Z[0-9A-Z]{1}$")
+    gst: str | None = None
     delivery_fee: Decimal | None = Field(default=None, ge=Decimal("0.00"))
     logo_public_id: str | None = None
     logo_version: int | None = None
     logo_storage_path: str | None = None
+    logo: str | None = None
+    logo_url: str | None = None
 
 
 # -----------------------------------------------------------------------------

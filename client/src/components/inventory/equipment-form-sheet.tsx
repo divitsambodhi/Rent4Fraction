@@ -84,7 +84,7 @@ export function EquipmentFormSheet({
     resolver: zodResolver(equipmentSchema),
     defaultValues: {
       name: '',
-      category_id: categories[0]?.id || 'speakers',
+      category_id: categories[0]?.id || '1',
       description: '',
       delivery_available: true,
       price_per_day: 1500,
@@ -135,7 +135,7 @@ export function EquipmentFormSheet({
     } else if (isNew) {
       reset({
         name: '',
-        category_id: categories[0]?.id || 'speakers',
+        category_id: categories[0]?.id || '1',
         description: '',
         delivery_available: true,
         price_per_day: 1500,
@@ -198,7 +198,7 @@ export function EquipmentFormSheet({
       if (andAddAnother) {
         reset({
           name: '',
-          category_id: categories[0]?.id || 'speakers',
+          category_id: categories[0]?.id || '1',
           description: '',
           delivery_available: true,
           price_per_day: 1500,

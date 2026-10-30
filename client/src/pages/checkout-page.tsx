@@ -12,6 +12,7 @@ import { MobileSummaryBar } from '@/components/checkout/mobile-summary-bar'
 import { useCart } from '@/providers/cart-provider'
 import { checkCartAvailability, getQuote, placeOrder } from '@/lib/api/cart'
 import { getAddresses } from '@/lib/api/account'
+import { ApiError } from '@/lib/api/client'
 import { toast } from 'sonner'
 import type {
   CheckoutStep,
@@ -34,11 +35,21 @@ export function CheckoutPage() {
   const [searchParams, setSearchParams] = useAppSearchParams()
   const headingRef = useRef<HTMLHeadingElement>(null)
 
-  // URL query params
+  // Local step state kept in sync with URL searchParams for instant UI updates
   const rawStep = searchParams.get('step') as CheckoutStep
-  const currentStep: CheckoutStep = ['cart', 'details', 'payment', 'result'].includes(rawStep)
+  const initialStep: CheckoutStep = ['cart', 'details', 'payment', 'result'].includes(rawStep)
     ? rawStep
     : 'cart'
+  const [currentStep, setCurrentStep] = useState<CheckoutStep>(initialStep)
+
+  // Sync state whenever URL param changes (e.g. browser back/forward or manual reload)
+  useEffect(() => {
+    if (rawStep && ['cart', 'details', 'payment', 'result'].includes(rawStep)) {
+      setCurrentStep(rawStep)
+    } else if (!rawStep) {
+      setCurrentStep('cart')
+    }
+  }, [rawStep])
 
   const periodParam = searchParams.get('period')
   const bookingParam = searchParams.get('booking')
@@ -141,7 +152,16 @@ export function CheckoutPage() {
   // Addresses for review & details
   const [addresses, setAddresses] = useState<Address[]>([])
   useEffect(() => {
-    getAddresses().then(setAddresses).catch(() => {})
+    getAddresses().then((list) => {
+      setAddresses(list)
+      setDraft((prev) => {
+        if (!prev.address_id && list.length > 0) {
+          const def = list.find((a) => a.is_default) || list[0]
+          return { ...prev, address_id: def.id }
+        }
+        return prev
+      })
+    }).catch(() => {})
   }, [])
   const selectedAddress = addresses.find((a) => a.id === draft.address_id) || addresses[0] || null
 
@@ -167,20 +187,29 @@ export function CheckoutPage() {
         : 'Checkout | Rent4Fraction'
   usePageTitle(pageTitle)
 
-  // Step change navigation (pushes browser history)
+  // Step change navigation (updates local step immediately and pushes browser history)
   const setStep = useCallback((next: CheckoutStep) => {
-    const nextParams = new URLSearchParams(searchParams)
-    nextParams.set('step', next)
-    setSearchParams(nextParams)
-  }, [searchParams, setSearchParams])
+    setCurrentStep(next)
+    setSearchParams((prev) => {
+      const nextParams = new URLSearchParams(prev)
+      nextParams.set('step', next)
+      return nextParams
+    })
+  }, [setSearchParams])
 
   // Non-step param changes (replaces history)
   const setPeriodKey = (key: string) => {
-    const nextParams = new URLSearchParams(searchParams)
-    nextParams.set('period', key)
-    setSearchParams(nextParams, { replace: true })
+    setSearchParams((prev) => {
+      const nextParams = new URLSearchParams(prev)
+      nextParams.set('period', key)
+      return nextParams
+    }, { replace: true })
     setDraft((prev) => ({ ...prev, period_key: key }))
   }
+
+  const handleUpdateDraft = useCallback((patch: Partial<CheckoutDraft>) => {
+    setDraft((p) => ({ ...p, ...patch }))
+  }, [])
 
   // Guard redirects: enforce prerequisites
   useEffect(() => {
@@ -260,8 +289,20 @@ export function CheckoutPage() {
       nextParams.set('result', res.success ? 'success' : 'failed')
       setSearchParams(nextParams)
     } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : 'Failed to place booking'
-      toast.error('Order placement error', { description: msg })
+      let desc = 'Failed to place booking'
+      if (err instanceof ApiError) {
+        if (err.details && Array.isArray((err.details as any).unavailable_lines)) {
+          const linesInfo = (err.details as any).unavailable_lines
+            .map((u: any) => `${u.name}: ${u.reason}`)
+            .join(' | ')
+          desc = linesInfo || err.message
+        } else if (err.message) {
+          desc = err.message
+        }
+      } else if (err instanceof Error) {
+        desc = err.message
+      }
+      toast.error('Order placement error', { description: desc })
     }
   }
 
@@ -366,7 +407,7 @@ export function CheckoutPage() {
                 <DetailsStep
                   period={selectedPeriod}
                   draft={draft}
-                  onUpdateDraft={(patch) => setDraft((p) => ({ ...p, ...patch }))}
+                  onUpdateDraft={handleUpdateDraft}
                   onBack={() => setStep('cart')}
                   onContinue={() => setStep('payment')}
                 />
@@ -420,9 +461,9 @@ export function CheckoutPage() {
             currentStep === 'cart'
               ? 'Continue to details'
               : currentStep === 'details'
-                ? 'Continue to payment'
+                ? 'Continue to Review & Booking'
                 : draft.payment_method === 'cod'
-                  ? 'Place order'
+                  ? 'Request Booking (COD)'
                   : 'Complete payment'
           }
           primaryDisabled={

@@ -568,7 +568,6 @@ def test_payment_verify_success_and_idor(checkout_test_env: dict[str, Any]) -> N
 
     payment = Payment(
         booking_id=booking.booking_id,
-        user_id=cust1.user_id,
         amount=Decimal("11800.00"),
         currency="INR",
         type=PaymentType.full,
@@ -667,7 +666,6 @@ def test_payment_status_polling_and_retry(checkout_test_env: dict[str, Any]) -> 
 
     p1 = Payment(
         booking_id=booking.booking_id,
-        user_id=cust1.user_id,
         amount=Decimal("5900.00"),
         currency="INR",
         type=PaymentType.full,
@@ -734,7 +732,6 @@ def test_webhook_payment_captured_and_deduplication(checkout_test_env: dict[str,
 
     payment = Payment(
         booking_id=booking.booking_id,
-        user_id=cust1.user_id,
         amount=Decimal("7080.00"),
         currency="INR",
         type=PaymentType.full,
@@ -860,7 +857,6 @@ def test_expire_unpaid_bookings_job(checkout_test_env: dict[str, Any]) -> None:
 
     p_pending = Payment(
         booking_id=booking.booking_id,
-        user_id=cust1.user_id,
         amount=Decimal("4000.00"),
         currency="INR",
         type=PaymentType.full,
@@ -907,7 +903,6 @@ def test_reconcile_payments_job(checkout_test_env: dict[str, Any]) -> None:
     pay_id = "pay_reconcile_captured_1"
     payment = Payment(
         booking_id=booking.booking_id,
-        user_id=cust1.user_id,
         amount=Decimal("2000.00"),
         currency="INR",
         type=PaymentType.full,

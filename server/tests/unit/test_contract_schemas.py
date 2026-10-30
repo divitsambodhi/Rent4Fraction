@@ -29,6 +29,7 @@ from app.schemas.social import (
     MessageResponse,
     NotificationResponse,
 )
+from app.schemas.vendor import UpdateVendorProfileRequest
 
 
 @pytest.mark.unit
@@ -263,3 +264,26 @@ def test_social_contract_keys() -> None:
     # 4. FAQItem
     faq_keys = set(FAQItemResponse.model_fields.keys())
     assert {"id", "question", "answer"}.issubset(faq_keys)
+
+
+@pytest.mark.unit
+def test_vendor_update_profile_schema_b1_regression() -> None:
+    # Regression test for Bug B1: UpdateVendorProfileRequest must accept logo_url, logo, and gst
+    payload = {
+        "business_name": "Apex Sound Labs",
+        "city": "Bengaluru",
+        "logo_url": "https://res.cloudinary.com/demo/image/upload/v1234/logo.png",
+        "logo": "https://res.cloudinary.com/demo/image/upload/v1234/logo.png",
+        "gst": "29ABCDE1234F1Z5",
+        "gst_number": "29ABCDE1234F1Z5",
+    }
+    req = UpdateVendorProfileRequest.model_validate(payload)
+    assert req.business_name == "Apex Sound Labs"
+    assert req.logo_url == "https://res.cloudinary.com/demo/image/upload/v1234/logo.png"
+    assert req.logo == "https://res.cloudinary.com/demo/image/upload/v1234/logo.png"
+    assert req.gst == "29ABCDE1234F1Z5"
+
+    # Ensure extra unauthorized fields like role or is_admin are strictly rejected (extra='forbid')
+    with pytest.raises(Exception):
+        UpdateVendorProfileRequest.model_validate({**payload, "is_admin": True})
+

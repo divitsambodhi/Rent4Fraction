@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import { useEffect, useState } from 'react'
 import {
   Building2,
   CalendarDays,
@@ -29,6 +29,8 @@ import {
 import { AppLink, useAppPathname, useAppSearchParams } from '@/components/shared/app-link'
 import { useAuth } from '@/providers/auth-provider'
 import { useTheme } from '@/providers/theme-provider'
+import { getVendorOverview, getVendorReviews } from '@/lib/api/vendor'
+import { getNotifications, getConversations } from '@/lib/api/account'
 import { cn } from '@/lib/utils'
 
 export interface NavItem {
@@ -50,20 +52,20 @@ export const vendorNavSections: NavSection[] = [
     title: 'Manage',
     items: [
       { title: 'Overview', href: '/vendor?tab=overview', tabKey: 'overview', icon: LayoutDashboard },
-      { title: 'Orders & returns', href: '/vendor/orders', icon: ShoppingBag, badge: '3', requiresApproval: true },
+      { title: 'Orders & returns', href: '/vendor/orders', icon: ShoppingBag, requiresApproval: true },
       { title: 'Inventory', href: '/vendor/inventory', icon: Package, requiresApproval: true },
     ],
   },
   {
     title: 'Feedback',
     items: [
-      { title: 'Reviews', href: '/vendor?tab=reviews', tabKey: 'reviews', icon: Star, badge: '4', requiresApproval: true },
+      { title: 'Reviews', href: '/vendor?tab=reviews', tabKey: 'reviews', icon: Star, requiresApproval: true },
     ],
   },
   {
     title: 'Account',
     items: [
-      { title: 'Inbox', href: '/vendor?tab=inbox', tabKey: 'inbox', icon: InboxIcon, badge: '2', requiresApproval: true },
+      { title: 'Inbox', href: '/vendor?tab=inbox', tabKey: 'inbox', icon: InboxIcon, requiresApproval: true },
       { title: 'Business profile', href: '/vendor?tab=profile', tabKey: 'profile', icon: Building2, requiresApproval: false },
     ],
   },
@@ -101,6 +103,43 @@ export function DashboardLayout({
   const [searchParams] = useAppSearchParams()
   const [collapsed, setCollapsed] = useState(false)
   const [mobileOpen, setMobileOpen] = useState(false)
+  const [vendorBadges, setVendorBadges] = useState<{ orders?: number; reviews?: number; inbox?: number }>({})
+
+  useEffect(() => {
+    if (type !== 'vendor' || !user) return
+
+    let isMounted = true
+    const loadBadges = async () => {
+      try {
+        const [ov, revs, notifs, convs] = await Promise.all([
+          getVendorOverview().catch(() => null),
+          getVendorReviews().catch(() => null),
+          getNotifications('unread').catch(() => []),
+          getConversations().catch(() => []),
+        ])
+
+        if (!isMounted) return
+
+        const pendingOrders = ov?.attention?.new_orders_waiting ?? 0
+        const reviewsNeedingReply = (revs as any)?.summary?.needs_reply_count ?? 0
+        const unreadInbox = (Array.isArray(notifs) ? notifs.length : 0) +
+          (Array.isArray(convs) ? convs.reduce((acc: number, c: any) => acc + (c.unread_count || 0), 0) : 0)
+
+        setVendorBadges({
+          orders: pendingOrders > 0 ? pendingOrders : undefined,
+          reviews: reviewsNeedingReply > 0 ? reviewsNeedingReply : undefined,
+          inbox: unreadInbox > 0 ? unreadInbox : undefined,
+        })
+      } catch {
+        // Silently preserve empty badges on error
+      }
+    }
+
+    loadBadges()
+    return () => {
+      isMounted = false
+    }
+  }, [type, user, pathname, searchParams])
 
   const tab = searchParams.get('tab') || 'overview'
   const section = searchParams.get('section') || 'overview'
@@ -217,6 +256,15 @@ export function DashboardLayout({
                 )
               }
 
+              let dynamicBadge = item.badge
+              if (item.href === '/vendor/orders' && vendorBadges.orders) {
+                dynamicBadge = String(vendorBadges.orders)
+              } else if (item.href.includes('tab=reviews') && vendorBadges.reviews) {
+                dynamicBadge = String(vendorBadges.reviews)
+              } else if (item.href.includes('tab=inbox') && vendorBadges.inbox) {
+                dynamicBadge = String(vendorBadges.inbox)
+              }
+
               return (
                 <AppLink
                   key={item.href}
@@ -243,9 +291,9 @@ export function DashboardLayout({
                       )}
                     </span>
                   )}
-                  {!collapsed && item.badge && (
+                  {!collapsed && dynamicBadge && (
                     <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded-full bg-brand/10 text-brand tabular-nums">
-                      {item.badge}
+                      {dynamicBadge}
                     </span>
                   )}
                 </AppLink>

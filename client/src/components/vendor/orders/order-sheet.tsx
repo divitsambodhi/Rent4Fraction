@@ -6,6 +6,7 @@ import {
   MapPin,
   MessageSquare,
   Package,
+  Truck,
   User,
 } from 'lucide-react'
 import { EntitySheet } from '@/components/shared/entity-sheet'
@@ -16,6 +17,9 @@ import { DamageReportCard } from '@/components/account/damage-report-card'
 import { ActivityTimeline } from '@/components/account/activity-timeline'
 import { NextStepPanel } from './next-step-panel'
 import { AppLink } from '@/components/shared/app-link'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { setOrderDeliveryFee } from '@/lib/api/vendor'
 import { toast } from 'sonner'
 import type { BookingDetail, VendorOrder } from '@/types/account'
 import type { LifecycleAction } from '@/lib/lifecycle'
@@ -40,11 +44,35 @@ export function OrderSheet({
   onAction,
 }: OrderSheetProps) {
   const [copiedField, setCopiedField] = useState<string | null>(null)
+  const [deliveryFeeInput, setDeliveryFeeInput] = useState<string>('')
+  const [deliveryNotesInput, setDeliveryNotesInput] = useState<string>('')
+  const [isUpdatingFee, setIsUpdatingFee] = useState(false)
 
   if (!order || !booking) return null
 
   const orderItems = booking.items.filter((it) => order.item_ids.includes(it.item_id))
   const orderDeliveryFee = (order as { delivery_fee?: number }).delivery_fee || 0
+
+  const handleSaveDeliveryFee = async () => {
+    const feeNum = parseFloat(deliveryFeeInput)
+    if (isNaN(feeNum) || feeNum < 0) {
+      toast.error('Please enter a valid delivery charge')
+      return
+    }
+    try {
+      setIsUpdatingFee(true)
+      await setOrderDeliveryFee(order.vendor_order_id, feeNum, deliveryNotesInput)
+      toast.success(`Delivery charge set to ₹${feeNum}. Customer has been notified.`)
+      setDeliveryFeeInput('')
+      setDeliveryNotesInput('')
+      // Trigger parent refresh
+      onAction('accept' as any)
+    } catch (err: any) {
+      toast.error(err?.message || 'Failed to update delivery charge')
+    } finally {
+      setIsUpdatingFee(false)
+    }
+  }
 
   // Copy helper
   const handleCopy = (text: string, label: string) => {
@@ -145,6 +173,56 @@ export function OrderSheet({
               {addr.city}, {addr.state} - {addr.pincode}
             </p>
           </div>
+
+          {/* Calculate & Set Custom Delivery Fee */}
+          {order.fulfilment_type === 'delivery' && (
+            <div className="p-3.5 rounded-[12px] bg-card border border-border space-y-3 text-xs">
+              <div className="flex items-center justify-between">
+                <span className="font-semibold text-foreground flex items-center gap-1.5">
+                  <Truck className="size-3.5 text-brand" />
+                  <span>Delivery Charge Calculation</span>
+                </span>
+                <span className="text-muted-foreground text-[11px]">
+                  Current:{' '}
+                  <strong className="text-foreground">
+                    {orderDeliveryFee > 0 ? `₹${orderDeliveryFee}` : 'Yet to be decided'}
+                  </strong>
+                </span>
+              </div>
+              <p className="text-muted-foreground text-[11px] leading-relaxed">
+                Review the customer's venue location above, calculate the transit cost, and enter the delivery fee. The customer will be prompted to accept or switch to self-pickup.
+              </p>
+              <div className="flex flex-col sm:flex-row items-center gap-2 pt-1">
+                <div className="w-full sm:w-40 relative">
+                  <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-muted-foreground text-xs">₹</span>
+                  <Input
+                    type="number"
+                    min="0"
+                    step="10"
+                    placeholder="Enter fee (e.g. 250)"
+                    value={deliveryFeeInput}
+                    onChange={(e) => setDeliveryFeeInput(e.target.value)}
+                    className="h-8 pl-6 text-xs"
+                  />
+                </div>
+                <Input
+                  type="text"
+                  placeholder="Optional note for distance/tempo..."
+                  value={deliveryNotesInput}
+                  onChange={(e) => setDeliveryNotesInput(e.target.value)}
+                  className="h-8 text-xs flex-1"
+                />
+                <Button
+                  size="sm"
+                  onClick={handleSaveDeliveryFee}
+                  disabled={isUpdatingFee || !deliveryFeeInput}
+                  className="h-8 text-xs px-3 font-semibold bg-brand hover:bg-brand-hover text-brand-foreground whitespace-nowrap w-full sm:w-auto"
+                >
+                  {isUpdatingFee ? 'Saving...' : 'Update Fee'}
+                </Button>
+              </div>
+            </div>
+          )}
         </section>
 
         {/* 2. ORDER ITEMS & AVAILABILITY CHECK */}

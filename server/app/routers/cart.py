@@ -65,6 +65,7 @@ def add_cart_item(
         quantity=payload.quantity,
         start_date=s_date,
         end_date=e_date,
+        override_quantity=payload.override_quantity,
     )
 
 

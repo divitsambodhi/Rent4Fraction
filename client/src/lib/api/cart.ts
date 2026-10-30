@@ -209,7 +209,8 @@ export function checkCartAvailability(
       return
     }
 
-    const avail = computeMockAvailability(line.equipment_id, line.start_date, line.end_date) ?? 6
+    const computed = computeMockAvailability(line.equipment_id, line.start_date, line.end_date)
+    const avail = computed !== undefined ? computed : (line.max_available_quantity ?? 6)
 
     if (avail === 0) {
       results[line.cart_item_id] = {
@@ -318,7 +319,7 @@ export interface PlaceOrderInput {
  * items, payments, snapshots and notifications, and clears the ordered period lines from cart.
  */
 export async function placeOrder(input: PlaceOrderInput): Promise<PlaceOrderResult> {
-  // Sync cart lines to backend cart table
+  // Sync cart lines to backend cart table (exact quantity override)
   for (const line of input.lines) {
     try {
       await apiClient.post('/api/v1/cart/items', {
@@ -326,9 +327,10 @@ export async function placeOrder(input: PlaceOrderInput): Promise<PlaceOrderResu
         quantity: line.quantity,
         start_date: input.period.start_date,
         end_date: input.period.end_date,
+        override_quantity: true,
       })
     } catch {
-      // Line may already be present in cart
+      // Line sync attempt
     }
   }
 
@@ -338,13 +340,30 @@ export async function placeOrder(input: PlaceOrderInput): Promise<PlaceOrderResu
     10
   )
 
+  // Ensure all vendors in the period have a fulfilment selection (default to 'delivery' or 'pickup')
+  const resolvedFulfilment: Record<string, string> = { ...(input.fulfilmentByVendor || {}) }
+  for (const vGroup of input.period.vendor_groups || []) {
+    const vId = String(vGroup.vendor_id)
+    if (!resolvedFulfilment[vId]) {
+      resolvedFulfilment[vId] = vGroup.delivery_available ? 'delivery' : 'pickup'
+    }
+  }
+
+  // Also ensure from lines
+  for (const line of input.lines) {
+    const vId = String(line.vendor_id)
+    if (!resolvedFulfilment[vId]) {
+      resolvedFulfilment[vId] = line.delivery_available ? 'delivery' : 'pickup'
+    }
+  }
+
   const payload = {
     period: {
       start_date: input.period.start_date,
       end_date: input.period.end_date,
     },
     address_id: numericAddressId,
-    fulfilment: input.fulfilmentByVendor,
+    fulfilment: resolvedFulfilment,
     event: {
       event_name: input.eventDetails.event_name,
       event_type: input.eventDetails.event_type || 'Wedding',

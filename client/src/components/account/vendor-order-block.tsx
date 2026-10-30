@@ -7,7 +7,10 @@ import { DeliveryTracker } from './delivery-tracker'
 import { ReturnInspectionPanel } from './return-inspection-panel'
 import { DamageReportCard } from './damage-report-card'
 import { Button } from '@/components/ui/button'
-import { AlertTriangle, MessageSquare, Truck } from 'lucide-react'
+import { AlertTriangle, Check, MessageSquare, Store, Truck } from 'lucide-react'
+import { respondToDeliveryFee } from '@/lib/api/account'
+import { formatINR } from '@/lib/format'
+import { toast } from 'sonner'
 import type { BookingItemDetail, VendorOrder } from '@/types/account'
 import { cn } from '@/lib/utils'
 
@@ -29,6 +32,24 @@ export function VendorOrderBlock({
   className,
 }: VendorOrderBlockProps) {
   const [messageOpen, setMessageOpen] = useState(false)
+  const [respondingFee, setRespondingFee] = useState(false)
+
+  const handleRespondFee = async (action: 'accept' | 'switch_to_pickup') => {
+    try {
+      setRespondingFee(true)
+      await respondToDeliveryFee(bookingId, order.vendor_order_id, action)
+      toast.success(
+        action === 'accept'
+          ? 'Delivery fee accepted.'
+          : 'Switched to self-pickup. Delivery fee set to ₹0.'
+      )
+      onActionComplete?.()
+    } catch (err: any) {
+      toast.error(err?.message || 'Failed to update delivery choice')
+    } finally {
+      setRespondingFee(false)
+    }
+  }
 
   // Find associated items for this vendor order
   const orderItems = items.filter(
@@ -119,6 +140,52 @@ export function VendorOrderBlock({
       {/* Delivery Tracking (if available) */}
       {order.delivery && (
         <DeliveryTracker delivery={order.delivery} />
+      )}
+
+      {/* Vendor Quoted Delivery Fee Banner / Prompt */}
+      {!isRejected && order.fulfilment_type === 'delivery' && (
+        <div className="p-3.5 rounded-[12px] bg-amber-500/10 border border-amber-500/30 text-xs space-y-2.5">
+          <div className="flex items-start justify-between gap-3">
+            <div className="space-y-1">
+              <span className="font-semibold text-foreground flex items-center gap-1.5">
+                <Truck className="size-3.5 text-amber-600 dark:text-amber-400" />
+                Delivery Fee:{' '}
+                {order.delivery_fee && order.delivery_fee > 0
+                  ? formatINR(order.delivery_fee)
+                  : 'Pending vendor review'}
+              </span>
+              <p className="text-muted-foreground text-[11px] leading-relaxed">
+                {order.delivery_fee && order.delivery_fee > 0
+                  ? 'Vendor calculated the delivery charge based on your venue location. You can accept this delivery charge or switch to self-pickup at no charge.'
+                  : 'The vendor will review your event address/distance and calculate the custom delivery charge.'}
+              </p>
+            </div>
+          </div>
+          {order.delivery_fee !== undefined && order.delivery_fee > 0 && (
+            <div className="flex items-center gap-2 pt-1">
+              <Button
+                size="sm"
+                variant="outline"
+                disabled={respondingFee}
+                onClick={() => handleRespondFee('accept')}
+                className="h-7 text-xs gap-1 border-amber-500/40 text-foreground hover:bg-amber-500/15"
+              >
+                <Check className="size-3 text-emerald-600 dark:text-emerald-400" />
+                Accept Delivery Fee
+              </Button>
+              <Button
+                size="sm"
+                variant="outline"
+                disabled={respondingFee}
+                onClick={() => handleRespondFee('switch_to_pickup')}
+                className="h-7 text-xs gap-1 text-muted-foreground hover:text-foreground"
+              >
+                <Store className="size-3" />
+                Switch to Self-Pickup (₹0)
+              </Button>
+            </div>
+          )}
+        </div>
       )}
 
       {/* When no delivery or return row is created yet */}

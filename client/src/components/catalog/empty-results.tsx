@@ -10,7 +10,7 @@ export interface EmptyResultsProps {
   className?: string
 }
 
-const POPULAR_CATEGORY_IDS = ['1', '4', '6', '8'] // Speakers, Stage lights, Chairs, Tents & decor
+const POPULAR_CATEGORY_IDS = ['1', '2', '4', '5'] // Furniture & Seating, Tents, Sound & DJ, Lighting & Effects
 
 export function EmptyResults({
   onClearFilters,

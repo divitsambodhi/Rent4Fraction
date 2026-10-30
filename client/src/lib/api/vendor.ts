@@ -1,5 +1,5 @@
 import { apiClient } from '@/lib/api/client'
-import type { VendorProfile, VendorOrderSummary } from '@/types/vendor'
+import type { VendorProfile } from '@/types/vendor'
 
 export async function getVendorProfile(): Promise<VendorProfile> {
   try {
@@ -34,13 +34,103 @@ export async function updateVendorProfile(data: Partial<VendorProfile>): Promise
   return await apiClient.put<VendorProfile>('/api/v1/vendor/profile', data)
 }
 
-export async function getVendorOrders(status?: string): Promise<VendorOrderSummary[]> {
+export interface VendorOrderDetailItem {
+  item_id: string
+  equipment_id: string
+  equipment_name: string
+  primary_image_url?: string | null
+  quantity: number
+  daily_rate: number
+  days: number
+  total_price: number
+  commission_rate: number
+  commission_amount: number
+  deposit_amount: number
+  status: string
+  condition?: string | null
+  damage_report?: any | null
+}
+
+export interface VendorOrderDetail {
+  vendor_order_id: string
+  order_number: string
+  booking_id: string
+  booking_number: string
+  customer_name: string
+  customer_phone?: string | null
+  customer_email?: string | null
+  delivery_address: any
+  fulfilment_type: 'delivery' | 'pickup' | string
+  status: 'pending' | 'accepted' | 'rejected' | 'dispatched' | 'delivered' | 'returned' | 'completed' | 'cancelled'
+  start_date: string
+  end_date: string
+  total_days: number
+  subtotal: number
+  delivery_fee: number
+  commission_amount: number
+  net_payout: number
+  deposit_share: number
+  deposit_held: number
+  deposit_refunded: number
+  deposit_deducted: number
+  items: VendorOrderDetailItem[]
+  delivery?: any | null
+  return_record?: any | null
+  damage_reports?: any[]
+  events?: any[]
+  allowed_actions?: string[]
+  rejection_reason?: string | null
+}
+
+export async function getVendorOrders(status?: string): Promise<VendorOrderDetail[]> {
   try {
-    const params = status ? { status } : undefined
-    const res = await apiClient.get<{ items: VendorOrderSummary[] }>('/api/v1/vendor/orders', { params })
+    const params = status && status !== 'all' ? { status } : undefined
+    const res = await apiClient.get<{ items: VendorOrderDetail[] }>('/api/v1/vendor/orders', { params })
     return res.items || []
   } catch {
     return []
+  }
+}
+
+export async function getVendorOrderDetail(vendorOrderId: string): Promise<VendorOrderDetail | null> {
+  try {
+    return await apiClient.get<VendorOrderDetail>(`/api/v1/vendor/orders/${vendorOrderId}`)
+  } catch {
+    return null
+  }
+}
+
+export async function executeVendorOrderLifecycleAction(
+  vendorOrderId: string,
+  action: string,
+  payload?: any
+): Promise<VendorOrderDetail> {
+  switch (action) {
+    case 'accept':
+      return await apiClient.post(`/api/v1/vendor/orders/${vendorOrderId}/accept`)
+    case 'decline':
+      return await apiClient.post(`/api/v1/vendor/orders/${vendorOrderId}/decline`, payload || { reason: 'Declined by vendor' })
+    case 'schedule_delivery':
+    case 'schedule_pickup':
+      return await apiClient.post(`/api/v1/vendor/orders/${vendorOrderId}/schedule-delivery`, payload)
+    case 'dispatch':
+      return await apiClient.post(`/api/v1/vendor/orders/${vendorOrderId}/mark-dispatched`)
+    case 'mark_delivered':
+      return await apiClient.post(`/api/v1/vendor/orders/${vendorOrderId}/mark-delivered`, payload)
+    case 'delivery_failed':
+      return await apiClient.post(`/api/v1/vendor/orders/${vendorOrderId}/delivery-failed`, payload)
+    case 'reschedule_delivery':
+      return await apiClient.post(`/api/v1/vendor/orders/${vendorOrderId}/reschedule-delivery`, payload)
+    case 'schedule_return':
+      return await apiClient.post(`/api/v1/vendor/orders/${vendorOrderId}/schedule-return`, payload)
+    case 'mark_returned':
+      return await apiClient.post(`/api/v1/vendor/orders/${vendorOrderId}/mark-returned`)
+    case 'inspect':
+      return await apiClient.post(`/api/v1/vendor/orders/${vendorOrderId}/inspect`, payload)
+    case 'complete_order':
+      return await apiClient.post(`/api/v1/vendor/orders/${vendorOrderId}/complete`)
+    default:
+      return await apiClient.post(`/api/v1/vendor/orders/${vendorOrderId}/status`, { action, ...(payload || {}) })
   }
 }
 
@@ -109,6 +199,13 @@ export async function getVendorReviews(): Promise<{ items: any[]; total: number 
   } catch {
     return { items: [], total: 0 }
   }
+}
+
+export async function setOrderDeliveryFee(vendorOrderId: string, deliveryFee: number, notes?: string): Promise<any> {
+  return await apiClient.post(`/api/v1/vendor/orders/${vendorOrderId}/set-delivery-fee`, {
+    delivery_fee: deliveryFee,
+    notes,
+  })
 }
 
 export async function replyToVendorReview(reviewId: string, replyText: string): Promise<void> {

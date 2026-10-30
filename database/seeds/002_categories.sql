@@ -1,63 +1,28 @@
 -- =============================================================================
--- Seed 002 — Category tree
--- Idempotent: ON DUPLICATE KEY UPDATE on UNIQUE(parent_id, name).
--- Top-level categories have parent_id = NULL.
+-- Seed 002 — Final Marketplace Categories (16 Root Categories)
+-- Platform: Rent4Fraction (COD-only Direct Marketplace, 0% Platform Commission)
 -- =============================================================================
 
--- ── Top-level categories ─────────────────────────────────────────────────────
-INSERT INTO categories (name, description, default_commission_rate, parent_id, is_active)
-SELECT 'Sound', 'Audio and sound equipment for events', 12.00, NULL, 1
-WHERE NOT EXISTS (SELECT 1 FROM categories WHERE name = 'Sound' AND parent_id IS NULL);
-
-INSERT INTO categories (name, description, default_commission_rate, parent_id, is_active)
-SELECT 'Lighting', 'Lighting rigs, spots and decorative lights', 10.00, NULL, 1
-WHERE NOT EXISTS (SELECT 1 FROM categories WHERE name = 'Lighting' AND parent_id IS NULL);
-
-INSERT INTO categories (name, description, default_commission_rate, parent_id, is_active)
-SELECT 'Furniture', 'Tables, chairs and seating for events', 15.00, NULL, 1
-WHERE NOT EXISTS (SELECT 1 FROM categories WHERE name = 'Furniture' AND parent_id IS NULL);
-
-INSERT INTO categories (name, description, default_commission_rate, parent_id, is_active)
-SELECT 'Tents & Decor', 'Tent structures and decorative elements', 15.00, NULL, 1
-WHERE NOT EXISTS (SELECT 1 FROM categories WHERE name = 'Tents & Decor' AND parent_id IS NULL);
-
--- ── Sub-categories — Sound ───────────────────────────────────────────────────
-INSERT INTO categories (name, description, default_commission_rate, parent_id, is_active)
-SELECT new_data.name, new_data.description, new_data.rate, c.category_id, 1
-FROM (
-    SELECT 'Speakers'      AS name, 'PA speakers, subwoofers and monitor speakers' AS description, 12.00 AS rate UNION ALL
-    SELECT 'Microphones',           'Wired and wireless microphone systems',                       10.00         UNION ALL
-    SELECT 'DJ Equipment',          'DJ consoles, mixers and turntables',                          14.00
-) AS new_data
-JOIN categories c ON c.name = 'Sound' AND c.parent_id IS NULL
+INSERT INTO categories (category_id, name, description, default_commission_rate, parent_id, is_active) VALUES
+(1, 'Furniture & Seating', 'Tables, chairs, lounges, banquet and event seating arrangements', 0.00, NULL, 1),
+(2, 'Tents, Canopies & Structures', 'Marquees, canopies, pagodas, gazebos, and structural setups', 0.00, NULL, 1),
+(3, 'Decor & Backdrops', 'Photo backdrops, floral frames, stage decor, and drapery', 0.00, NULL, 1),
+(4, 'Sound & DJ Equipment', 'PA systems, speakers, DJ mixers, consoles, and microphones', 0.00, NULL, 1),
+(5, 'Lighting & Effects', 'Stage spotlights, LED pars, ambient lighting, smoke and haze machines', 0.00, NULL, 1),
+(6, 'Screens & Visual Equipment', 'LED video walls, projectors, projection screens, and monitors', 0.00, NULL, 1),
+(7, 'Catering & Dining', 'Chafing dishes, beverage dispensers, buffet counters, and food warmers', 0.00, NULL, 1),
+(8, 'Photography & Videography', 'Cameras, camera lenses, stabilizers, tripods, and lighting kits', 0.00, NULL, 1),
+(9, 'Power & Climate Control', 'Silent diesel generators, heavy-duty UPS, mist fans, and portable ACs', 0.00, NULL, 1),
+(10, 'Flooring & Carpets', 'Dance floors, red carpets, wooden platforms, and artificial turf', 0.00, NULL, 1),
+(11, 'Event Accessories', 'Stanchions, crowd control barriers, podiums, and welcome boards', 0.00, NULL, 1),
+(12, 'Tableware & Serving', 'Plates, glassware, cutlery, serving trays, and fine tableware', 0.00, NULL, 1),
+(13, 'Games & Entertainment', 'Carnival games, arcade machines, photo booths, and fun activities', 0.00, NULL, 1),
+(14, 'Safety & Security', 'Fire extinguishers, walkie-talkies, metal detectors, and safety gear', 0.00, NULL, 1),
+(15, 'Transport & Logistics Equipment', 'Hand trucks, equipment dollies, loading ramps, and trolleys', 0.00, NULL, 1),
+(16, 'Others', 'Miscellaneous event gear, tools, and specialty rental equipment', 0.00, NULL, 1)
 ON DUPLICATE KEY UPDATE
+    name                    = VALUES(name),
     description             = VALUES(description),
-    default_commission_rate = VALUES(default_commission_rate),
+    default_commission_rate = 0.00,
+    parent_id               = NULL,
     is_active               = 1;
-
--- ── Sub-categories — Lighting ────────────────────────────────────────────────
-INSERT INTO categories (name, description, default_commission_rate, parent_id, is_active)
-SELECT new_data.name, new_data.description, new_data.rate, c.category_id, 1
-FROM (
-    SELECT 'Stage Lights' AS name, 'LED par cans, moving heads and wash lights' AS description, 10.00 AS rate UNION ALL
-    SELECT 'Fairy Lights',         'String lights and canopy lighting',                         10.00
-) AS new_data
-JOIN categories c ON c.name = 'Lighting' AND c.parent_id IS NULL
-ON DUPLICATE KEY UPDATE
-    description             = VALUES(description),
-    default_commission_rate = VALUES(default_commission_rate),
-    is_active               = 1;
-
--- ── Sub-categories — Furniture ────────────────────────────────────────────────
-INSERT INTO categories (name, description, default_commission_rate, parent_id, is_active)
-SELECT new_data.name, new_data.description, new_data.rate, c.category_id, 1
-FROM (
-    SELECT 'Chairs' AS name, 'Folding, banquet and Chiavari chairs' AS description, 15.00 AS rate UNION ALL
-    SELECT 'Tables',         'Round, rectangular and cocktail tables',              15.00
-) AS new_data
-JOIN categories c ON c.name = 'Furniture' AND c.parent_id IS NULL
-ON DUPLICATE KEY UPDATE
-    description             = VALUES(description),
-    default_commission_rate = VALUES(default_commission_rate),
-    is_active               = 1;
-

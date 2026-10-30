@@ -80,7 +80,7 @@ class DatabaseIdempotencyStore:
 
     def get(self, key: str) -> IdempotencyRecord | None:
         stmt = select(IdempotencyKey).where(IdempotencyKey.idempotency_key == key)
-        row = self.session.execute(stmt).scalar_one_or_none()
+        row = self.session.execute(stmt).scalars().first()
         if not row:
             return None
         # Check expiry
@@ -92,20 +92,32 @@ class DatabaseIdempotencyStore:
             self.session.delete(row)
             self.session.commit()
             return None
+        body_str = (
+            json.dumps(row.response_body)
+            if isinstance(row.response_body, (dict, list))
+            else str(row.response_body or "")
+        )
         return IdempotencyRecord(
             key=row.idempotency_key,
             request_hash=row.request_hash,
-            response_code=row.response_code,
-            response_body=row.response_body,
+            response_code=row.response_status or 200,
+            response_body=body_str,
             expires_at=exp,
         )
 
     def save(self, record: IdempotencyRecord) -> None:
+        try:
+            parsed_body = json.loads(record.response_body)
+        except Exception:
+            parsed_body = {"raw": record.response_body}
+
         key_obj = IdempotencyKey(
+            user_id=0,
+            endpoint="generic",
             idempotency_key=record.key,
             request_hash=record.request_hash,
-            response_code=record.response_code,
-            response_body=record.response_body,
+            response_status=record.response_code,
+            response_body=parsed_body,
             expires_at=record.expires_at,
         )
         self.session.add(key_obj)

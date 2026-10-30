@@ -3,7 +3,7 @@ from __future__ import annotations
 from datetime import datetime
 from typing import Any
 
-from sqlalchemy import JSON, DateTime, ForeignKey, Integer, String, Text, func
+from sqlalchemy import JSON, DateTime, ForeignKey, Integer, SmallInteger, String, Text, func
 from sqlalchemy.dialects.mysql import BIGINT
 from sqlalchemy.orm import Mapped, mapped_column
 
@@ -27,16 +27,17 @@ class SchemaMigration(Base):
 class IdempotencyKey(Base):
     """
     Platform idempotency storage for safe mutations (e.g. checkout, payment captures, refunds).
-    Backed by MySQL table or in-memory fallback.
+    Composite PK: (user_id, endpoint, idempotency_key).
     """
 
     __tablename__ = "idempotency_keys"
 
-    key_id: Mapped[int] = mapped_column(BIGINT(unsigned=True), primary_key=True, autoincrement=True)
-    idempotency_key: Mapped[str] = mapped_column(String(255), unique=True, nullable=False)
+    user_id: Mapped[int] = mapped_column(BIGINT(unsigned=True), primary_key=True)
+    endpoint: Mapped[str] = mapped_column(String(80), primary_key=True)
+    idempotency_key: Mapped[str] = mapped_column(String(80), primary_key=True)
     request_hash: Mapped[str] = mapped_column(String(64), nullable=False)
-    response_code: Mapped[int] = mapped_column(Integer, nullable=False)
-    response_body: Mapped[str] = mapped_column(Text, nullable=False)
+    response_status: Mapped[int | None] = mapped_column(SmallInteger, nullable=True)
+    response_body: Mapped[Any | None] = mapped_column(JSON, nullable=True)
     created_at: Mapped[datetime] = mapped_column(
         DateTime, server_default=func.now(), nullable=False
     )

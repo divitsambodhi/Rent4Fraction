@@ -65,10 +65,14 @@ class CustomerRepository:
         quantity: int,
         start_date: date,
         end_date: date,
+        override_quantity: bool = False,
     ) -> CartItem:
         existing = self.find_cart_item(user_id, equipment_id, start_date, end_date)
         if existing:
-            existing.quantity = min(50, existing.quantity + quantity)
+            if override_quantity:
+                existing.quantity = quantity
+            else:
+                existing.quantity = min(50, existing.quantity + quantity)
             self.db.flush()
             return existing
 

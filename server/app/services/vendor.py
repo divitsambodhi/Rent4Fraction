@@ -736,6 +736,74 @@ class VendorService:
         self.db.flush()
         return self._format_order_detail(vo)
 
+    def set_delivery_fee(
+        self,
+        vendor_id: int,
+        vendor_order_id: int,
+        fee: float,
+        notes: str | None,
+        actor_user_id: int,
+    ) -> VendorOrderDetailResponse:
+        vo = (
+            self.db.query(VendorOrder)
+            .filter(VendorOrder.vendor_order_id == vendor_order_id, VendorOrder.vendor_id == vendor_id)
+            .with_for_update()
+            .first()
+        )
+        if not vo:
+            raise NotFoundError("VendorOrder", str(vendor_order_id))
+
+        new_fee = quantize_money(Decimal(str(fee)))
+        vo.delivery_fee = new_fee
+
+        booking = (
+            self.db.query(Booking)
+            .filter(Booking.booking_id == vo.booking_id)
+            .with_for_update()
+            .first()
+        )
+        if booking:
+            all_vos = self.db.query(VendorOrder).filter(VendorOrder.booking_id == booking.booking_id).all()
+            new_tot = sum((v.delivery_fee for v in all_vos if v.vendor_order_id != vo.vendor_order_id), Decimal("0.00")) + new_fee
+            booking.delivery_fee = new_tot
+            booking.total_amount = (
+                booking.subtotal
+                - booking.discount
+                + booking.tax
+                + booking.delivery_fee
+                + booking.security_deposit
+            )
+
+        note_msg = f"Vendor set delivery fee to Rs. {new_fee} based on venue location. {notes or ''}".strip()
+        self.db.add(
+            OrderEvent(
+                booking_id=vo.booking_id,
+                vendor_order_id=vo.vendor_order_id,
+                actor_user_id=actor_user_id,
+                actor_role="vendor",
+                event_type="delivery_fee_set",
+                from_status=vo.status.value,
+                to_status=vo.status.value,
+                note=note_msg,
+            )
+        )
+
+        # Notify customer
+        if booking and booking.user_id:
+            self.db.add(
+                Notification(
+                    user_id=booking.user_id,
+                    type="order_delivery_fee_quoted",
+                    title="Delivery Fee Quoted",
+                    message=f"Vendor quoted Rs. {new_fee} for venue delivery on booking #{booking.booking_id}. You can accept it or choose self-pickup.",
+                    entity_type="booking",
+                    entity_id=booking.booking_id,
+                )
+            )
+
+        self.db.flush()
+        return self._format_order_detail(vo)
+
     def _format_order_detail(self, vo: VendorOrder) -> VendorOrderDetailResponse:
         booking = vo.booking
         cust = booking.user if booking else None

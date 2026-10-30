@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useAuth } from '@/providers/auth-provider'
 import { useAppNavigate, useAppSearchParams } from '@/components/shared/app-link'
 import { usePageTitle } from '@/hooks/use-page-title'
@@ -8,9 +8,13 @@ import { OrdersTable, type VendorOrderRowData } from '@/components/vendor/orders
 import { ReturnsTable, type VendorReturnRowData } from '@/components/vendor/orders/returns-table'
 import { OrderSheet } from '@/components/vendor/orders/order-sheet'
 import { InspectionDialog } from '@/components/vendor/orders/inspection-dialog'
-import { applyAction, type InspectionPayload, type LifecycleAction } from '@/lib/lifecycle'
-import { loadAccountState, saveAccountState } from '@/lib/api/account'
+import { type InspectionPayload, type LifecycleAction } from '@/lib/lifecycle'
 import { getAllStoredEquipment } from '@/lib/api/inventory'
+import {
+  getVendorOrders,
+  executeVendorOrderLifecycleAction,
+  type VendorOrderDetail,
+} from '@/lib/api/vendor'
 import { toast } from 'sonner'
 import type { BookingDetail, VendorOrder } from '@/types/account'
 import { cn } from '@/lib/utils'
@@ -20,7 +24,7 @@ export function VendorOrdersPage() {
   const navigate = useAppNavigate()
   const [searchParams, setSearchParams] = useAppSearchParams()
 
-  const vendorId = String(user?.vendor?.vendor_id || '1')
+  const vendorId = String(user?.vendor?.vendor_id || '')
   const approvalStatus = user?.vendor?.approval_status || 'approved'
 
   // Non-approved vendors are redirected to /vendor
@@ -40,10 +44,27 @@ export function VendorOrdersPage() {
 
   usePageTitle(tabParam === 'returns' ? 'Vendor Returns & Inspection' : 'Vendor Orders')
 
-  const [accountState, setAccountState] = useState(loadAccountState)
+  const [rawOrders, setRawOrders] = useState<VendorOrderDetail[]>([])
+  const [loadingOrders, setLoadingOrders] = useState(true)
   const [selectedOrderRow, setSelectedOrderRow] = useState<VendorOrderRowData | null>(null)
   const [inspectingOrder, setInspectingOrder] = useState<VendorOrder | null>(null)
   const [inspectingBooking, setInspectingBooking] = useState<BookingDetail | null>(null)
+
+  const fetchOrders = useCallback(async () => {
+    setLoadingOrders(true)
+    try {
+      const orders = await getVendorOrders('all')
+      setRawOrders(orders)
+    } catch (err: any) {
+      toast.error('Failed to load vendor orders')
+    } finally {
+      setLoadingOrders(false)
+    }
+  }, [])
+
+  useEffect(() => {
+    fetchOrders()
+  }, [fetchOrders])
 
   // Equipment deposits map
   const equipmentDeposits = useMemo(() => {
@@ -57,44 +78,122 @@ export function VendorOrdersPage() {
 
   // Vendor profile defaults
   const profile = useMemo(() => ({
-    commission_rate: 0.15,
+    commission_rate: 0,
     business_name: user?.vendor?.business_name || 'My Storefront',
   }), [user])
 
-  // All vendor orders across bookings
+  // Convert raw API VendorOrderDetail items to VendorOrderRowData
   const allVendorOrders = useMemo(() => {
-    const rows: VendorOrderRowData[] = []
-    const bookingsList = Array.isArray(accountState.bookings) ? accountState.bookings : []
-    bookingsList.forEach((booking: any) => {
-      (booking.vendor_orders || []).forEach((vo: any) => {
-        if (vo.vendor_id === vendorId) {
-          const itemNames = (booking.items || [])
-            .filter((it: any) => (vo.item_ids || []).includes(it.item_id))
-            .map((it: any) => `${it.name} ×${it.quantity}`)
-            .join(', ')
+    return rawOrders.map((detail): VendorOrderRowData => {
+      const itemNames = (detail.items || [])
+        .map((it) => `${it.equipment_name} ×${it.quantity}`)
+        .join(', ')
 
-          let nextLabel = ''
-          if (vo.status === 'pending') nextLabel = 'Awaiting your response'
-          else if (vo.status === 'accepted') {
-            nextLabel = vo.delivery?.status === 'scheduled' ? 'Mark out for delivery' : 'Schedule delivery'
-          } else if (vo.status === 'dispatched') nextLabel = 'Mark delivered'
-          else if (vo.status === 'delivered') nextLabel = vo.return?.scheduled_window ? 'Mark returned' : 'Schedule return'
-          else if (vo.status === 'returned') nextLabel = vo.return?.inspected_at ? 'Resolve damage' : 'Inspect items'
+      let nextLabel = ''
+      if (detail.status === 'pending') nextLabel = 'Awaiting your response'
+      else if (detail.status === 'accepted') {
+        nextLabel = detail.delivery?.status === 'scheduled' ? 'Mark out for delivery' : 'Schedule delivery'
+      } else if (detail.status === 'dispatched') nextLabel = 'Mark delivered'
+      else if (detail.status === 'delivered') nextLabel = detail.return_record?.scheduled_window ? 'Mark returned' : 'Schedule return'
+      else if (detail.status === 'returned') nextLabel = detail.return_record?.inspected_at ? 'Resolve damage' : 'Inspect items'
 
-          rows.push({
-            order: vo,
-            booking,
-            itemsSummary: itemNames || 'Sound & Stage Equipment',
-            rentalDates: `${booking.start_date} to ${booking.end_date}`,
-            totalDays: booking.rental_days,
-            city: booking.delivery_address.city,
-            nextStepLabel: nextLabel,
-          })
-        }
-      })
+      const mappedOrder: VendorOrder = {
+        vendor_order_id: String(detail.vendor_order_id),
+        vendor_id: vendorId,
+        vendor_name: profile.business_name,
+        vendor_initials: profile.business_name.slice(0, 2).toUpperCase(),
+        vendor_phone: user?.phone || null,
+        status: detail.status as any,
+        rejection_reason: detail.rejection_reason || undefined,
+        subtotal: detail.subtotal,
+        delivery_fee: detail.delivery_fee,
+        item_ids: (detail.items || []).map((it) => String(it.item_id)),
+        delivery: detail.delivery as any,
+        return: detail.return_record as any,
+        fulfilment_type: (detail.fulfilment_type === 'pickup' ? 'pickup' : 'delivery'),
+      }
+
+      const deliveryAddr = {
+        name: detail.customer_name || 'Customer',
+        line1: detail.delivery_address?.line1 || 'Address line 1',
+        line2: detail.delivery_address?.line2 || '',
+        city: detail.delivery_address?.city || 'City',
+        state: detail.delivery_address?.state || 'State',
+        pincode: detail.delivery_address?.pincode || '',
+        country: 'India',
+      }
+
+      const bookingItems = (detail.items || []).map((it) => ({
+        item_id: String(it.item_id),
+        equipment_id: String(it.equipment_id),
+        name: it.equipment_name,
+        image_url: it.primary_image_url || '/placeholder.png',
+        unit_price: it.daily_rate,
+        quantity: it.quantity,
+        days: it.days,
+        total_price: it.total_price,
+        status: it.status as any,
+        vendor_id: vendorId,
+        vendor_name: profile.business_name,
+        security_deposit: it.deposit_amount,
+        review: null,
+        damage_report: it.damage_report || null,
+        commission_rate: it.commission_rate,
+        commission_amount: it.commission_amount,
+      }))
+
+      const mappedBooking: BookingDetail = {
+        booking_id: detail.booking_number || String(detail.booking_id),
+        event_name: 'Rental Booking',
+        event_type: 'Event Equipment Rental',
+        status: 'confirmed',
+        payment_status: 'unpaid',
+        start_date: detail.start_date,
+        end_date: detail.end_date,
+        rental_days: detail.total_days,
+        delivery_city: deliveryAddr.city,
+        vendor_count: 1,
+        item_count: (detail.items || []).reduce((sum, it) => sum + it.quantity, 0),
+        vendor_avatars: [{ id: vendorId, name: profile.business_name, initials: profile.business_name.slice(0, 2) }],
+        total_amount: detail.subtotal + detail.delivery_fee,
+        action_needed: [],
+        created_at: detail.start_date,
+        delivery_address: deliveryAddr,
+        vendor_orders: [mappedOrder],
+        items: bookingItems,
+        payments: [],
+        deposit: {
+          held: detail.deposit_share,
+          deducted: detail.deposit_deducted,
+          refunded: detail.deposit_refunded,
+          pending_refund: 0,
+        },
+        price_summary: {
+          subtotal: detail.subtotal,
+          discount: 0,
+          coupon_code: undefined,
+          tax: 0,
+          delivery_fee: detail.delivery_fee,
+          security_deposit: detail.deposit_share,
+          total: detail.subtotal + detail.delivery_fee,
+        },
+        activity: (detail.events || []).map((ev: any) => ({
+          timestamp: ev.created_at || new Date().toISOString(),
+          description: ev.details || ev.action || 'Order event',
+        })),
+      }
+
+      return {
+        order: mappedOrder,
+        booking: mappedBooking,
+        itemsSummary: itemNames || 'Sound & Stage Equipment',
+        rentalDates: `${detail.start_date} to ${detail.end_date}`,
+        totalDays: detail.total_days,
+        city: deliveryAddr.city,
+        nextStepLabel: nextLabel,
+      }
     })
-    return rows
-  }, [accountState, vendorId])
+  }, [rawOrders, vendorId, profile, user])
 
   // Synchronize URL order param with drawer
   useEffect(() => {
@@ -221,35 +320,14 @@ export function VendorOrdersPage() {
     if (!selectedOrderRow && !inspectingOrder) return
 
     const currentOrder = selectedOrderRow?.order || inspectingOrder!
-    const currentBooking = selectedOrderRow?.booking || inspectingBooking!
 
-    const res = applyAction(
-      currentBooking,
-      currentOrder.vendor_order_id,
-      action,
-      payload,
-      'vendor',
-      {
-        vendorCommissionRate: profile.commission_rate,
-        equipmentDeposits,
-      }
-    )
-
-    if (res.error) {
-      toast.error(res.error)
-      return
+    try {
+      await executeVendorOrderLifecycleAction(currentOrder.vendor_order_id, action, payload)
+      toast.success(`Order ${currentOrder.vendor_order_id} updated successfully.`)
+      await fetchOrders()
+    } catch (err: any) {
+      toast.error(err?.message || `Failed to update order ${currentOrder.vendor_order_id}`)
     }
-
-    // Persist to store
-    const state = loadAccountState() as { bookings: BookingDetail[] }
-    const bIndex = state.bookings.findIndex((b) => b.booking_id === res.booking.booking_id)
-    if (bIndex !== -1) {
-      state.bookings[bIndex] = res.booking
-      saveAccountState(state)
-      setAccountState(state as any)
-    }
-
-    toast.success(`Order ${currentOrder.vendor_order_id} updated successfully.`)
   }
 
   const handleTabChange = (nextTab: 'orders' | 'returns') => {
@@ -389,6 +467,7 @@ export function VendorOrdersPage() {
 
             <OrdersTable
               orders={filteredOrders}
+              loading={loadingOrders}
               page={pageParam}
               pageSize={10}
               totalItems={filteredOrders.length}

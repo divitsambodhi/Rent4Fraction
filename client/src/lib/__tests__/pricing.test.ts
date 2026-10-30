@@ -154,22 +154,20 @@ describe('Pricing Engine Unit Tests', () => {
   })
 
   describe('deliveryFee', () => {
-    it('charges ₹300 per vendor choosing delivery and ₹0 for pickup', () => {
+    it('sets delivery fee to 0 at checkout (calculated by vendor upon review) and ₹0 for pickup', () => {
       const res = deliveryFee(
         { v1: 'delivery', v2: 'pickup', v3: 'delivery' },
         ['v1', 'v2', 'v3'],
       )
-      expect(res.total).toBe(600)
-      expect(res.byVendor).toEqual({ v1: 300, v2: 0, v3: 300 })
+      expect(res.total).toBe(0)
+      expect(res.byVendor).toEqual({ v1: 0, v2: 0, v3: 0 })
     })
   })
 
   describe('tax calculation', () => {
-    it('computes 18% GST accurately on discounted subtotal', () => {
-      // 10000 taxable subtotal -> 1800 tax
-      expect(tax(10000)).toBe(1800)
-      // 1234.50 taxable subtotal -> round(1234.50 * 0.18) = 222.21
-      expect(tax(1234.5)).toBe(222.21)
+    it('computes ₹0 platform tax (direct vendor-to-customer model)', () => {
+      expect(tax(10000)).toBe(0)
+      expect(tax(1234.5)).toBe(0)
     })
   })
 
@@ -220,14 +218,14 @@ describe('Pricing Engine Unit Tests', () => {
       expect(q.subtotal).toBe(23400)
       // Discount = 100
       expect(q.discount).toBe(100)
-      // Taxable = 23400 - 100 = 23300. Tax = 23300 * 0.18 = 4194
-      expect(q.tax).toBe(4194)
-      // Delivery = 300 (v1 delivery, v2 pickup)
-      expect(q.delivery_fee).toBe(300)
+      // Platform tax = 0
+      expect(q.tax).toBe(0)
+      // Delivery = 0 (to be quoted by vendor)
+      expect(q.delivery_fee).toBe(0)
       // Security deposit = (10000 * 2) + (7000 * 1) = 27000
       expect(q.security_deposit).toBe(27000)
-      // Total = 23400 - 100 + 4194 + 300 + 27000 = 54794
-      expect(q.total).toBe(54794)
+      // Total = 23400 - 100 + 0 + 0 + 27000 = 50300
+      expect(q.total).toBe(50300)
 
       const expectedTotal =
         q.subtotal - q.discount + q.tax + q.delivery_fee + q.security_deposit

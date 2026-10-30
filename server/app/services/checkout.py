@@ -80,16 +80,27 @@ def create_checkout_order(
     req_json = payload.model_dump_json()
     req_hash = hashlib.sha256(req_json.encode("utf-8")).hexdigest()
 
+    CHECKOUT_ENDPOINT = "/api/v1/checkout/orders"
     existing_idem = (
-        db.query(IdempotencyKey).filter(IdempotencyKey.idempotency_key == idempotency_key).first()
+        db.query(IdempotencyKey)
+        .filter(
+            IdempotencyKey.user_id == user.user_id,
+            IdempotencyKey.endpoint == CHECKOUT_ENDPOINT,
+            IdempotencyKey.idempotency_key == idempotency_key,
+        )
+        .first()
     )
     if existing_idem:
         if existing_idem.request_hash != req_hash:
             raise IdempotencyKeyReuseError(
                 "Idempotency key has already been used with a different request payload."
             )
-        saved_dict = json.loads(existing_idem.response_body)
-        return CheckoutOrderResponse.model_validate(saved_dict)
+        saved_data = (
+            existing_idem.response_body
+            if isinstance(existing_idem.response_body, dict)
+            else json.loads(existing_idem.response_body)
+        )
+        return CheckoutOrderResponse.model_validate(saved_data)
 
     # -------------------------------------------------------------------------
     # 1. Preconditions
@@ -167,8 +178,13 @@ def create_checkout_order(
         cod_setting = (
             db.query(PlatformSetting).filter(PlatformSetting.setting_key == "cod_enabled").first()
         )
-        cod_val = cod_setting.setting_value.strip().lower() if cod_setting else "0"
-        if cod_val not in ("1", "true"):
+        if cod_setting:
+            cod_val = cod_setting.setting_value.strip().lower()
+            if cod_val not in ("1", "true"):
+                raise CodNotAvailableError(
+                    message="Cash on Delivery is currently disabled by platform policy."
+                )
+        elif not settings.COD_ENABLED:
             raise CodNotAvailableError(
                 message="Cash on Delivery is currently disabled by platform policy."
             )
@@ -284,10 +300,14 @@ def create_checkout_order(
     }
     for v_id_str in cart_vendor_ids:
         if v_id_str not in payload.fulfilment_by_vendor:
-            raise ValidationFailedError(
-                message=f"Fulfilment type missing for vendor ID {v_id_str}.",
-                details={"vendor_id": v_id_str},
-            )
+            # Default to delivery if all vendor's items allow it, else pickup
+            vendor_eqs = [
+                locked_equipment_map[item.equipment_id]
+                for item in cart_lines
+                if str(locked_equipment_map[item.equipment_id].vendor_id) == v_id_str
+            ]
+            all_delivery = all(eq.delivery_available for eq in vendor_eqs)
+            payload.fulfilment_by_vendor[v_id_str] = "delivery" if all_delivery else "pickup"
 
     # Delivery availability check
     for item in cart_lines:
@@ -588,10 +608,12 @@ def create_checkout_order(
             razorpay=None,
         )
         idem_record = IdempotencyKey(
+            user_id=user.user_id,
+            endpoint=CHECKOUT_ENDPOINT,
             idempotency_key=idempotency_key,
             request_hash=req_hash,
-            response_code=201,
-            response_body=resp.model_dump_json(),
+            response_status=201,
+            response_body=resp.model_dump(),
             expires_at=now + timedelta(days=1),
         )
         db.add(idem_record)
@@ -641,10 +663,12 @@ def create_checkout_order(
         )
 
         idem_record = IdempotencyKey(
+            user_id=user.user_id,
+            endpoint=CHECKOUT_ENDPOINT,
             idempotency_key=idempotency_key,
             request_hash=req_hash,
-            response_code=201,
-            response_body=resp.model_dump_json(),
+            response_status=201,
+            response_body=resp.model_dump(),
             expires_at=now + timedelta(days=1),
         )
         db.add(idem_record)

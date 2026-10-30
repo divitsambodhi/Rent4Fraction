@@ -30,6 +30,8 @@ export interface AddToCartInput {
   category_id?: string
   vendor_id?: string
   delivery_available?: boolean
+  min_rental_days?: number
+  max_available_quantity?: number
 }
 
 interface CartContextType {
@@ -133,8 +135,8 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
           days,
           primary_image_url: input.primary_image_url || mock?.primary_image_url || '/images/equipment/line-array-speaker.svg',
           delivery_available: input.delivery_available ?? mock?.delivery_available ?? true,
-          min_rental_days: mock?.min_rental_days ?? 1,
-          max_available_quantity: 6,
+          min_rental_days: input.min_rental_days ?? mock?.min_rental_days ?? 1,
+          max_available_quantity: input.max_available_quantity ?? 6,
         }
         updated = [...prev, newLine]
       }

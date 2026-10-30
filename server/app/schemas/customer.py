@@ -61,6 +61,7 @@ class CartItemCreateRequest(BaseModel):
     quantity: int = Field(default=1, ge=1, le=50)
     start_date: str
     end_date: str
+    override_quantity: bool = False
 
 
 class CartItemUpdateRequest(BaseModel):

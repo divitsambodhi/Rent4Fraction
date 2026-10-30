@@ -26,7 +26,7 @@ class RateLimitRule:
 
 
 # Default tiers
-TIER_GLOBAL_IP = RateLimitRule(max_requests=120, window_seconds=60)
+TIER_GLOBAL_IP = RateLimitRule(max_requests=300, window_seconds=60)
 TIER_AUTH_IP = RateLimitRule(max_requests=20, window_seconds=60)
 TIER_CONTACT_IP = RateLimitRule(max_requests=5, window_seconds=3600)
 TIER_CONTACT_USER = RateLimitRule(max_requests=3, window_seconds=3600)

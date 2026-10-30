@@ -159,13 +159,29 @@ export async function sendMessage(input: SendMessageInput): Promise<Message> {
   })
 }
 
-export async function getAddresses(): Promise<Address[]> {
-  try {
-    const res = await apiClient.get<{ items: Address[] }>('/api/v1/addresses')
-    return res.items || []
-  } catch {
-    return []
+let cachedAddressesPromise: Promise<Address[]> | null = null
+let cachedAddressesExpiry = 0
+
+export async function getAddresses(forceRefresh = false): Promise<Address[]> {
+  const now = Date.now()
+  if (!forceRefresh && cachedAddressesPromise && now < cachedAddressesExpiry) {
+    return cachedAddressesPromise
   }
+
+  cachedAddressesExpiry = now + 3000 // dedupe window: 3s
+  cachedAddressesPromise = (async () => {
+    try {
+      const res = await apiClient.get<any>('/api/v1/addresses')
+      if (Array.isArray(res)) {
+        return res
+      }
+      return res?.items || []
+    } catch {
+      return []
+    }
+  })()
+
+  return cachedAddressesPromise
 }
 
 export async function saveAddress(data: Partial<Address>): Promise<Address> {
@@ -269,4 +285,15 @@ export async function respondToDamageReport(
     action,
     dispute_reason: reason,
   })
+}
+
+export async function respondToDeliveryFee(
+  bookingId: string,
+  vendorOrderId: string,
+  action: 'accept' | 'switch_to_pickup'
+): Promise<any> {
+  return await apiClient.post(
+    `/api/v1/bookings/${bookingId}/vendor-orders/${vendorOrderId}/respond-delivery-fee`,
+    { action }
+  )
 }

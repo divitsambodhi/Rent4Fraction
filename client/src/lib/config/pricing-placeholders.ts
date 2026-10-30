@@ -6,10 +6,10 @@ import type { Coupon } from '@/types/checkout'
 export const DEFAULT_PLATFORM_COMMISSION_RATE = 10 // MOCK PLACEHOLDER
 
 /** Estimated Goods & Services Tax (GST) rate applied to (subtotal - discount) */
-export const MOCK_TAX_RATE = 0.18
+export const MOCK_TAX_RATE = 0
 
-/** Standard flat delivery fee charged per vendor that fulfils via delivery */
-export const MOCK_DELIVERY_FEE_PER_VENDOR = 300
+/** Standard flat delivery fee charged per vendor that fulfils via delivery (0 at initial checkout; calculated by vendor) */
+export const MOCK_DELIVERY_FEE_PER_VENDOR = 0
 
 /** Self-pickup fee per vendor */
 export const MOCK_PICKUP_FEE = 0

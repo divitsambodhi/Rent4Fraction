@@ -206,9 +206,11 @@ export interface VendorOrder {
   vendor_id: string
   vendor_name: string
   vendor_initials: string
+  vendor_phone?: string | null
   status: VendorOrderStatus
   rejection_reason?: string
   subtotal: number
+  delivery_fee?: number
   item_ids: string[]
   delivery?: DeliveryTrackerData | null
   return?: ReturnInspectionData | null

@@ -37,28 +37,25 @@ export function PriceSummary({ summary, className }: PriceSummaryProps) {
         </div>
       )}
 
-      {/* Tax */}
-      {summary.tax > 0 ? (
-        <div className="flex items-center justify-between text-muted-foreground">
-          <span>Taxes & GST (18%)</span>
-          <span className="font-semibold text-foreground tabular-nums">
-            {formatINR(summary.tax)}
-          </span>
-        </div>
-      ) : (
-        <div className="flex items-center justify-between text-muted-foreground">
-          <span>Platform fee & tax</span>
-          <span className="font-medium text-emerald-600 dark:text-emerald-400 tabular-nums">
-            ₹0 (0% platform fee)
-          </span>
-        </div>
-      )}
+      {/* Platform fee / tax */}
+      <div className="flex items-center justify-between text-muted-foreground">
+        <span>Taxes & platform fee</span>
+        <span className="font-medium text-emerald-600 dark:text-emerald-400 tabular-nums">
+          ₹0 (0% platform cut)
+        </span>
+      </div>
 
       {/* Delivery Fee */}
       <div className="flex items-center justify-between text-muted-foreground">
         <span>Venue delivery & logistics</span>
         <span className="font-semibold text-foreground tabular-nums">
-          {formatINR(summary.delivery_fee)}
+          {summary.delivery_fee > 0 ? (
+            formatINR(summary.delivery_fee)
+          ) : (
+            <span className="text-[11px] font-medium text-amber-600 dark:text-amber-400">
+              To be quoted by vendor
+            </span>
+          )}
         </span>
       </div>
 

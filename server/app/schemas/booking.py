@@ -178,12 +178,17 @@ class VendorOrderResponse(BaseModel):
     status: str
     rejection_reason: str | None = None
     subtotal: float
+    delivery_fee: float = 0.0
     item_ids: list[str] = Field(default_factory=list)
     delivery: DeliveryTrackerData | None = None
     return_: ReturnInspectionData | None = Field(default=None, alias="return")
     fulfilment_type: str = "delivery"
 
     model_config = {"populate_by_name": True}
+
+
+class RespondDeliveryFeeRequest(BaseModel):
+    action: str = Field(description="'accept' or 'switch_to_pickup'")
 
 
 class DepositSummaryData(BaseModel):

@@ -489,6 +489,85 @@ class BookingService:
             "dispute_reason": dr.dispute_reason,
         }
 
+    def respond_to_delivery_fee(
+        self,
+        user: User,
+        booking_id: int,
+        vendor_order_id: int,
+        action: str,  # 'accept' | 'switch_to_pickup'
+    ) -> dict[str, Any]:
+        """
+        Customer responds to vendor-quoted delivery fee.
+        - 'accept': acknowledges the fee; fee remains active.
+        - 'switch_to_pickup': changes fulfilment to pickup and sets fee to 0.00.
+        Recalculates booking delivery_fee and total_amount.
+        """
+        booking = (
+            self.db.query(Booking)
+            .filter(Booking.booking_id == booking_id, Booking.user_id == user.user_id)
+            .with_for_update()
+            .first()
+        )
+        if not booking:
+            raise NotFoundError("Booking", str(booking_id))
+
+        vo = (
+            self.db.query(VendorOrder)
+            .filter(
+                VendorOrder.vendor_order_id == vendor_order_id,
+                VendorOrder.booking_id == booking.booking_id,
+            )
+            .with_for_update()
+            .first()
+        )
+        if not vo:
+            raise NotFoundError("VendorOrder", str(vendor_order_id))
+
+        if action == "switch_to_pickup":
+            vo.fulfilment_type = "pickup"
+            vo.delivery_fee = Decimal("0.00")
+            note_text = f"Customer switched fulfillment to self-pickup. Delivery fee set to ₹0."
+        elif action == "accept":
+            note_text = f"Customer accepted delivery fee of ₹{vo.delivery_fee}."
+        else:
+            raise ValidationFailedError(f"Invalid action '{action}'. Must be 'accept' or 'switch_to_pickup'.")
+
+        # Recalculate total delivery fee and total booking amount
+        all_vos = (
+            self.db.query(VendorOrder)
+            .filter(VendorOrder.booking_id == booking.booking_id)
+            .all()
+        )
+        new_delivery_fee_total = sum((v.delivery_fee for v in all_vos), Decimal("0.00"))
+        booking.delivery_fee = new_delivery_fee_total
+        booking.total_amount = (
+            booking.subtotal
+            - booking.discount
+            + booking.tax
+            + booking.delivery_fee
+            + booking.security_deposit
+        )
+
+        event = OrderEvent(
+            booking_id=booking.booking_id,
+            from_status=vo.status.value,
+            to_status=vo.status.value,
+            event_type="delivery_fee_response",
+            note=note_text,
+            actor_user_id=user.user_id,
+        )
+        self.db.add(event)
+        self.db.commit()
+
+        return {
+            "success": True,
+            "vendor_order_id": str(vo.vendor_order_id),
+            "fulfilment_type": vo.fulfilment_type,
+            "delivery_fee": float(vo.delivery_fee),
+            "booking_delivery_fee": float(booking.delivery_fee),
+            "booking_total_amount": float(booking.total_amount),
+        }
+
     # -------------------------------------------------------------------------
     # Payments Read
     # -------------------------------------------------------------------------

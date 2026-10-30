@@ -1,5 +1,4 @@
 import { apiClient } from '@/lib/api/client'
-import type { EquipmentListingView } from '@/types'
 import type {
   AvailabilityBlock,
   AvailabilityReason,
@@ -7,211 +6,223 @@ import type {
   InventoryItem,
 } from '@/types/vendor'
 
-export interface InventoryItemInput {
-  name: string
-  category_id: string
-  price_per_day: number
-  security_deposit: number
-  quantity: number
-  min_rental_days?: number
-  description?: string
-  delivery_available?: boolean
-  images?: string[]
+export interface InventoryStats {
+  total: number
+  active: number
+  lowStock: number
+  outOfStock: number
 }
 
-const INVENTORY_STORAGE_KEY = 'r4f-vendor-inventory-v1'
-
-export interface EquipmentStoreState {
-  version: number
+export interface InventoryListResult {
   items: InventoryItem[]
-}
-
-export function getStoredEquipmentState(): EquipmentStoreState {
-  if (typeof window === 'undefined') {
-    return { version: 1, items: [] }
-  }
-  try {
-    const raw = localStorage.getItem(INVENTORY_STORAGE_KEY)
-    if (!raw) {
-      return { version: 1, items: [] }
-    }
-    const parsed = JSON.parse(raw)
-    return { version: 1, items: Array.isArray(parsed.items) ? parsed.items : [] }
-  } catch {
-    return { version: 1, items: [] }
+  total: number
+  page: number
+  pageSize: number
+  stats: {
+    total: number
+    active: number
+    inactive: number
+    out_of_stock: number
+    low_stock: number
+    archived: number
   }
 }
 
-export function saveStoredEquipmentState(state: EquipmentStoreState): void {
-  if (typeof window === 'undefined') return
-  try {
-    localStorage.setItem(INVENTORY_STORAGE_KEY, JSON.stringify(state))
-  } catch {
-    // ignore
-  }
-}
+// In-memory cache for synchronous readers
+let cachedEquipment: InventoryItem[] = []
 
 export function getAllStoredEquipment(): InventoryItem[] {
-  return getStoredEquipmentState().items
+  return cachedEquipment
 }
 
-export function getInventoryItemById(id: string): InventoryItem | null {
-  const all = getAllStoredEquipment()
-  return all.find((item) => item.id === id || item.equipment_id === id) || null
+export async function fetchVendorInventory(params: {
+  q?: string
+  status?: string
+  category_id?: number
+  stock?: string
+  sort?: string
+  page?: number
+  pageSize?: number
+} = {}): Promise<InventoryListResult> {
+  try {
+    const queryParams: Record<string, any> = {}
+    if (params.q) queryParams.q = params.q
+    if (params.status && params.status !== 'all') queryParams.status = params.status
+    if (params.category_id) queryParams.category_id = params.category_id
+    if (params.stock && params.stock !== 'all') queryParams.stock = params.stock
+    if (params.sort) queryParams.sort = params.sort
+    if (params.page) queryParams.page = params.page
+    if (params.pageSize) queryParams.pageSize = params.pageSize
+
+    const res = await apiClient.get<any>('/api/v1/vendor/inventory', { params: queryParams })
+    if (res && Array.isArray(res.items)) {
+      cachedEquipment = res.items
+      return {
+        items: res.items,
+        total: res.total ?? res.items.length,
+        page: res.page ?? 1,
+        pageSize: res.pageSize ?? 10,
+        stats: res.stats || {
+          total: res.items.length,
+          active: res.items.filter((i: any) => i.status === 'active').length,
+          inactive: res.items.filter((i: any) => i.status === 'inactive').length,
+          out_of_stock: res.items.filter((i: any) => (i.quantity ?? 0) === 0).length,
+          low_stock: res.items.filter((i: any) => (i.quantity ?? 0) > 0 && (i.quantity ?? 0) <= 2).length,
+          archived: 0,
+        },
+      }
+    }
+    return {
+      items: [],
+      total: 0,
+      page: 1,
+      pageSize: 10,
+      stats: { total: 0, active: 0, inactive: 0, out_of_stock: 0, low_stock: 0, archived: 0 },
+    }
+  } catch {
+    return {
+      items: [],
+      total: 0,
+      page: 1,
+      pageSize: 10,
+      stats: { total: 0, active: 0, inactive: 0, out_of_stock: 0, low_stock: 0, archived: 0 },
+    }
+  }
 }
 
-export function saveInventoryItem(
+export const getVendorInventory = fetchVendorInventory
+
+export async function getInventoryItemById(id: string): Promise<InventoryItem | null> {
+  try {
+    const item = await apiClient.get<InventoryItem>(`/api/v1/vendor/inventory/${id}`)
+    return item || null
+  } catch {
+    return cachedEquipment.find((i) => i.id === id || i.equipment_id === id) || null
+  }
+}
+
+function cleanImagePayload(images?: any[]): any[] {
+  if (!images || !Array.isArray(images)) return []
+  return images.map((img, idx) => {
+    if (typeof img === 'string') {
+      return { url: img, is_primary: idx === 0, sort_order: idx }
+    }
+    return {
+      url: img.url || '',
+      public_id: img.public_id || undefined,
+      storage_path: img.storage_path || undefined,
+      is_primary: Boolean(img.is_primary || img.isPrimary),
+      sort_order: typeof img.sort_order === 'number' ? img.sort_order : idx,
+      alt_text: img.alt_text || undefined,
+    }
+  }).filter((img) => Boolean(img.url))
+}
+
+export async function createVendorEquipment(data: Partial<InventoryItem>): Promise<InventoryItem> {
+  const images = cleanImagePayload(data.images)
+  if (images.length === 0 && data.primary_image_url) {
+    images.push({ url: data.primary_image_url, is_primary: true, sort_order: 0 })
+  }
+
+  const payload = {
+    category_id: parseInt(String(data.category_id || '1'), 10) || 1,
+    name: (data.name || 'Untitled Equipment').trim(),
+    description: data.description || '',
+    price_per_day: Number(data.price_per_day ?? (data as any).price ?? 1000),
+    security_deposit: Number(data.security_deposit ?? (data as any).deposit ?? 0),
+    quantity: Number(data.quantity ?? (data as any).stock ?? 1),
+    min_rental_days: Number(data.min_rental_days ?? 1),
+    delivery_available: data.delivery_available ?? true,
+    images,
+    includes: data.includes || (data as any).included || [],
+    specifications: data.specifications || {},
+  }
+
+  const res = await apiClient.post<InventoryItem>('/api/v1/vendor/inventory', payload)
+  return res
+}
+
+export async function updateVendorEquipment(id: string, data: Partial<InventoryItem>): Promise<InventoryItem> {
+  const payload: Record<string, any> = {}
+  if (data.category_id !== undefined) payload.category_id = parseInt(String(data.category_id), 10) || 1
+  if (data.name !== undefined) payload.name = data.name.trim()
+  if (data.description !== undefined) payload.description = data.description
+  if (data.price_per_day !== undefined) payload.price_per_day = Number(data.price_per_day)
+  if (data.security_deposit !== undefined) payload.security_deposit = Number(data.security_deposit)
+  if (data.quantity !== undefined) payload.quantity = Number(data.quantity)
+  if (data.min_rental_days !== undefined) payload.min_rental_days = Number(data.min_rental_days)
+  if (data.delivery_available !== undefined) payload.delivery_available = Boolean(data.delivery_available)
+  if (data.status !== undefined) {
+    payload.status = data.status === 'out_of_stock' ? 'inactive' : data.status
+  }
+  if (data.images !== undefined) {
+    payload.images = cleanImagePayload(data.images)
+  }
+  if (data.includes !== undefined || (data as any).included !== undefined) {
+    payload.includes = data.includes || (data as any).included
+  }
+  if (data.specifications !== undefined) {
+    payload.specifications = data.specifications
+  }
+
+  const res = await apiClient.patch<InventoryItem>(`/api/v1/vendor/inventory/${id}`, payload)
+  return res
+}
+
+export async function saveInventoryItem(
   data: Partial<InventoryItem> & { equipment_id?: string },
-  vendorId = '1',
-): InventoryItem {
-  const state = getStoredEquipmentState()
-  const now = new Date().toISOString()
-
-  let savedItem: InventoryItem
-
-  if (data.equipment_id && data.equipment_id !== 'new') {
-    const index = state.items.findIndex(
-      (item) => item.equipment_id === data.equipment_id || item.id === data.equipment_id,
-    )
-    if (index === -1) {
-      throw new Error(`Equipment item with ID ${data.equipment_id} not found`)
-    }
-    const existing = state.items[index]
-    savedItem = {
-      ...existing,
-      ...data,
-      id: existing.id || existing.equipment_id,
-      equipment_id: existing.equipment_id || existing.id,
-      vendor_id: existing.vendor_id || vendorId,
-      updated_at: now,
-    } as InventoryItem
-    state.items[index] = savedItem
-  } else {
-    const newId = String(Date.now())
-    savedItem = {
-      id: newId,
-      equipment_id: newId,
-      vendor_id: vendorId,
-      vendor_name: data.vendor_name || 'My Equipment Co.',
-      name: data.name || 'Untitled Equipment',
-      description: data.description || '',
-      category_id: data.category_id || '1',
-      category_name: data.category_name || 'Sound',
-      category: data.category_name || 'Sound',
-      parent_category_id: data.parent_category_id || null,
-      parent_category_name: data.parent_category_name || null,
-      price_per_day: data.price_per_day ?? 1000,
-      price: data.price_per_day ?? 1000,
-      security_deposit: data.security_deposit ?? 2000,
-      deposit: data.security_deposit ?? 2000,
-      quantity: data.quantity ?? 1,
-      stock: data.quantity ?? 1,
-      min_rental_days: data.min_rental_days ?? 1,
-      delivery_available: data.delivery_available ?? true,
-      avg_rating: 0,
-      rating: 0,
-      review_count: 0,
-      reviews: 0,
-      status: (data.status as EquipmentStatus) || 'active',
-      primary_image_url: data.primary_image_url || '',
-      image: data.primary_image_url || '',
-      images: (data.images as EquipmentImage[]) || [],
-      includes: data.includes || ['Standard accessories'],
-      specifications: data.specifications || {},
-      blocked_ranges: [],
-      created_at: now,
-      updated_at: now,
-      updated: now,
-    } as unknown as InventoryItem
-    state.items.unshift(savedItem)
+  _vendorId = '1',
+): Promise<InventoryItem> {
+  const targetId = data.equipment_id || data.id
+  if (targetId && targetId !== 'new') {
+    return await updateVendorEquipment(targetId, data)
   }
-
-  saveStoredEquipmentState(state)
-  return savedItem
+  return await createVendorEquipment(data)
 }
 
-export function duplicateInventoryItem(id: string): InventoryItem {
-  const state = getStoredEquipmentState()
-  const original = state.items.find((item) => item.equipment_id === id || item.id === id)
-  if (!original) {
-    throw new Error(`Equipment item with ID ${id} not found`)
-  }
-  const newId = String(Date.now())
-  const now = new Date().toISOString()
-  const duplicated: InventoryItem = {
-    ...original,
-    id: newId,
-    equipment_id: newId,
-    name: `${original.name} (Copy)`,
-    status: 'inactive',
-    created_at: now,
-    updated_at: now,
-  }
-  state.items.unshift(duplicated)
-  saveStoredEquipmentState(state)
-  return duplicated
+export async function duplicateInventoryItem(id: string): Promise<InventoryItem> {
+  const res = await apiClient.post<InventoryItem>(`/api/v1/vendor/inventory/${id}/duplicate`)
+  return res
 }
 
-export function setInventoryItemStatuses(ids: string[], status: EquipmentStatus): void {
-  const state = getStoredEquipmentState()
-  const now = new Date().toISOString()
-  state.items = state.items.map((item) => {
-    if (ids.includes(item.equipment_id) || ids.includes(item.id)) {
-      return { ...item, status, updated_at: now }
-    }
-    return item
+export async function setInventoryItemStatuses(ids: string[], status: EquipmentStatus): Promise<void> {
+  const mappedStatus = status === 'out_of_stock' ? 'inactive' : status
+  const numericIds = ids.map((id) => parseInt(id.replace(/\D/g, ''), 10)).filter((n) => !isNaN(n))
+  if (numericIds.length === 0) return
+  await apiClient.post('/api/v1/vendor/inventory/bulk-status', {
+    equipment_ids: numericIds,
+    status: mappedStatus,
   })
-  saveStoredEquipmentState(state)
 }
 
-export function checkCanArchiveEquipment(_id: string): { canArchive: boolean; reason?: string } {
-  return { canArchive: true }
-}
-
-export function archiveEquipmentItem(id: string): { success: boolean; error?: string } {
-  setInventoryItemStatuses([id], 'archived' as EquipmentStatus)
-  return { success: true }
+export function checkCanArchiveEquipment(_id: string): boolean {
+  return true
 }
 
 export function queryInventory(
   params: {
     q?: string
-    status?: EquipmentStatus | 'all'
+    status?: string
     category?: string
-    stock?: 'low' | 'all'
+    stock?: string
     sort?: string
     page?: number
     pageSize?: number
-  } = {},
-  vendorId = '1',
-) {
-  const all = getAllStoredEquipment().filter((i) => i.vendor_id === vendorId || !i.vendor_id)
-  let filtered = all.filter((item) => {
-    if (params.q) {
-      const q = params.q.toLowerCase()
-      if (!item.name.toLowerCase().includes(q) && !(item.description || '').toLowerCase().includes(q)) {
-        return false
-      }
-    }
-    if (params.status && params.status !== 'all' && item.status !== params.status) {
-      return false
-    }
-    if (params.category && params.category !== 'all' && item.category_id !== params.category) {
-      return false
-    }
-    if (params.stock === 'low' && item.quantity > 2) {
-      return false
-    }
-    return true
-  })
-
+  },
+  _vendorId = '1',
+): { items: InventoryItem[]; total: number; page: number; pageSize: number } {
+  let filtered = [...cachedEquipment]
+  if (params.q) {
+    const q = params.q.toLowerCase()
+    filtered = filtered.filter((i) => i.name.toLowerCase().includes(q))
+  }
+  if (params.status && params.status !== 'all') {
+    filtered = filtered.filter((i) => i.status === params.status)
+  }
   const page = Math.max(1, params.page || 1)
   const pageSize = params.pageSize || 10
-  const start = (page - 1) * pageSize
-  const paginated = filtered.slice(start, start + pageSize)
-
   return {
-    items: paginated,
+    items: filtered.slice((page - 1) * pageSize, page * pageSize),
     total: filtered.length,
     page,
     pageSize,
@@ -238,7 +249,7 @@ export function getAvailability(equipmentId: string): {
   total_quantity: number
   blocks: AvailabilityBlock[]
 } | null {
-  const item = getInventoryItemById(equipmentId)
+  const item = cachedEquipment.find((i) => i.id === equipmentId || i.equipment_id === equipmentId)
   if (!item) return null
   return {
     equipment_id: equipmentId,
@@ -259,81 +270,15 @@ export async function addAvailabilityBlock(
   },
 ): Promise<AvailabilityBlock> {
   const qty = blockData.quantity ?? blockData.units ?? 1
-  const blockId = `blk-${Date.now()}`
-  const newBlock: AvailabilityBlock = {
-    id: blockId,
-    block_id: blockId,
-    equipment_id: equipmentId,
+  return await apiClient.post<AvailabilityBlock>(`/api/v1/vendor/inventory/${equipmentId}/availability-blocks`, {
     start_date: blockData.start_date,
     end_date: blockData.end_date,
-    reason: blockData.reason,
     units: qty,
-    quantity: qty,
+    reason: blockData.reason === 'maintenance' ? 'maintenance' : 'vendor_blocked',
     note: blockData.note,
-    created_at: new Date().toISOString(),
-  }
-
-  const state = getStoredEquipmentState()
-  const item = state.items.find((i) => i.equipment_id === equipmentId || i.id === equipmentId)
-  if (item) {
-    item.blocked_ranges = item.blocked_ranges || []
-    item.blocked_ranges.push(newBlock)
-    saveStoredEquipmentState(state)
-  }
-
-  return newBlock
-}
-
-export async function removeAvailabilityBlock(equipmentId: string, blockId: string): Promise<void> {
-  const state = getStoredEquipmentState()
-  const item = state.items.find((i) => i.equipment_id === equipmentId || i.id === equipmentId)
-  if (item && item.blocked_ranges) {
-    item.blocked_ranges = item.blocked_ranges.filter((b) => b.id !== blockId && b.block_id !== blockId)
-    saveStoredEquipmentState(state)
-  }
-}
-
-export async function getVendorInventory(): Promise<EquipmentListingView[]> {
-  try {
-    const res = await apiClient.get<{ items: EquipmentListingView[] }>('/api/v1/vendor/equipment')
-    return res.items || []
-  } catch {
-    return []
-  }
-}
-
-export async function createInventoryEquipment(data: InventoryItemInput): Promise<EquipmentListingView> {
-  return await apiClient.post<EquipmentListingView>('/api/v1/vendor/equipment', data)
-}
-
-export async function updateInventoryEquipment(
-  equipmentId: string,
-  data: Partial<InventoryItemInput>,
-): Promise<EquipmentListingView> {
-  return await apiClient.put<EquipmentListingView>(`/api/v1/vendor/equipment/${equipmentId}`, data)
-}
-
-export async function deleteInventoryEquipment(equipmentId: string): Promise<void> {
-  await apiClient.delete(`/api/v1/vendor/equipment/${equipmentId}`)
-}
-
-export async function bulkUpdateInventoryStatus(
-  equipmentIds: string[],
-  status: 'active' | 'paused' | 'archived',
-): Promise<void> {
-  await apiClient.post('/api/v1/vendor/equipment/bulk-status', {
-    equipment_ids: equipmentIds,
-    status,
   })
 }
 
-export async function createAvailabilityBlock(
-  equipmentId: string,
-  data: { start_date: string; end_date: string; reason?: string },
-): Promise<{ block_id: string }> {
-  return await apiClient.post<{ block_id: string }>(`/api/v1/vendor/equipment/${equipmentId}/blocks`, data)
-}
-
-export async function deleteAvailabilityBlock(equipmentId: string, blockId: string): Promise<void> {
-  await apiClient.delete(`/api/v1/vendor/equipment/${equipmentId}/blocks/${blockId}`)
+export async function removeAvailabilityBlock(equipmentId: string, blockId: string): Promise<void> {
+  await apiClient.delete(`/api/v1/vendor/inventory/${equipmentId}/availability-blocks/${blockId}`)
 }

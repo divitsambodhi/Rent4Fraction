@@ -24,6 +24,7 @@ from app.schemas.vendor import (
     RecordDepositSettlementRequest,
     RecordNoShowRequest,
     ReviewReplyRequest,
+    SetDeliveryFeeRequest,
     StatusUpdateRequest,
     UpdateEquipmentRequest,
     UpdateVendorProfileRequest,
@@ -581,6 +582,30 @@ def record_order_deposit_settlement(
             vendor_id=vendor_id,
             vendor_order_id=vendor_order_id,
             req=payload,
+            actor_user_id=current_user.user_id,
+        )
+
+
+@router.post(
+    "/orders/{vendor_order_id}/set-delivery-fee",
+    response_model=VendorOrderDetailResponse,
+    operation_id="set_order_delivery_fee",
+    summary="Set or update custom delivery fee for order based on customer location",
+)
+def set_order_delivery_fee(
+    vendor_order_id: int,
+    payload: SetDeliveryFeeRequest,
+    current_user: CurrentUser = Depends(require_approved_vendor),
+    db: Session = Depends(get_db),
+) -> VendorOrderDetailResponse:
+    vendor_id = _get_vendor_id(current_user)
+    with transaction(db):
+        service = VendorService(db)
+        return service.set_delivery_fee(
+            vendor_id=vendor_id,
+            vendor_order_id=vendor_order_id,
+            fee=payload.delivery_fee,
+            notes=payload.notes,
             actor_user_id=current_user.user_id,
         )
 

@@ -82,11 +82,6 @@ class Payment(Base):
         ForeignKey("vendor_orders.vendor_order_id", ondelete="RESTRICT"),
         nullable=True,
     )
-    user_id: Mapped[int | None] = mapped_column(
-        BIGINT(unsigned=True),
-        ForeignKey("users.user_id", ondelete="RESTRICT"),
-        nullable=True,
-    )
     amount: Mapped[Decimal] = mapped_column(SQLDecimal(12, 2), nullable=False)
     currency: Mapped[str] = mapped_column(String(10), nullable=False, default="INR")
     type: Mapped[PaymentType] = mapped_column(
@@ -97,11 +92,9 @@ class Payment(Base):
         SQLEnum(PaymentMethod, values_callable=lambda x: [e.value for e in x]),
         nullable=True,
     )
-    payment_method: Mapped[str | None] = mapped_column(String(50), nullable=True)
     gateway: Mapped[str | None] = mapped_column(String(100), nullable=True, default="razorpay")
     transaction_id: Mapped[str | None] = mapped_column(String(255), unique=True, nullable=True)
     gateway_order_id: Mapped[str | None] = mapped_column(String(64), unique=True, nullable=True)
-    gateway_payment_id: Mapped[str | None] = mapped_column(String(64), nullable=True)
     gateway_refund_id: Mapped[str | None] = mapped_column(String(64), unique=True, nullable=True)
     signature_verified: Mapped[int] = mapped_column(TINYINT, default=0, nullable=False)
     status: Mapped[PaymentStatus] = mapped_column(
@@ -113,11 +106,6 @@ class Payment(Base):
     failure_code: Mapped[str | None] = mapped_column(String(100), nullable=True)
     failure_reason: Mapped[str | None] = mapped_column(String(255), nullable=True)
     refund_of_payment_id: Mapped[int | None] = mapped_column(
-        BIGINT(unsigned=True),
-        ForeignKey("payments.payment_id", ondelete="RESTRICT"),
-        nullable=True,
-    )
-    refund_of_id: Mapped[int | None] = mapped_column(
         BIGINT(unsigned=True),
         ForeignKey("payments.payment_id", ondelete="RESTRICT"),
         nullable=True,
@@ -136,12 +124,12 @@ class Payment(Base):
     refund_of: Mapped[Payment | None] = relationship(
         "Payment",
         remote_side=[payment_id],
-        foreign_keys=[refund_of_id],
+        foreign_keys=[refund_of_payment_id],
         back_populates="refunds",
     )
     refunds: Mapped[list[Payment]] = relationship(
         "Payment",
-        foreign_keys=[refund_of_id],
+        foreign_keys=[refund_of_payment_id],
         back_populates="refund_of",
     )
 

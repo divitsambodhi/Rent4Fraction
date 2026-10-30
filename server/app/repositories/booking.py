@@ -384,6 +384,7 @@ class BookingRepository:
                     "status": vo.status.value,
                     "rejection_reason": vo.rejection_reason,
                     "subtotal": float(vo.subtotal),
+                    "delivery_fee": float(vo.delivery_fee),
                     "item_ids": vo_item_ids,
                     "delivery": deliv_data,
                     "return": ret_data,

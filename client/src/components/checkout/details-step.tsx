@@ -28,23 +28,46 @@ export function DetailsStep({
   const [addressSheetOpen, setAddressSheetOpen] = useState(false)
   const [isEventFormValid, setIsEventFormValid] = useState(true)
 
-  // Load customer addresses
+  // Load customer addresses once on mount
   useEffect(() => {
+    let active = true
     async function load() {
       try {
-        const list = await getAddresses()
+        const list = await getAddresses(true)
+        if (!active) return
         setAddresses(list)
         // If no address currently selected, pre-select default address
+        const patch: Partial<CheckoutDraft> = {}
         if (!draft.address_id && list.length > 0) {
           const def = list.find((a) => a.is_default) || list[0]
-          onUpdateDraft({ address_id: def.id })
+          patch.address_id = def.id
+        }
+
+        // Initialize default fulfilment for any unassigned vendors
+        const currentFulfilment = { ...(draft.fulfilment_by_vendor || {}) }
+        let fulfilmentChanged = false
+        for (const vg of period.vendor_groups) {
+          if (!currentFulfilment[vg.vendor_id]) {
+            currentFulfilment[vg.vendor_id] = vg.delivery_available ? 'delivery' : 'pickup'
+            fulfilmentChanged = true
+          }
+        }
+        if (fulfilmentChanged) {
+          patch.fulfilment_by_vendor = currentFulfilment
+        }
+
+        if (Object.keys(patch).length > 0) {
+          onUpdateDraft(patch)
         }
       } catch (err) {
         console.error('Failed to load addresses', err)
       }
     }
     load()
-  }, [draft.address_id, onUpdateDraft])
+    return () => {
+      active = false
+    }
+  }, [])
 
   const selectedAddress = addresses.find((a) => a.id === draft.address_id) || addresses[0] || null
 
@@ -170,9 +193,9 @@ export function DetailsStep({
           type="button"
           onClick={onContinue}
           disabled={!canContinue}
-          className="h-12 px-8 text-sm font-semibold rounded-[12px] shadow-sm gap-2"
+          className="h-12 px-8 text-sm font-semibold rounded-[12px] shadow-sm gap-2 bg-brand hover:bg-brand-hover text-brand-foreground cursor-pointer"
         >
-          <span>Continue to payment</span>
+          <span>Continue to Review & Booking</span>
           <ArrowRight className="size-4" />
         </Button>
       </div>
