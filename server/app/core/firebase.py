@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import base64
+import json
 import logging
 import os
 from collections.abc import Callable
@@ -19,8 +21,9 @@ def init_firebase() -> firebase_admin.App | None:
     Initialises the Firebase Admin SDK once at startup (lazily if credentials are absent).
     Supports:
     1. Local Firebase Auth Emulator (FIREBASE_AUTH_EMULATOR_HOST)
-    2. Google Service Account JSON (GOOGLE_APPLICATION_CREDENTIALS)
-    3. Firebase Project ID (FIREBASE_PROJECT_ID)
+    2. Raw JSON or Base64 credentials string in env (FIREBASE_CREDENTIALS_JSON / FIREBASE_CREDENTIALS_BASE64)
+    3. Google Service Account JSON file path (GOOGLE_APPLICATION_CREDENTIALS)
+    4. Firebase Project ID (FIREBASE_PROJECT_ID)
     Returns the App instance if initialised, or None if credentials are absent.
     """
     global _firebase_app
@@ -52,11 +55,35 @@ def init_firebase() -> firebase_admin.App | None:
         return _firebase_app
 
     # 2. Check for real service account credentials
-    cred_path = settings.GOOGLE_APPLICATION_CREDENTIALS or os.environ.get(
-        "GOOGLE_APPLICATION_CREDENTIALS"
-    )
     real_project_id: str | None = settings.FIREBASE_PROJECT_ID or os.environ.get(
         "FIREBASE_PROJECT_ID"
+    )
+
+    cred_json_str = os.environ.get("FIREBASE_CREDENTIALS_JSON")
+    cred_b64_str = os.environ.get("FIREBASE_CREDENTIALS_BASE64")
+
+    if cred_b64_str and not cred_json_str:
+        try:
+            cred_json_str = base64.b64decode(cred_b64_str.strip()).decode("utf-8")
+        except Exception as e:
+            logger.error("Failed to decode FIREBASE_CREDENTIALS_BASE64: %s", e)
+
+    if cred_json_str:
+        try:
+            cert_dict = json.loads(cred_json_str)
+            try:
+                _firebase_app = firebase_admin.get_app()
+            except ValueError:
+                cred = credentials.Certificate(cert_dict)
+                options = {"projectId": real_project_id} if real_project_id else None
+                _firebase_app = firebase_admin.initialize_app(cred, options=options)
+            logger.info("Initialised Firebase Admin SDK from environment credentials.")
+            return _firebase_app
+        except Exception as e:
+            logger.error("Failed to initialize Firebase Admin SDK from credentials JSON: %s", e)
+
+    cred_path = settings.GOOGLE_APPLICATION_CREDENTIALS or os.environ.get(
+        "GOOGLE_APPLICATION_CREDENTIALS"
     )
 
     if cred_path and os.path.exists(cred_path):

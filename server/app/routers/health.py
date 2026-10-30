@@ -64,6 +64,12 @@ def health_check(settings: Settings = Depends(get_settings)) -> HealthStatusResp
 
 
 @router.get(
+    "/health/ready",
+    response_model=DatabaseHealthResponse,
+    summary="Application & Database Readiness Probe",
+    operation_id="readiness_check",
+)
+@router.get(
     "/health/db",
     response_model=DatabaseHealthResponse,
     summary="Database Readiness Check",

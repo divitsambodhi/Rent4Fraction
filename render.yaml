@@ -1,0 +1,51 @@
+services:
+  - type: web
+    name: rent4fraction-api
+    runtime: python
+    region: singapore
+    plan: starter
+    rootDir: server
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn app.main:app --host 0.0.0.0 --port $PORT --workers 2
+    healthCheckPath: /health
+    autoDeploy: false
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.12.10
+      - key: ENV
+        value: prod
+      - key: LOG_LEVEL
+        value: INFO
+      - key: TRUST_PROXY
+        value: "true"
+      - key: RENDER
+        value: "true"
+      - key: DATABASE_URL
+        sync: false
+      - key: CORS_ORIGINS
+        sync: false
+      - key: FRONTEND_URL
+        sync: false
+      - key: STORAGE_PROVIDER
+        value: cloudinary
+      - key: CLOUDINARY_CLOUD_NAME
+        sync: false
+      - key: CLOUDINARY_API_KEY
+        sync: false
+      - key: CLOUDINARY_API_SECRET
+        sync: false
+      - key: CLOUDINARY_UPLOAD_PRESET_PUBLIC
+        value: rent4fraction_public
+      - key: CLOUDINARY_UPLOAD_PRESET_PRIVATE
+        value: rent4fraction_private
+      - key: FIREBASE_PROJECT_ID
+        sync: false
+      - key: FIREBASE_CREDENTIALS_BASE64
+        sync: false
+      - key: COD_ENABLED
+        value: "true"
+      - key: PAYMENTS_ONLINE_ENABLED
+        value: "false"
+      - key: ENABLE_SCHEDULER
+        value: "true"
+

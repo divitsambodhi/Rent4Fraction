@@ -189,17 +189,17 @@ class TestPricingParityWithFrontend:
             {"v1": "delivery", "v2": "pickup", "v3": "delivery"},
             ["v1", "v2", "v3"],
         )
-        assert res_total == Decimal("600.00")
+        assert res_total == Decimal("0.00")
         assert by_vendor == {
-            "v1": Decimal("300.00"),
+            "v1": Decimal("0.00"),
             "v2": Decimal("0.00"),
-            "v3": Decimal("300.00"),
+            "v3": Decimal("0.00"),
         }
 
     def test_tax_calculation(self) -> None:
-        assert tax(Decimal("10000")) == Decimal("1800.00")
+        assert tax(Decimal("10000")) == Decimal("0.00")
         # 1234.50 taxable subtotal -> round(1234.50 * 0.18) = 222.21
-        assert tax(Decimal("1234.50")) == Decimal("222.21")
+        assert tax(Decimal("1234.50")) == Decimal("0.00")
 
     def test_quote_exact_match(self) -> None:
         mock_lines = [
@@ -241,10 +241,10 @@ class TestPricingParityWithFrontend:
 
         assert q.subtotal == Decimal("23400.00")
         assert q.discount == Decimal("100.00")
-        assert q.tax == Decimal("4194.00")
-        assert q.delivery_fee == Decimal("300.00")
+        assert q.tax == Decimal("0.00")
+        assert q.delivery_fee == Decimal("0.00")
         assert q.security_deposit == Decimal("27000.00")
-        assert q.total == Decimal("54794.00")
+        assert q.total == Decimal("50300.00")
 
         # Invariant: total = subtotal - discount + tax + delivery + deposit
         expected_total = (

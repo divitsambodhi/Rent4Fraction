@@ -95,7 +95,7 @@ export function BookingDetailSheet({
 
   const handlePayBalance = () => {
     toast.info('Online payments will be connected soon', {
-      description: 'Razorpay / UPI test gateway integration is in progress.',
+      description: 'Cash on Delivery payment will be collected at handover.',
     })
   }
 

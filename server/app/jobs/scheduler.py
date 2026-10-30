@@ -3,6 +3,8 @@ from __future__ import annotations
 import logging
 import threading
 
+from sqlalchemy import text
+
 from app.core.config import get_settings
 from app.core.db import get_session_factory
 from app.jobs.expire_bookings import expire_unpaid_bookings
@@ -22,9 +24,28 @@ def _scheduler_loop(interval_seconds: int = 60) -> None:
     while not _stop_event.is_set():
         try:
             with session_factory() as db:
-                expire_unpaid_bookings(db)
-                reconcile_payments(db)
-                mark_late_returns(db)
+                # Multi-worker safe advisory lease lock:
+                # GET_LOCK returns 1 if acquired, 0 if held by another worker, NULL on error
+                has_lock = False
+                try:
+                    res = db.execute(text("SELECT GET_LOCK('rent4fraction_scheduler_lease', 0)")).scalar()
+                    has_lock = (res == 1)
+                except Exception:
+                    # Non-MySQL fallback (e.g. SQLite unit tests)
+                    has_lock = True
+
+                if has_lock:
+                    try:
+                        expire_unpaid_bookings(db)
+                        reconcile_payments(db)
+                        mark_late_returns(db)
+                    finally:
+                        try:
+                            db.execute(text("SELECT RELEASE_LOCK('rent4fraction_scheduler_lease')"))
+                        except Exception:
+                            pass
+                else:
+                    logger.debug("Scheduler lease held by peer instance; skipping cycle.")
         except Exception as exc:
             logger.error("Error in background job scheduler cycle: %s", exc)
 

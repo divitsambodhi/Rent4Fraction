@@ -119,7 +119,6 @@ def refunds_db_setup(db_session: Session) -> dict[str, Booking]:
     charge = Payment(
         booking_id=booking.booking_id,
         vendor_order_id=None,
-        user_id=cust.user_id,
         amount=Decimal("8740.00"),
         currency="INR",
         type=PaymentType.full,
