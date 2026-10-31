@@ -84,9 +84,21 @@ def test_ssl_mode_require_triggers_ssl_bypass() -> None:
 
 @pytest.mark.unit
 def test_no_ssl_indicators_adds_no_ssl() -> None:
-    """Plain localhost URL without SSL flags must not add an ssl context."""
+    """Plain localhost URL must not add an ssl context (local dev is unaffected)."""
     args = _captured_connect_args()
     assert "ssl" not in args
+
+
+@pytest.mark.unit
+def test_remote_host_triggers_ssl_bypass_by_default() -> None:
+    """Any non-localhost remote host must get ssl CERT_NONE context by default."""
+    args = _captured_connect_args(
+        DATABASE_URL="mysql+pymysql://user:pass@some-managed-db.example.com:3306/db"
+    )
+    assert "ssl" in args
+    ctx = args["ssl"]
+    assert isinstance(ctx, ssl.SSLContext)
+    assert ctx.verify_mode == ssl.CERT_NONE
 
 
 @pytest.mark.unit
@@ -121,3 +133,4 @@ def test_db_ssl_ca_sets_custom_ca_context(tmp_path) -> None:
     reset_engine()
     assert "ssl" in args_holder
     assert args_holder["ssl"] is mock_ctx
+

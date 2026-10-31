@@ -37,19 +37,29 @@ def get_engine() -> Engine:
             "write_timeout": 10,
         }
 
-        # Handle managed databases (e.g. Aiven, PlanetScale) with self-signed CA certificates
-        # or when DB_SSL_NO_VERIFY is explicitly enabled.
-        # Aiven uses ssl-mode=require (no trailing 'd'), so check for the prefix "ssl-mode=req"
-        # and "ssl_mode=req" to cover both "require" and "required" variants.
+        # SSL context strategy for managed MySQL databases (Aiven, PlanetScale, etc.)
+        # that use self-signed or private CA certificates Python cannot verify by default.
+        #
+        # Rule: any connection whose host is NOT localhost/127.0.0.1 gets TLS with
+        # CERT_NONE by default — encryption is still enforced, only cert-chain
+        # verification is skipped.  Local dev connections are left untouched.
+        # Override with DB_SSL_CA to supply your own CA bundle for full verification.
         import ssl
         db_url_lower = settings.DATABASE_URL.lower()
-        _has_ssl_in_url = (
-            "ssl-mode=req" in db_url_lower       # Aiven: ssl-mode=require
-            or "ssl_mode=req" in db_url_lower    # alt format: ssl_mode=require / ssl_mode=required
-            or "ssl_disabled=false" in db_url_lower
-            or "aivencloud.com" in db_url_lower  # Always bypass cert verify for Aiven managed DB
+        _is_remote_host = (
+            "localhost" not in db_url_lower
+            and "127.0.0.1" not in db_url_lower
+            and "::1" not in db_url_lower
         )
-        if settings.DB_SSL_NO_VERIFY or _has_ssl_in_url:
+        _wants_ssl_bypass = (
+            settings.DB_SSL_NO_VERIFY
+            or "ssl-mode=req" in db_url_lower
+            or "ssl_mode=req" in db_url_lower
+            or "ssl_disabled=false" in db_url_lower
+            or "aivencloud.com" in db_url_lower
+            or _is_remote_host  # default: bypass cert verify for all remote MySQL hosts
+        )
+        if _wants_ssl_bypass and not settings.DB_SSL_CA:
             # Create an SSLContext that enforces TLS encryption without failing on self-signed server CAs
             ssl_ctx = ssl.create_default_context()
             ssl_ctx.check_hostname = False
