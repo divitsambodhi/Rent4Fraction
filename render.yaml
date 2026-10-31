@@ -1,6 +1,6 @@
 services:
   - type: web
-    name: rent4fraction-api
+    name: rent4fraction
     runtime: python
     region: singapore
     plan: starter

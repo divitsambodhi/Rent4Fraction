@@ -29,8 +29,10 @@ class Settings(BaseSettings):
     TEST_DATABASE_URL: str | None = None
 
     # CORS & Web
-    CORS_ORIGINS: str = "http://localhost:5173,http://127.0.0.1:5173"
-    FRONTEND_URL: str = "http://localhost:5173"
+    CORS_ORIGINS: str = (
+        "https://rent4fraction.vercel.app,http://localhost:5173,http://127.0.0.1:5173"
+    )
+    FRONTEND_URL: str = "https://rent4fraction.vercel.app"
 
     # Firebase Auth
     FIREBASE_PROJECT_ID: str | None = None
