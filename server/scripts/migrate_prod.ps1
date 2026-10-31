@@ -77,12 +77,17 @@ $env:MYSQL_USER = $TargetUser
 $env:MYSQL_PASSWORD = $TargetPassword
 $env:MYSQL_DATABASE = $TargetDatabase
 
-$pythonExe = ".\server\.venv312\Scripts\python.exe"
+$repoRoot = Split-Path -Parent (Split-Path -Parent $PSScriptRoot)
+if (-not (Test-Path "$repoRoot\database")) {
+    $repoRoot = (Get-Location).Path
+}
+
+$pythonExe = "$repoRoot\server\.venv312\Scripts\python.exe"
 if (-not (Test-Path $pythonExe)) {
     $pythonExe = "python"
 }
 
-& $pythonExe database/scripts/migrate.py up
+& $pythonExe "$repoRoot\database\scripts\migrate.py" up
 
 if ($LASTEXITCODE -eq 0) {
     Write-Host "SUCCESS: Production migrations applied cleanly!" -ForegroundColor Green

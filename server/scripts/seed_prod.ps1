@@ -36,7 +36,12 @@ if (-not $TargetHost -or -not $TargetUser) {
     exit 1
 }
 
-$CategorySeedFile = "database/seeds/002_categories.sql"
+$repoRoot = Split-Path -Parent (Split-Path -Parent $PSScriptRoot)
+if (-not (Test-Path "$repoRoot\database")) {
+    $repoRoot = (Get-Location).Path
+}
+
+$CategorySeedFile = "$repoRoot\database\seeds\002_categories.sql"
 if (-not (Test-Path $CategorySeedFile)) {
     Write-Error "Categories seed file missing at $CategorySeedFile"
     exit 1

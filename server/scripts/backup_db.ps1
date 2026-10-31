@@ -12,9 +12,14 @@ param (
 
 $ErrorActionPreference = "Stop"
 
+$repoRoot = Split-Path -Parent (Split-Path -Parent $PSScriptRoot)
+if (-not (Test-Path "$repoRoot\server")) {
+    $repoRoot = (Get-Location).Path
+}
+
 # Auto-detect from server/.env if parameters not provided
 if (-not $HostName -or -not $User) {
-    $envFile = "server/.env"
+    $envFile = "$repoRoot\server\.env"
     if (Test-Path $envFile) {
         $content = Get-Content $envFile -Raw
         if ($content -match 'DATABASE_URL="?mysql(?:\+pymysql)?://([^:]+):([^@]+)@([^:/]+)(?::(\d+))?/([^"?]+)') {
@@ -31,6 +36,9 @@ if (-not $HostName) { $HostName = "127.0.0.1" }
 if (-not $User) { $User = "root" }
 if (-not $Database) { $Database = "event_rental" }
 
+if (-not (Test-Path $OutputDir)) {
+    $OutputDir = "$repoRoot\$OutputDir"
+}
 if (-not (Test-Path $OutputDir)) {
     New-Item -ItemType Directory -Path $OutputDir -Force | Out-Null
 }

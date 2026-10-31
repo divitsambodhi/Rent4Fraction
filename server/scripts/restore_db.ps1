@@ -13,13 +13,22 @@ param (
 
 $ErrorActionPreference = "Stop"
 
+$repoRoot = Split-Path -Parent (Split-Path -Parent $PSScriptRoot)
+if (-not (Test-Path "$repoRoot\server")) {
+    $repoRoot = (Get-Location).Path
+}
+
 if (-not (Test-Path $BackupFile)) {
-    Write-Error "Backup file not found at: $BackupFile"
-    exit 1
+    if (Test-Path "$repoRoot\$BackupFile") {
+        $BackupFile = "$repoRoot\$BackupFile"
+    } else {
+        Write-Error "Backup file not found at: $BackupFile"
+        exit 1
+    }
 }
 
 if (-not $User -or -not $Password) {
-    $envFile = "server/.env"
+    $envFile = "$repoRoot\server\.env"
     if (Test-Path $envFile) {
         $content = Get-Content $envFile -Raw
         if ($content -match 'DATABASE_URL="?mysql(?:\+pymysql)?://([^:]+):([^@]+)@([^:/]+)(?::(\d+))?/([^"?]+)') {

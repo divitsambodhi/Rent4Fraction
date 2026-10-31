@@ -8,9 +8,12 @@ param (
 
 $ErrorActionPreference = "Stop"
 
-$repoRoot = Split-Path -Parent $PSScriptRoot
+$repoRoot = Split-Path -Parent (Split-Path -Parent $PSScriptRoot)
 if (-not (Test-Path "$repoRoot\server")) {
-    $repoRoot = (Get-Location).Path
+    $repoRoot = Split-Path -Parent $PSScriptRoot
+    if (-not (Test-Path "$repoRoot\server")) {
+        $repoRoot = (Get-Location).Path
+    }
 }
 
 Write-Host "======================================================================" -ForegroundColor Cyan
