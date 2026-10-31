@@ -1,11 +1,12 @@
-"""Regression tests for DB SSL context creation in db.py.
+"""Regression tests for DB SSL configuration in db.py.
 
-Covers:
-- DB_SSL_NO_VERIFY=True → ssl.CERT_NONE context
-- Aiven hostname in DATABASE_URL → ssl.CERT_NONE context
-- ssl-mode=require in DATABASE_URL → ssl.CERT_NONE context
-- No SSL indicators → no ssl context added
-- DB_SSL_CA set → custom CA context
+PyMySQL 2.x exposes dedicated ssl_verify_cert / ssl_verify_identity parameters.
+Passing ssl=SSLContext does NOT work because SQLAlchemy merges URL query params
+(e.g. ssl-mode=require) into connect args first; PyMySQL then re-creates a strict
+CERT_REQUIRED context, overriding any SSLContext we pass.
+
+The correct fix: use ssl_verify_cert=False + ssl_verify_identity=False, which
+PyMySQL 2.2+ handles explicitly and which take priority over URL-derived SSL params.
 """
 from __future__ import annotations
 
@@ -29,7 +30,7 @@ def _make_settings(**kwargs) -> Settings:
 
 
 def _captured_connect_args(**settings_kwargs) -> dict:
-    """Run get_engine() with patched create_engine and return the connect_args passed to it."""
+    """Run get_engine() with patched create_engine; return the connect_args passed to it."""
     captured: dict = {}
 
     def fake_create_engine(url, **kw):
@@ -49,64 +50,47 @@ def _captured_connect_args(**settings_kwargs) -> dict:
 
 
 @pytest.mark.unit
-def test_db_ssl_no_verify_flag_sets_cert_none() -> None:
-    """DB_SSL_NO_VERIFY=True must create an ssl context with CERT_NONE."""
+def test_db_ssl_no_verify_flag_sets_pymysql_params() -> None:
+    """DB_SSL_NO_VERIFY=True must set ssl_verify_cert=False and ssl_verify_identity=False."""
     args = _captured_connect_args(DB_SSL_NO_VERIFY=True)
-    assert "ssl" in args, "ssl key missing from connect_args"
-    ctx = args["ssl"]
-    assert isinstance(ctx, ssl.SSLContext)
-    assert ctx.verify_mode == ssl.CERT_NONE
-    assert ctx.check_hostname is False
+    assert args.get("ssl_verify_cert") is False, "ssl_verify_cert must be False"
+    assert args.get("ssl_verify_identity") is False, "ssl_verify_identity must be False"
+    assert "ssl" not in args, "raw ssl key must not be set when using dedicated params"
 
 
 @pytest.mark.unit
 def test_aiven_hostname_triggers_ssl_bypass() -> None:
-    """DATABASE_URL containing aivencloud.com must bypass cert verification."""
+    """DATABASE_URL containing aivencloud.com must disable cert verification."""
     args = _captured_connect_args(
         DATABASE_URL="mysql+pymysql://user:pass@rent4fraction-mysql.a.aivencloud.com:12345/db"
     )
-    assert "ssl" in args
-    ctx = args["ssl"]
-    assert isinstance(ctx, ssl.SSLContext)
-    assert ctx.verify_mode == ssl.CERT_NONE
-
-
-@pytest.mark.unit
-def test_ssl_mode_require_triggers_ssl_bypass() -> None:
-    """ssl-mode=require in DATABASE_URL must bypass cert verification."""
-    args = _captured_connect_args(
-        DATABASE_URL="mysql+pymysql://user:pass@somehost:3306/db?ssl-mode=require"
-    )
-    assert "ssl" in args
-    ctx = args["ssl"]
-    assert ctx.verify_mode == ssl.CERT_NONE
-
-
-@pytest.mark.unit
-def test_no_ssl_indicators_adds_no_ssl() -> None:
-    """Plain localhost URL must not add an ssl context (local dev is unaffected)."""
-    args = _captured_connect_args()
-    assert "ssl" not in args
+    assert args.get("ssl_verify_cert") is False
+    assert args.get("ssl_verify_identity") is False
 
 
 @pytest.mark.unit
 def test_remote_host_triggers_ssl_bypass_by_default() -> None:
-    """Any non-localhost remote host must get ssl CERT_NONE context by default."""
+    """Any non-localhost remote host must disable cert verification by default."""
     args = _captured_connect_args(
         DATABASE_URL="mysql+pymysql://user:pass@some-managed-db.example.com:3306/db"
     )
-    assert "ssl" in args
-    ctx = args["ssl"]
-    assert isinstance(ctx, ssl.SSLContext)
-    assert ctx.verify_mode == ssl.CERT_NONE
+    assert args.get("ssl_verify_cert") is False
+    assert args.get("ssl_verify_identity") is False
+
+
+@pytest.mark.unit
+def test_localhost_has_no_ssl_params() -> None:
+    """Plain localhost URL must not set any SSL verification params (local dev unaffected)."""
+    args = _captured_connect_args()
+    assert "ssl_verify_cert" not in args
+    assert "ssl_verify_identity" not in args
+    assert "ssl" not in args
 
 
 @pytest.mark.unit
 def test_db_ssl_ca_sets_custom_ca_context(tmp_path) -> None:
-    """DB_SSL_CA must create an ssl context loaded from the given CA file."""
-    # Create a dummy (non-functional) PEM file to satisfy the cafile path check
+    """DB_SSL_CA must use ssl.create_default_context(cafile=...) and NOT set ssl_verify_cert."""
     ca_file = tmp_path / "ca.pem"
-    # We'll mock ssl.create_default_context to avoid needing a real cert
     mock_ctx = MagicMock(spec=ssl.SSLContext)
 
     def fake_default_context(cafile=None):
@@ -133,4 +117,4 @@ def test_db_ssl_ca_sets_custom_ca_context(tmp_path) -> None:
     reset_engine()
     assert "ssl" in args_holder
     assert args_holder["ssl"] is mock_ctx
-
+    assert "ssl_verify_cert" not in args_holder

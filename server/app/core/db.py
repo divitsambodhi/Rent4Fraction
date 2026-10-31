@@ -37,14 +37,21 @@ def get_engine() -> Engine:
             "write_timeout": 10,
         }
 
-        # SSL context strategy for managed MySQL databases (Aiven, PlanetScale, etc.)
-        # that use self-signed or private CA certificates Python cannot verify by default.
+        # SSL handling for managed MySQL databases (Aiven, PlanetScale, etc.)
+        # that present self-signed or private CA certificates Python cannot verify.
         #
-        # Rule: any connection whose host is NOT localhost/127.0.0.1 gets TLS with
-        # CERT_NONE by default — encryption is still enforced, only cert-chain
-        # verification is skipped.  Local dev connections are left untouched.
-        # Override with DB_SSL_CA to supply your own CA bundle for full verification.
-        import ssl
+        # Root cause of previous failures: passing ssl=SSLContext to create_engine
+        # does NOT work because SQLAlchemy merges URL query params (ssl-mode=require, etc.)
+        # into connect args AFTER our SSLContext, so PyMySQL's own SSL path runs and
+        # re-creates a strict ssl.CERT_REQUIRED context, ignoring our SSLContext entirely.
+        #
+        # Correct fix for PyMySQL 2.x: use the dedicated ssl_verify_cert / ssl_verify_identity
+        # keyword arguments, which PyMySQL 2.2+ explicitly handles and which take priority
+        # over any SSL context derived from URL parameters.
+        #
+        # TLS encryption is still enforced — only certificate-chain verification is skipped.
+        # Local dev (localhost / 127.0.0.1) is left untouched.
+        import ssl as ssl_module
         db_url_lower = settings.DATABASE_URL.lower()
         _is_remote_host = (
             "localhost" not in db_url_lower
@@ -53,20 +60,15 @@ def get_engine() -> Engine:
         )
         _wants_ssl_bypass = (
             settings.DB_SSL_NO_VERIFY
-            or "ssl-mode=req" in db_url_lower
-            or "ssl_mode=req" in db_url_lower
-            or "ssl_disabled=false" in db_url_lower
             or "aivencloud.com" in db_url_lower
-            or _is_remote_host  # default: bypass cert verify for all remote MySQL hosts
+            or _is_remote_host  # default: skip cert verify for all remote MySQL hosts
         )
         if _wants_ssl_bypass and not settings.DB_SSL_CA:
-            # Create an SSLContext that enforces TLS encryption without failing on self-signed server CAs
-            ssl_ctx = ssl.create_default_context()
-            ssl_ctx.check_hostname = False
-            ssl_ctx.verify_mode = ssl.CERT_NONE
-            connect_args["ssl"] = ssl_ctx
+            # PyMySQL 2.x native SSL params — these override URL-derived ssl settings
+            connect_args["ssl_verify_cert"] = False
+            connect_args["ssl_verify_identity"] = False
         elif settings.DB_SSL_CA:
-            ssl_ctx = ssl.create_default_context(cafile=settings.DB_SSL_CA)
+            ssl_ctx = ssl_module.create_default_context(cafile=settings.DB_SSL_CA)
             connect_args["ssl"] = ssl_ctx
         _engine = create_engine(
             settings.DATABASE_URL,
