@@ -1,10 +1,12 @@
 from __future__ import annotations
 
+import ssl as ssl_module
 from collections.abc import Generator
 from contextlib import contextmanager
 from typing import Any
 
 from sqlalchemy import Engine, create_engine
+from sqlalchemy.engine import make_url
 from sqlalchemy.orm import DeclarativeBase, Session, sessionmaker
 
 from app.core.config import get_settings
@@ -37,21 +39,23 @@ def get_engine() -> Engine:
             "write_timeout": 10,
         }
 
-        # SSL handling for managed MySQL databases (Aiven, PlanetScale, etc.)
-        # that present self-signed or private CA certificates Python cannot verify.
-        #
-        # Root cause of previous failures: passing ssl=SSLContext to create_engine
-        # does NOT work because SQLAlchemy merges URL query params (ssl-mode=require, etc.)
-        # into connect args AFTER our SSLContext, so PyMySQL's own SSL path runs and
-        # re-creates a strict ssl.CERT_REQUIRED context, ignoring our SSLContext entirely.
-        #
-        # Correct fix for PyMySQL 2.x: use the dedicated ssl_verify_cert / ssl_verify_identity
-        # keyword arguments, which PyMySQL 2.2+ explicitly handles and which take priority
-        # over any SSL context derived from URL parameters.
-        #
-        # TLS encryption is still enforced — only certificate-chain verification is skipped.
-        # Local dev (localhost / 127.0.0.1) is left untouched.
-        import ssl as ssl_module
+        # ------------------------------------------------------------------ #
+        # SSL handling for managed MySQL databases (Aiven, PlanetScale, …)   #
+        # ------------------------------------------------------------------ #
+        # Actual root cause (confirmed from Render traceback):               #
+        #   The Aiven DATABASE_URL contains ?ssl_ca=/path/to/ca.pem.         #
+        #   SQLAlchemy forwards that query param to PyMySQL, which calls     #
+        #   ssl.create_default_context(cafile="/path/to/ca.pem").            #
+        #   That path does NOT exist on Render → FileNotFoundError.          #
+        #                                                                    #
+        # Fix:                                                               #
+        #   1. Strip all ssl-* query params from the URL (remove the bad     #
+        #      ca path and mode flags before SQLAlchemy can forward them).   #
+        #   2. Pass ssl={"verify_mode": False} as a connect_arg.             #
+        #      • Truthy dict → PyMySQL sets CLIENT.SSL flag (Aiven needs it) #
+        #      • No "ca" key → _create_ssl_ctx does NOT load any file        #
+        #      • verify_mode=False → CERT_NONE → no cert chain verification  #
+        # ------------------------------------------------------------------ #
         db_url_lower = settings.DATABASE_URL.lower()
         _is_remote_host = (
             "localhost" not in db_url_lower
@@ -61,17 +65,31 @@ def get_engine() -> Engine:
         _wants_ssl_bypass = (
             settings.DB_SSL_NO_VERIFY
             or "aivencloud.com" in db_url_lower
-            or _is_remote_host  # default: skip cert verify for all remote MySQL hosts
+            or _is_remote_host  # any remote MySQL host: skip self-signed cert errors
         )
+
+        # Parse the URL and remove ssl-related query params so they cannot
+        # be forwarded to PyMySQL. PyMySQL does NOT accept params like ssl_mode / ssl-mode
+        # (raises TypeError: Connection.__init__() got an unexpected keyword argument 'ssl_mode')
+        # nor does it accept invalid local cafile paths (raises FileNotFoundError).
+        # We handle SSL cleanly and explicitly through connect_args["ssl"].
+        url_obj = make_url(settings.DATABASE_URL)
+        cleaned_query = {
+            k: v
+            for k, v in url_obj.query.items()
+            if not k.lower().replace("-", "_").startswith("ssl")
+        }
+        url_obj = url_obj.set(query=cleaned_query)
+
         if _wants_ssl_bypass and not settings.DB_SSL_CA:
-            # PyMySQL 2.x native SSL params — these override URL-derived ssl settings
-            connect_args["ssl_verify_cert"] = False
-            connect_args["ssl_verify_identity"] = False
+            # Truthy dict without a "ca" key → PyMySQL sends CLIENT.SSL flag
+            # but calls create_default_context(cafile=None) → no file I/O →
+            # then sets verify_mode=CERT_NONE because verify_mode=False (bool).
+            connect_args["ssl"] = {"verify_mode": False, "check_hostname": False}
         elif settings.DB_SSL_CA:
-            ssl_ctx = ssl_module.create_default_context(cafile=settings.DB_SSL_CA)
-            connect_args["ssl"] = ssl_ctx
+            connect_args["ssl"] = ssl_module.create_default_context(cafile=settings.DB_SSL_CA)
         _engine = create_engine(
-            settings.DATABASE_URL,
+            url_obj,
             pool_size=5,
             max_overflow=10,
             pool_recycle=1800,
