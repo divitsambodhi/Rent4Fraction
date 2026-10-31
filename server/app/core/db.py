@@ -37,15 +37,19 @@ def get_engine() -> Engine:
             "write_timeout": 10,
         }
 
-        # Handle managed databases (e.g. Aiven) with self-signed CA certificates or when DB_SSL_NO_VERIFY is enabled
+        # Handle managed databases (e.g. Aiven, PlanetScale) with self-signed CA certificates
+        # or when DB_SSL_NO_VERIFY is explicitly enabled.
+        # Aiven uses ssl-mode=require (no trailing 'd'), so check for the prefix "ssl-mode=req"
+        # and "ssl_mode=req" to cover both "require" and "required" variants.
         import ssl
         db_url_lower = settings.DATABASE_URL.lower()
-        if (
-            settings.DB_SSL_NO_VERIFY
-            or "ssl-mode=required" in db_url_lower
-            or "ssl_mode=required" in db_url_lower
+        _has_ssl_in_url = (
+            "ssl-mode=req" in db_url_lower       # Aiven: ssl-mode=require
+            or "ssl_mode=req" in db_url_lower    # alt format: ssl_mode=require / ssl_mode=required
             or "ssl_disabled=false" in db_url_lower
-        ):
+            or "aivencloud.com" in db_url_lower  # Always bypass cert verify for Aiven managed DB
+        )
+        if settings.DB_SSL_NO_VERIFY or _has_ssl_in_url:
             # Create an SSLContext that enforces TLS encryption without failing on self-signed server CAs
             ssl_ctx = ssl.create_default_context()
             ssl_ctx.check_hostname = False
