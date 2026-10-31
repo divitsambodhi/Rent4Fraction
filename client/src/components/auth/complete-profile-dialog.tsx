@@ -14,7 +14,7 @@ import { toast } from 'sonner'
 import { Loader2, ShieldCheck } from 'lucide-react'
 
 export function CompleteProfileDialog() {
-  const { needsProfileUser, setNeedsProfileUser, completeRegistration } = useAuth()
+  const { needsProfileUser, setNeedsProfileUser, completeRegistration, logout } = useAuth()
   const [name, setName] = useState(needsProfileUser?.name || '')
   const [phone, setPhone] = useState('')
   const [role, setRole] = useState<'customer' | 'vendor'>(needsProfileUser?.initialRole || 'customer')
@@ -86,7 +86,15 @@ export function CompleteProfileDialog() {
   }
 
   return (
-    <Dialog open={!!needsProfileUser} onOpenChange={(open) => !open && setNeedsProfileUser(null)}>
+    <Dialog
+      open={!!needsProfileUser}
+      onOpenChange={(open) => {
+        if (!open) {
+          setNeedsProfileUser(null)
+          logout()
+        }
+      }}
+    >
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <div className="flex items-center gap-2 text-brand mb-1">

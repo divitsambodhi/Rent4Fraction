@@ -121,6 +121,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             }
           } else {
             setUser(null)
+            setNeedsProfileUser({
+              email: fbUser.email || '',
+              name: fbUser.displayName || '',
+            })
           }
           setStatus('ready')
         }
