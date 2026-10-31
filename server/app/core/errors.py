@@ -627,7 +627,10 @@ def map_mysql_signal_message(raw_msg: str) -> tuple[str, str, int] | None:
 
 
 def get_request_id(request: Request) -> str:
-    return getattr(request.state, "request_id", "unknown-request-id")
+    req_id = getattr(request.state, "request_id", None)
+    if not req_id:
+        req_id = request.headers.get("X-Request-ID")
+    return req_id or "unknown-request-id"
 
 
 def build_error_response(
@@ -720,7 +723,21 @@ def register_exception_handlers(app: FastAPI) -> None:
                 )
 
         # Log unhandled exceptions with full traceback internally; never leak to client
-        logger.exception("Unhandled server error [request_id=%s]: %s", req_id, exc)
+        logger.error(
+            "Unhandled server error [%s %s] [request_id=%s] %s: %s",
+            request.method,
+            request.url.path,
+            req_id,
+            exc.__class__.__name__,
+            exc,
+            exc_info=exc,
+            extra={
+                "request_id": req_id,
+                "http_method": request.method,
+                "http_path": request.url.path,
+                "exception_type": exc.__class__.__name__,
+            },
+        )
         return build_error_response(
             code="INTERNAL_SERVER_ERROR",
             message="An unexpected error occurred. Please try again later.",

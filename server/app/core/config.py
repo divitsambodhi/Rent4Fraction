@@ -27,6 +27,8 @@ class Settings(BaseSettings):
     # Database
     DATABASE_URL: str = Field(default="", description="MySQL connection URL using mysql+pymysql://")
     TEST_DATABASE_URL: str | None = None
+    DB_SSL_CA: str | None = None
+    DB_SSL_NO_VERIFY: bool = False
 
     # CORS & Web
     CORS_ORIGINS: str = (
@@ -115,8 +117,8 @@ class Settings(BaseSettings):
                 raise ValueError(
                     "FATAL CONFIGURATION ERROR: Production DATABASE_URL cannot point to localhost or sqlite."
                 )
-            ssl_indicators = ("ssl_ca", "ssl_disabled=false", "ssl_mode", "ssl=")
-            has_ssl_env = bool(os.getenv("DB_SSL_CA"))
+            ssl_indicators = ("ssl_ca", "ssl_disabled=false", "ssl_mode", "ssl=", "ssl_no_verify")
+            has_ssl_env = bool(self.DB_SSL_CA or self.DB_SSL_NO_VERIFY or os.getenv("DB_SSL_CA") or os.getenv("DB_SSL_NO_VERIFY"))
             if not any(k in db_url for k in ssl_indicators) and not has_ssl_env:
                 raise ValueError(
                     "FATAL CONFIGURATION ERROR: Production DATABASE_URL requires SSL encryption (e.g. ?ssl_mode=REQUIRED or ?ssl_ca=...)."

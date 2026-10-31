@@ -29,16 +29,39 @@ def get_engine() -> Engine:
     global _engine, _session_factory
     if _engine is None:
         settings = get_settings()
+        connect_args: dict[str, Any] = {
+            "charset": "utf8mb4",
+            "init_command": "SET time_zone = '+00:00', sql_mode = 'ONLY_FULL_GROUP_BY,STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION'",
+            "connect_timeout": 5,
+            "read_timeout": 10,
+            "write_timeout": 10,
+        }
+
+        # Handle managed databases (e.g. Aiven) with self-signed CA certificates or when DB_SSL_NO_VERIFY is enabled
+        import ssl
+        db_url_lower = settings.DATABASE_URL.lower()
+        if (
+            settings.DB_SSL_NO_VERIFY
+            or "ssl-mode=required" in db_url_lower
+            or "ssl_mode=required" in db_url_lower
+            or "ssl_disabled=false" in db_url_lower
+        ):
+            # Create an SSLContext that enforces TLS encryption without failing on self-signed server CAs
+            ssl_ctx = ssl.create_default_context()
+            ssl_ctx.check_hostname = False
+            ssl_ctx.verify_mode = ssl.CERT_NONE
+            connect_args["ssl"] = ssl_ctx
+        elif settings.DB_SSL_CA:
+            ssl_ctx = ssl.create_default_context(cafile=settings.DB_SSL_CA)
+            connect_args["ssl"] = ssl_ctx
         _engine = create_engine(
             settings.DATABASE_URL,
             pool_size=5,
             max_overflow=10,
             pool_recycle=1800,
             pool_pre_ping=True,
-            connect_args={
-                "charset": "utf8mb4",
-                "init_command": "SET time_zone = '+00:00', sql_mode = 'ONLY_FULL_GROUP_BY,STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION'",
-            },
+            pool_timeout=10,
+            connect_args=connect_args,
         )
         _session_factory = sessionmaker(autocommit=False, autoflush=False, bind=_engine)
     return _engine
