@@ -12,7 +12,7 @@ import { Button } from '@/components/ui/button'
 import { AppLink } from '@/components/shared/app-link'
 import { FormAlert } from './form-alert'
 import { useCooldown } from '@/hooks/use-cooldown'
-import { mockAuthService } from '@/lib/auth'
+import { authService } from '@/lib/auth'
 
 export interface ApplicationSubmittedPanelProps {
   businessName: string
@@ -32,7 +32,7 @@ export function ApplicationSubmittedPanel({
     setResending(true)
     setFeedback(null)
     try {
-      await mockAuthService.sendEmailVerification()
+      await authService.sendEmailVerification()
       start(60)
       setFeedback({
         type: 'success',

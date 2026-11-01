@@ -158,8 +158,7 @@ export function CloudImage({
         height={explicitHeight}
         loading={priority ? 'eager' : 'lazy'}
         decoding={priority ? 'sync' : 'async'}
-        // @ts-expect-error fetchpriority attribute
-        fetchpriority={priority ? 'high' : 'auto'}
+        fetchPriority={priority ? 'high' : 'auto'}
         onLoad={handleImageLoad}
         onError={handleImageError}
         className={cn(

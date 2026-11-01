@@ -19,6 +19,7 @@ import {
   replyToVendorReview,
   updateVendorProfile,
 } from '@/lib/api/vendor'
+import { getNotifications, getConversations } from '@/lib/api/account'
 import type { BusinessDetailsFormData } from '@/components/vendor/business-details-form'
 import type {
   OverviewRange,
@@ -70,6 +71,7 @@ export function VendorPage() {
   const [overview, setOverview] = useState<VendorOverview | null>(null)
   const [payoutsData, setPayoutsData] = useState<VendorPayoutsResult | null>(null)
   const [reviewsData, setReviewsData] = useState<VendorReviewsResult | null>(null)
+  const [unreadInboxCount, setUnreadInboxCount] = useState<number>(0)
   const [profile, setProfile] = useState<VendorProfile | null>(null)
   const [equipmentList] = useState<{ id: string; name: string }[]>([])
 
@@ -82,16 +84,21 @@ export function VendorPage() {
     setError(null)
 
     try {
-      const [prof, ov, payoutsRes, revsRes] = await Promise.all([
-        getVendorProfile(),
-        getVendorOverview(),
-        getVendorPayouts(),
-        getVendorReviews(),
+      const [prof, ov, payoutsRes, revsRes, notifs, convs] = await Promise.all([
+        getVendorProfile().catch(() => null),
+        getVendorOverview().catch(() => null),
+        getVendorPayouts().catch(() => null),
+        getVendorReviews().catch(() => null),
+        getNotifications('unread').catch(() => []),
+        getConversations().catch(() => []),
       ])
       setProfile(prof)
       setOverview(ov as any)
       setPayoutsData(payoutsRes as any)
       setReviewsData(revsRes as any)
+      const unreadNotifs = Array.isArray(notifs) ? notifs.length : 0
+      const unreadConvs = Array.isArray(convs) ? convs.reduce((acc: number, c: any) => acc + (c.unread_count || 0), 0) : 0
+      setUnreadInboxCount(unreadNotifs + unreadConvs)
     } catch (err) {
       setError(err instanceof Error ? err : new Error(String(err)))
     } finally {
@@ -101,6 +108,15 @@ export function VendorPage() {
 
   useEffect(() => {
     loadAllData()
+    const handleUpdate = () => {
+      loadAllData()
+    }
+    window.addEventListener('r4f-account-store-updated', handleUpdate)
+    window.addEventListener('r4f-order-updated', handleUpdate)
+    return () => {
+      window.removeEventListener('r4f-account-store-updated', handleUpdate)
+      window.removeEventListener('r4f-order-updated', handleUpdate)
+    }
   }, [loadAllData])
 
   // Handlers
@@ -185,7 +201,7 @@ export function VendorPage() {
       <VendorTabs
         currentTab={tabParam}
         reviewsBadge={overview?.attention?.reviews_needing_reply || reviewsData?.summary.needs_reply_count}
-        inboxBadge={2}
+        inboxBadge={unreadInboxCount > 0 ? unreadInboxCount : undefined}
       />
 
       {tabParam === 'overview' && (

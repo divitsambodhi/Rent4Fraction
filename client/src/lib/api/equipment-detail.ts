@@ -18,8 +18,14 @@ export async function getEquipmentAvailability(
 ): Promise<EquipmentAvailability> {
   const numericId = equipmentId.replace(/\D/g, '') || equipmentId
   const params: Record<string, string> = {}
-  if (fromDate) params.start_date = fromDate
-  if (toDate) params.end_date = toDate
+  if (fromDate) {
+    params.from = fromDate
+    params.start_date = fromDate
+  }
+  if (toDate) {
+    params.to = toDate
+    params.end_date = toDate
+  }
 
   try {
     return await apiClient.get<EquipmentAvailability>(
@@ -28,7 +34,7 @@ export async function getEquipmentAvailability(
     )
   } catch {
     return {
-      available_quantity: 1,
+      available_quantity: 10,
       next_available_from: null,
       unavailable_days: [],
     }

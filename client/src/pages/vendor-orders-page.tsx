@@ -55,7 +55,7 @@ export function VendorOrdersPage() {
     try {
       const orders = await getVendorOrders('all')
       setRawOrders(orders)
-    } catch (err: any) {
+    } catch {
       toast.error('Failed to load vendor orders')
     } finally {
       setLoadingOrders(false)
@@ -325,8 +325,9 @@ export function VendorOrdersPage() {
       await executeVendorOrderLifecycleAction(currentOrder.vendor_order_id, action, payload)
       toast.success(`Order ${currentOrder.vendor_order_id} updated successfully.`)
       await fetchOrders()
-    } catch (err: any) {
-      toast.error(err?.message || `Failed to update order ${currentOrder.vendor_order_id}`)
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : `Failed to update order ${currentOrder.vendor_order_id}`
+      toast.error(msg)
     }
   }
 

@@ -5,7 +5,6 @@ import { HowItWorks } from '@/components/home/how-it-works'
 import { VendorCTA } from '@/components/home/vendor-cta'
 import { FAQSection } from '@/components/home/faq-section'
 import { PageContainer } from '@/components/shared/page-container'
-import { SampleDataNotice } from '@/components/shared/sample-data-notice'
 import { usePageTitle } from '@/hooks/use-page-title'
 
 export function HomePage() {
@@ -14,10 +13,7 @@ export function HomePage() {
 
   return (
     <>
-      {/* 1. Dismissible sample data notice */}
-      <SampleDataNotice dismissible />
-
-      <PageContainer>
+            <PageContainer>
         {/* 2. Restrained Hero with display heading, subtext, Browse and Choose dates buttons */}
         <HomeHero dates={dates} onDatesChange={setDates} />
 

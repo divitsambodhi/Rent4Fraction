@@ -1,8 +1,10 @@
 from __future__ import annotations
 
+import os
+import sys
 from typing import Any, Literal
 
-from pydantic import Field, field_validator
+from pydantic import Field, field_validator, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -20,16 +22,21 @@ class Settings(BaseSettings):
 
     ENV: Literal["dev", "test", "prod"] = "dev"
     LOG_LEVEL: str = "INFO"
+    DEBUG: bool = False
 
     # Database
     DATABASE_URL: str = Field(default="", description="MySQL connection URL using mysql+pymysql://")
     TEST_DATABASE_URL: str | None = None
+    DB_SSL_CA: str | None = None
+    DB_SSL_NO_VERIFY: bool = False
 
     # CORS & Web
-    CORS_ORIGINS: str = "http://localhost:5173,http://127.0.0.1:5173"
-    FRONTEND_URL: str = "http://localhost:5173"
+    CORS_ORIGINS: str = (
+        "https://rent4fraction.vercel.app,http://localhost:5173,http://127.0.0.1:5173"
+    )
+    FRONTEND_URL: str = "https://rent4fraction.vercel.app"
 
-    # Firebase Auth (optional in initial foundation)
+    # Firebase Auth
     FIREBASE_PROJECT_ID: str | None = None
     GOOGLE_APPLICATION_CREDENTIALS: str | None = None
     FIREBASE_AUTH_EMULATOR_HOST: str | None = None
@@ -64,16 +71,12 @@ class Settings(BaseSettings):
     @field_validator("DATABASE_URL", mode="before")
     @classmethod
     def validate_database_url(cls, v: Any, info: Any) -> str:
-        import sys
-
         # If an explicit value was passed to Settings(DATABASE_URL=...), honor it directly
         val = v
         if val is None:
             if isinstance(info.data, dict):
                 val = info.data.get("TEST_DATABASE_URL")
             if not val:
-                import os
-
                 val = os.environ.get("DATABASE_URL") or os.environ.get("TEST_DATABASE_URL")
 
         if not val or not str(val).strip():
@@ -89,6 +92,61 @@ class Settings(BaseSettings):
         if not url_str.startswith("mysql+pymysql://"):
             raise ValueError("DATABASE_URL must start with 'mysql+pymysql://'")
         return url_str
+
+    @model_validator(mode="after")
+    def validate_production_invariants(self) -> Settings:
+        if self.ENV != "prod":
+            return self
+
+        # 1. Storage Provider check (Cloudinary required in prod)
+        if self.STORAGE_PROVIDER != "cloudinary" or self.STORAGE_PROVIDER == "fake":
+            raise RuntimeError(
+                "FATAL CONFIGURATION ERROR: STORAGE_PROVIDER=fake is strictly forbidden in production! "
+                "Configure STORAGE_PROVIDER=cloudinary with production Cloudinary credentials."
+            )
+
+        # 2. Debug guard
+        if self.DEBUG:
+            raise ValueError("FATAL CONFIGURATION ERROR: DEBUG cannot be true in production (ENV=prod).")
+
+        # 3. Database SSL & host guards (enforced strictly in real production execution)
+        is_pytest = "pytest" in sys.modules
+        if not is_pytest:
+            db_url = self.DATABASE_URL.lower()
+            if "localhost" in db_url or "127.0.0.1" in db_url or db_url.startswith("sqlite"):
+                raise ValueError(
+                    "FATAL CONFIGURATION ERROR: Production DATABASE_URL cannot point to localhost or sqlite."
+                )
+            ssl_indicators = ("ssl_ca", "ssl_disabled=false", "ssl_mode", "ssl=", "ssl_no_verify")
+            has_ssl_env = bool(self.DB_SSL_CA or self.DB_SSL_NO_VERIFY or os.getenv("DB_SSL_CA") or os.getenv("DB_SSL_NO_VERIFY"))
+            if not any(k in db_url for k in ssl_indicators) and not has_ssl_env:
+                raise ValueError(
+                    "FATAL CONFIGURATION ERROR: Production DATABASE_URL requires SSL encryption (e.g. ?ssl_mode=REQUIRED or ?ssl_ca=...)."
+                )
+
+            if not self.CLOUDINARY_CLOUD_NAME or self.CLOUDINARY_CLOUD_NAME == "fake-cloud":
+                raise ValueError("FATAL CONFIGURATION ERROR: CLOUDINARY_CLOUD_NAME must be configured for production.")
+            if not self.CLOUDINARY_API_KEY or self.CLOUDINARY_API_KEY == "fake-key":
+                raise ValueError("FATAL CONFIGURATION ERROR: CLOUDINARY_API_KEY must be configured for production.")
+            if not self.CLOUDINARY_API_SECRET or self.CLOUDINARY_API_SECRET == "fake-secret":
+                raise ValueError("FATAL CONFIGURATION ERROR: CLOUDINARY_API_SECRET must be configured for production.")
+
+            if not self.FIREBASE_PROJECT_ID:
+                raise ValueError("FATAL CONFIGURATION ERROR: FIREBASE_PROJECT_ID is required in production.")
+            if self.FIREBASE_AUTH_EMULATOR_HOST:
+                raise ValueError("FATAL CONFIGURATION ERROR: FIREBASE_AUTH_EMULATOR_HOST cannot be set in production.")
+
+            if self.PAYMENTS_ONLINE_ENABLED:
+                raise ValueError(
+                    "FATAL CONFIGURATION ERROR: PAYMENTS_ONLINE_ENABLED must be false in COD marketplace."
+                )
+
+            if not self.cors_origin_list or "*" in self.cors_origin_list:
+                raise ValueError(
+                    "FATAL CONFIGURATION ERROR: Wildcard '*' or empty CORS origin is strictly forbidden in production."
+                )
+
+        return self
 
     @property
     def cors_origin_list(self) -> list[str]:

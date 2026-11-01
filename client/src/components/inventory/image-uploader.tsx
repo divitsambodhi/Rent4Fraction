@@ -169,8 +169,8 @@ export function ImageUploader({
         <input
           ref={fileInputRef}
           type="file"
-          accept="image/*"
-          capture="environment"
+          accept="image/jpeg,image/png,image/webp,image/heic,image/heif,.jpg,.jpeg,.png,.webp,.heic,.heif"
+          
           multiple
           disabled={disabled || isUploading || images.length >= maxImages}
           onChange={(e) => processFiles(e.target.files)}

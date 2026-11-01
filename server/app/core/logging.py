@@ -19,6 +19,10 @@ class JSONFormatter(logging.Formatter):
         req_id = getattr(record, "request_id", None)
         if req_id:
             log_obj["request_id"] = req_id
+        for attr in ("http_method", "http_path", "exception_type"):
+            val = getattr(record, attr, None)
+            if val is not None:
+                log_obj[attr] = val
         if record.exc_info:
             log_obj["exception"] = self.formatException(record.exc_info)
         return json.dumps(log_obj)

@@ -24,6 +24,31 @@ def _get_user(db: Session, current_user: CurrentUser) -> User:
 
 
 @router.get(
+    "/notifications/unread-count",
+    response_model=dict[str, int],
+    operation_id="get_notifications_unread_count",
+    summary="Count of unread notifications for the current user",
+)
+def get_notifications_unread_count(
+    current_user: CurrentUser = Depends(get_current_user),
+    db: Session = Depends(get_db),
+) -> dict[str, int]:
+    from sqlalchemy import func
+    from app.models.social import Notification
+
+    count: int = (
+        db.query(func.count(Notification.notification_id))
+        .filter(
+            Notification.user_id == current_user.user_id,
+            Notification.is_read == 0,
+        )
+        .scalar()
+        or 0
+    )
+    return {"unread_count": count}
+
+
+@router.get(
     "/notifications",
     response_model=NotificationListResponse,
     operation_id="list_user_notifications",

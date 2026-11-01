@@ -15,19 +15,37 @@ export interface ProcessedImage {
 
 export async function processImageUpload(
   file: File,
-  maxDimension = 1600,
+  maxDimension = 2000,
   quality = 0.8,
 ): Promise<ProcessedImage> {
+  const isHeic = file.type === 'image/heic' || file.type === 'image/heif' || /\.hei[cf]$/i.test(file.name)
   const allowedTypes = ['image/jpeg', 'image/png', 'image/webp', 'image/heic', 'image/heif']
-  if (!allowedTypes.includes(file.type) && !file.type.startsWith('image/')) {
-    throw new Error('Unsupported image format. Please select a JPG, PNG, or WebP photo.')
+  if (!isHeic && !allowedTypes.includes(file.type) && !file.type.startsWith('image/')) {
+    throw new Error('Unsupported image format. Please select a JPG, PNG, WebP, or HEIC photo.')
+  }
+
+  // Convert HEIC/HEIF files to JPEG using client-side wasm/canvas
+  let sourceBlob: Blob = file
+  if (isHeic) {
+    try {
+      const heic2anyModule = await import('heic2any');
+      const heic2any = (heic2anyModule as any).default || heic2anyModule;
+      const converted = await heic2any({
+        blob: file,
+        toType: 'image/jpeg',
+        quality: 0.9,
+      })
+      sourceBlob = Array.isArray(converted) ? converted[0] : converted
+    } catch {
+      throw new Error('Could not convert HEIC photo. Please save as JPEG or WebP and try again.')
+    }
   }
 
   // Use createImageBitmap with imageOrientation: 'from-image' for automatic EXIF orientation handling
   let bitmap: ImageBitmap | null = null
   try {
     if (typeof window !== 'undefined' && 'createImageBitmap' in window) {
-      bitmap = await createImageBitmap(file, { imageOrientation: 'from-image' })
+      bitmap = await createImageBitmap(sourceBlob, { imageOrientation: 'from-image' })
     }
   } catch {
     bitmap = null
@@ -44,10 +62,10 @@ export async function processImageUpload(
   } else {
     // Fallback using HTMLImageElement
     const img = new Image()
-    const objectUrl = URL.createObjectURL(file)
+    const objectUrl = URL.createObjectURL(sourceBlob)
     await new Promise<void>((resolve, reject) => {
       img.onload = () => resolve()
-      img.onerror = () => reject(new Error('Failed to load image file'))
+      img.onerror = () => reject(new Error('The selected image file is corrupted or cannot be read.'))
       img.src = objectUrl
     })
     sourceWidth = img.naturalWidth || img.width

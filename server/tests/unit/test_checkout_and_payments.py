@@ -452,6 +452,59 @@ def test_checkout_order_placement_and_snapshots(checkout_test_env: dict[str, Any
 
 
 @pytest.mark.unit
+def test_checkout_order_placement_as_admin(checkout_test_env: dict[str, Any]) -> None:
+    client: TestClient = checkout_test_env["client"]
+    db: Session = checkout_test_env["db"]
+    cust1: User = checkout_test_env["cust1"]
+    eq: Equipment = checkout_test_env["equipment"]
+    addr: Address = checkout_test_env["address"]
+    vendor: Vendor = checkout_test_env["vendor"]
+    auth = {"Authorization": "Bearer cust1-token"}
+
+    # Ensure COD enabled
+    cod_setting = db.query(PlatformSetting).filter(PlatformSetting.setting_key == "cod_enabled").first()
+    if cod_setting:
+        cod_setting.setting_value = "1"
+    else:
+        db.add(PlatformSetting(setting_key="cod_enabled", setting_value="1", description="COD enabled"))
+
+    # Set user role to admin to verify admins can test checkout
+    cust1.role = UserRole.admin
+    db.commit()
+
+    cart_item = CartItem(
+        user_id=cust1.user_id,
+        equipment_id=eq.equipment_id,
+        quantity=1,
+        start_date=date(2026, 12, 15),
+        end_date=date(2026, 12, 17),
+    )
+    db.add(cart_item)
+    db.commit()
+
+    order_payload = {
+        "period": {"start_date": "2026-12-15", "end_date": "2026-12-17"},
+        "address_id": addr.address_id,
+        "fulfilment": {str(vendor.vendor_id): "delivery"},
+        "event": {
+            "event_name": "Admin Test Shoot",
+            "event_type": "Corporate",
+            "event_date": "2026-12-16",
+            "venue_address": "Studio 1, Mumbai",
+        },
+        "payment_method": "cod",
+    }
+
+    headers = {**auth, "Idempotency-Key": "idem_admin_order_001"}
+    res = client.post("/api/v1/checkout/orders", headers=headers, json=order_payload)
+    assert res.status_code == 201, res.text
+    data = res.json()
+    assert data["status"] in ("pending", "confirmed")
+    assert data["payment_method"] == "cod"
+
+
+
+@pytest.mark.unit
 def test_checkout_idempotency_replay_and_conflict(checkout_test_env: dict[str, Any]) -> None:
     client: TestClient = checkout_test_env["client"]
     db: Session = checkout_test_env["db"]
@@ -938,3 +991,119 @@ def test_reconcile_payments_job(checkout_test_env: dict[str, Any]) -> None:
     assert booking.status == BookingStatus.confirmed
     assert booking.payment_status == BookingPaymentStatus.paid
     assert payment.status == PaymentStatus.success
+
+
+@pytest.mark.unit
+def test_checkout_vendor_notifications_created(checkout_test_env: dict[str, Any]) -> None:
+    from app.models.social import Notification
+    from app.services.checkout import create_checkout_order
+    from app.schemas.checkout import CheckoutOrderCreateRequest
+    db: Session = checkout_test_env["db"]
+    vendor: Vendor = checkout_test_env["vendor"]
+    cust1: User = checkout_test_env["cust1"]
+    eq: Equipment = checkout_test_env["equipment"]
+    addr: Address = checkout_test_env["address"]
+
+    # Place an order
+    cart_item = CartItem(
+        user_id=cust1.user_id,
+        equipment_id=eq.equipment_id,
+        quantity=1,
+        start_date=date(2026, 12, 20),
+        end_date=date(2026, 12, 22),
+    )
+    db.add(cart_item)
+    db.commit()
+
+    order_payload = {
+        "period": {"start_date": "2026-12-20", "end_date": "2026-12-22"},
+        "address_id": addr.address_id,
+        "fulfilment": {str(vendor.vendor_id): "delivery"},
+        "event": {
+            "event_type": "Wedding",
+            "event_date": "2026-12-21",
+            "venue_address": "Test Venue",
+        },
+        "payment_method": "upi",
+    }
+    req = CheckoutOrderCreateRequest.model_validate(order_payload)
+    create_checkout_order(db, cust1, req, "idem_notif_test_001")
+
+    # Verify vendor notification created
+    vendor_notif = (
+        db.query(Notification)
+        .filter(Notification.user_id == vendor.user_id, Notification.type == "new_order")
+        .first()
+    )
+    assert vendor_notif is not None
+    assert "BK-" in vendor_notif.message
+    assert "New Booking Request" in vendor_notif.title
+
+
+@pytest.mark.unit
+def test_checkout_rejects_booking_own_equipment(checkout_test_env: dict[str, Any]) -> None:
+    client: TestClient = checkout_test_env["client"]
+    db: Session = checkout_test_env["db"]
+    vendor: Vendor = checkout_test_env["vendor"]
+    eq: Equipment = checkout_test_env["equipment"]
+    addr: Address = checkout_test_env["address"]
+
+    # Enable COD for test
+    cod_setting = db.query(PlatformSetting).filter(PlatformSetting.setting_key == "cod_enabled").first()
+    if cod_setting:
+        cod_setting.setting_value = "1"
+    else:
+        db.add(PlatformSetting(setting_key="cod_enabled", setting_value="1", description="COD enabled"))
+    db.commit()
+
+    # Vendor tries to book their own equipment as customer
+    vendor_user = db.query(User).filter(User.user_id == vendor.user_id).first()
+    vendor_user.phone = "+919876543210"
+    vendor_user.email_verified = True
+    db.commit()
+
+    # Vendor creates an address for themselves
+    v_addr = Address(
+        user_id=vendor.user_id,
+        line1="Vendor St",
+        city="Mumbai",
+        state="Maharashtra",
+        pincode="400050",
+        country="India",
+        is_default=True,
+    )
+    db.add(v_addr)
+    db.flush()
+
+    cart_item = CartItem(
+        user_id=vendor.user_id,
+        equipment_id=eq.equipment_id,
+        quantity=1,
+        start_date=date(2026, 12, 10),
+        end_date=date(2026, 12, 12),
+    )
+    db.add(cart_item)
+    db.commit()
+
+    order_payload = {
+        "period": {"start_date": "2026-12-10", "end_date": "2026-12-12"},
+        "address_id": v_addr.address_id,
+        "fulfilment": {str(vendor.vendor_id): "delivery"},
+        "event": {
+            "event_type": "Wedding",
+            "event_date": "2026-12-11",
+            "venue_address": "Vendor Venue",
+        },
+        "payment_method": "cod",
+    }
+
+    from app.services.checkout import create_checkout_order
+    from app.schemas.checkout import CheckoutOrderCreateRequest
+    from app.core.errors import ValidationFailedError
+    import pytest
+
+    req = CheckoutOrderCreateRequest.model_validate(order_payload)
+    with pytest.raises(ValidationFailedError) as exc_info:
+        create_checkout_order(db, vendor_user, req, "idem_own_eq_001")
+
+    assert "You cannot book your own equipment listing" in str(exc_info.value.message)

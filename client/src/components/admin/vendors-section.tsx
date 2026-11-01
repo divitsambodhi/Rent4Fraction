@@ -113,7 +113,7 @@ export function VendorsSection({
       header: 'Commission',
       accessor: (vendor: VendorProfile) => (
         <span className="font-mono font-semibold text-xs text-foreground bg-muted/60 px-2 py-0.5 rounded border border-border/60">
-          {vendor.commission_rate ?? 10}%
+          {vendor.commission_rate ?? 0}%
         </span>
       ),
       sortable: true,

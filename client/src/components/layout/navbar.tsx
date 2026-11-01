@@ -39,7 +39,7 @@ export function Navbar() {
   const [customerUnreadCount, setCustomerUnreadCount] = useState(0)
   const [isScrolled, setIsScrolled] = useState(false)
 
-  // Scroll listener for hairline border elevation (>10px, no blur per P-008)
+  // Scroll listener for hairline border elevation (>10px)
   useEffect(() => {
     const handleScroll = () => {
       setIsScrolled(window.scrollY > 10)
@@ -123,12 +123,18 @@ export function Navbar() {
       <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8">
         {/* DESKTOP NAVBAR (>= 1024px) */}
         <div className="hidden lg:flex items-center justify-between gap-6 h-16">
-          {/* 1. Wordmark logo */}
+          {/* 1. Logo mark + wordmark */}
           <AppLink
             to="/"
-            className="flex items-center focus:outline-none focus-visible:ring-2 focus-visible:ring-brand rounded-sm py-1 shrink-0"
+            className="flex items-center gap-2 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand rounded-sm py-1 shrink-0"
             aria-label="Rent4Fraction home"
           >
+            <img
+              src="/images/logo.svg"
+              alt=""
+              aria-hidden="true"
+              className="size-8 shrink-0"
+            />
             <span className="text-xl font-bold tracking-tight text-foreground">
               Rent4Fraction
             </span>
@@ -163,8 +169,231 @@ export function Navbar() {
 
           {/* 3. Actions */}
           <div className="flex items-center gap-5 shrink-0 text-sm font-medium">
+            {/* ADMIN ACTIONS */}
+            {role === 'admin' && (
+              <>
+                <AppLink
+                  to="/admin"
+                  className="text-foreground hover:text-brand font-semibold transition-colors"
+                >
+                  Admin Console
+                </AppLink>
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <button
+                      type="button"
+                      aria-label="Admin menu"
+                      className="flex items-center gap-2 text-foreground hover:text-brand font-semibold py-1.5 px-2 rounded-sm outline-none focus-visible:ring-2 focus-visible:ring-brand cursor-pointer"
+                    >
+                      <span>Admin</span>
+                      <Icon name="chevron-down" size={14} className="opacity-70" />
+                    </button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end" className="w-52 bg-surface border-border shadow-md rounded-sm z-popover">
+                    <DropdownMenuLabel className="font-semibold text-foreground">
+                      Admin Moderator
+                    </DropdownMenuLabel>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem asChild>
+                      <AppLink to="/admin?section=overview" className="w-full cursor-pointer">
+                        Overview
+                      </AppLink>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem asChild>
+                      <AppLink to="/admin?section=vendors" className="w-full cursor-pointer">
+                        Vendors
+                      </AppLink>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem asChild>
+                      <AppLink to="/admin?section=equipment" className="w-full cursor-pointer">
+                        Equipment
+                      </AppLink>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem asChild>
+                      <AppLink to="/admin?section=disputes" className="w-full cursor-pointer">
+                        Disputes
+                      </AppLink>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem asChild>
+                      <AppLink to="/admin?section=bookings" className="w-full cursor-pointer">
+                        Bookings
+                      </AppLink>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem asChild>
+                      <AppLink to="/admin?section=users" className="w-full cursor-pointer">
+                        Users
+                      </AppLink>
+                    </DropdownMenuItem>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem
+                      onClick={handleLogout}
+                      className="text-danger focus:text-danger focus:bg-muted cursor-pointer"
+                    >
+                      Log out
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              </>
+            )}
+
+            {/* VENDOR ACTIONS */}
+            {role === 'vendor' && (
+              <>
+                <AppLink
+                  to="/vendor"
+                  className="text-foreground hover:text-brand font-semibold transition-colors"
+                >
+                  Vendor Portal
+                </AppLink>
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <button
+                      type="button"
+                      aria-label="Vendor menu"
+                      className="flex items-center gap-2 text-foreground hover:text-brand font-semibold py-1.5 px-2 rounded-sm outline-none focus-visible:ring-2 focus-visible:ring-brand cursor-pointer"
+                    >
+                      <span>{user?.name || 'Vendor'}</span>
+                      <Icon name="chevron-down" size={14} className="opacity-70" />
+                    </button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end" className="w-52 bg-surface border-border shadow-md rounded-sm z-popover">
+                    <DropdownMenuLabel className="font-semibold text-foreground">
+                      {user?.name || 'Vendor Portal'}
+                    </DropdownMenuLabel>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem asChild>
+                      <AppLink to="/vendor?tab=overview" className="w-full cursor-pointer">
+                        Dashboard
+                      </AppLink>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem asChild>
+                      <AppLink to="/vendor?tab=inventory" className="w-full cursor-pointer">
+                        Inventory
+                      </AppLink>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem asChild>
+                      <AppLink to="/vendor?tab=orders" className="w-full cursor-pointer">
+                        Orders & returns
+                      </AppLink>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem asChild>
+                      <AppLink to="/vendor?tab=inbox" className="w-full cursor-pointer">
+                        Messages
+                      </AppLink>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem asChild>
+                      <AppLink to="/vendor?tab=reviews" className="w-full cursor-pointer">
+                        Reviews
+                      </AppLink>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem asChild>
+                      <AppLink to="/vendor?tab=profile" className="w-full cursor-pointer">
+                        Business profile
+                      </AppLink>
+                    </DropdownMenuItem>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem
+                      onClick={handleLogout}
+                      className="text-danger focus:text-danger focus:bg-muted cursor-pointer"
+                    >
+                      Log out
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              </>
+            )}
+
+            {/* CUSTOMER ACCOUNT MENU */}
+            {role === 'customer' && (
+              <>
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <button
+                      type="button"
+                      aria-label="Account menu"
+                      className="flex items-center gap-2 text-foreground hover:text-brand font-semibold py-1.5 px-2 rounded-sm outline-none focus-visible:ring-2 focus-visible:ring-brand cursor-pointer relative"
+                    >
+                      <span>{user?.name || 'Account'}</span>
+                      <Icon name="chevron-down" size={14} className="opacity-70" />
+                      {customerUnreadCount > 0 && (
+                        <span
+                          className="size-2 rounded-full bg-brand absolute top-1 right-1"
+                          aria-label={`${customerUnreadCount} unread notifications`}
+                        />
+                      )}
+                    </button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end" className="w-56 bg-surface border-border shadow-md rounded-sm z-popover">
+                    <DropdownMenuLabel className="font-semibold text-foreground">
+                      {user?.name || 'My Account'}
+                    </DropdownMenuLabel>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem asChild>
+                      <AppLink to="/account?tab=bookings" className="w-full cursor-pointer">
+                        My bookings
+                      </AppLink>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem asChild>
+                      <AppLink to="/account?tab=messages" className="w-full cursor-pointer">
+                        Messages
+                      </AppLink>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem asChild>
+                      <AppLink to="/account?tab=notifications" className="w-full cursor-pointer flex items-center justify-between">
+                        <span>Notifications</span>
+                        {customerUnreadCount > 0 && (
+                          <span className="text-[11px] font-bold px-1.5 py-0.2 rounded-full bg-brand text-white">
+                            {customerUnreadCount}
+                          </span>
+                        )}
+                      </AppLink>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem asChild>
+                      <AppLink to="/account?tab=wishlist" className="w-full cursor-pointer">
+                        Wishlist
+                      </AppLink>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem asChild>
+                      <AppLink to="/account?tab=addresses" className="w-full cursor-pointer">
+                        Addresses
+                      </AppLink>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem asChild>
+                      <AppLink to="/account?tab=profile" className="w-full cursor-pointer">
+                        Profile and security
+                      </AppLink>
+                    </DropdownMenuItem>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem
+                      onClick={handleLogout}
+                      className="text-danger focus:text-danger focus:bg-muted cursor-pointer"
+                    >
+                      Log out
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+
+                {/* CART FOR CUSTOMER */}
+                <AppLink
+                  to="/checkout"
+                  aria-label={`Cart with ${cartCount} items`}
+                  className="flex items-center gap-1.5 text-foreground hover:text-brand font-medium transition-colors relative py-1 px-1.5"
+                >
+                  <div className="relative">
+                    <Icon name="cart" size={19} />
+                    {cartCount > 0 && (
+                      <span className="absolute -top-1.5 -right-2 min-w-4 h-4 px-1 rounded-full bg-brand text-white text-[10px] font-bold flex items-center justify-center tabular-nums">
+                        {cartCount}
+                      </span>
+                    )}
+                  </div>
+                  <span>Cart</span>
+                </AppLink>
+              </>
+            )}
+
             {/* VISITOR ACTIONS */}
-            {role !== 'customer' && (
+            {!role && (
               <>
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
@@ -192,100 +421,30 @@ export function Navbar() {
                 </DropdownMenu>
 
                 <AppLink
-                  to="/vendor"
+                  to="/auth?mode=vendor"
                   className="text-foreground hover:text-brand font-medium transition-colors"
                 >
-                  Become a vendor
+                  List your equipment
+                </AppLink>
+
+                {/* CART FOR VISITOR */}
+                <AppLink
+                  to="/checkout"
+                  aria-label={`Cart with ${cartCount} items`}
+                  className="flex items-center gap-1.5 text-foreground hover:text-brand font-medium transition-colors relative py-1 px-1.5"
+                >
+                  <div className="relative">
+                    <Icon name="cart" size={19} />
+                    {cartCount > 0 && (
+                      <span className="absolute -top-1.5 -right-2 min-w-4 h-4 px-1 rounded-full bg-brand text-white text-[10px] font-bold flex items-center justify-center tabular-nums">
+                        {cartCount}
+                      </span>
+                    )}
+                  </div>
+                  <span>Cart</span>
                 </AppLink>
               </>
             )}
-
-            {/* CUSTOMER ACCOUNT MENU */}
-            {role === 'customer' && (
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <button
-                    type="button"
-                    aria-label="Account menu"
-                    className="flex items-center gap-2 text-foreground hover:text-brand font-semibold py-1.5 px-2 rounded-sm outline-none focus-visible:ring-2 focus-visible:ring-brand cursor-pointer relative"
-                  >
-                    <span>{user?.name || 'Account'}</span>
-                    <Icon name="chevron-down" size={14} className="opacity-70" />
-                    {customerUnreadCount > 0 && (
-                      <span
-                        className="size-2 rounded-full bg-brand absolute top-1 right-1"
-                        aria-label={`${customerUnreadCount} unread notifications`}
-                      />
-                    )}
-                  </button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-56 bg-surface border-border shadow-md rounded-sm z-popover">
-                  <DropdownMenuLabel className="font-semibold text-foreground">
-                    {user?.name || 'My Account'}
-                  </DropdownMenuLabel>
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem asChild>
-                    <AppLink to="/account?tab=bookings" className="w-full cursor-pointer">
-                      My bookings
-                    </AppLink>
-                  </DropdownMenuItem>
-                  <DropdownMenuItem asChild>
-                    <AppLink to="/account?tab=messages" className="w-full cursor-pointer">
-                      Messages
-                    </AppLink>
-                  </DropdownMenuItem>
-                  <DropdownMenuItem asChild>
-                    <AppLink to="/account?tab=notifications" className="w-full cursor-pointer flex items-center justify-between">
-                      <span>Notifications</span>
-                      {customerUnreadCount > 0 && (
-                        <span className="text-[11px] font-bold px-1.5 py-0.2 rounded-full bg-brand text-white">
-                          {customerUnreadCount}
-                        </span>
-                      )}
-                    </AppLink>
-                  </DropdownMenuItem>
-                  <DropdownMenuItem asChild>
-                    <AppLink to="/account?tab=wishlist" className="w-full cursor-pointer">
-                      Wishlist
-                    </AppLink>
-                  </DropdownMenuItem>
-                  <DropdownMenuItem asChild>
-                    <AppLink to="/account?tab=addresses" className="w-full cursor-pointer">
-                      Addresses
-                    </AppLink>
-                  </DropdownMenuItem>
-                  <DropdownMenuItem asChild>
-                    <AppLink to="/account?tab=profile" className="w-full cursor-pointer">
-                      Profile and security
-                    </AppLink>
-                  </DropdownMenuItem>
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem
-                    onClick={handleLogout}
-                    className="text-danger focus:text-danger focus:bg-muted cursor-pointer"
-                  >
-                    Log out
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
-            )}
-
-            {/* CART (with label "Cart" and count badge) */}
-            <AppLink
-              to="/checkout"
-              aria-label={`Cart with ${cartCount} items`}
-              className="flex items-center gap-1.5 text-foreground hover:text-brand font-medium transition-colors relative py-1 px-1.5"
-            >
-              <div className="relative">
-                <Icon name="cart" size={19} />
-                {cartCount > 0 && (
-                  <span className="absolute -top-1.5 -right-2 min-w-4 h-4 px-1 rounded-full bg-brand text-white text-[10px] font-bold flex items-center justify-center tabular-nums">
-                    {cartCount}
-                  </span>
-                )}
-              </div>
-              <span>Cart</span>
-            </AppLink>
 
             {/* THEME TOGGLE BUTTON */}
             <button
@@ -318,47 +477,156 @@ export function Navbar() {
                 </SheetTrigger>
                 <SheetContent side="left" className="w-[280px] p-0 bg-surface border-r border-border">
                   <SheetHeader className="p-4 border-b border-border">
-                    <SheetTitle className="font-bold text-lg text-foreground text-left">
+                    <SheetTitle className="font-bold text-lg text-foreground text-left flex items-center gap-2">
+                      <img src="/images/logo.svg" alt="" aria-hidden="true" className="size-7 shrink-0" />
                       Rent4Fraction
                     </SheetTitle>
                   </SheetHeader>
                   <div className="p-4 space-y-4 overflow-y-auto max-h-[calc(100dvh-70px)]">
                     <nav className="space-y-1">
-                      <AppLink
-                        to="/equipment"
-                        className="flex items-center px-3 py-2.5 rounded-sm text-sm font-medium text-foreground hover:bg-muted"
-                      >
-                        Browse equipment
-                      </AppLink>
+                      {role === 'admin' ? (
+                        <>
+                          <AppLink
+                            to="/admin"
+                            className="flex items-center px-3 py-2.5 rounded-sm text-sm font-semibold text-brand hover:bg-brand/10"
+                          >
+                            Admin Console
+                          </AppLink>
+                          <AppLink
+                            to="/admin?section=vendors"
+                            className="flex items-center px-3 py-2.5 rounded-sm text-sm font-medium text-foreground hover:bg-muted"
+                          >
+                            Vendors
+                          </AppLink>
+                          <AppLink
+                            to="/admin?section=equipment"
+                            className="flex items-center px-3 py-2.5 rounded-sm text-sm font-medium text-foreground hover:bg-muted"
+                          >
+                            Equipment
+                          </AppLink>
+                          <AppLink
+                            to="/admin?section=disputes"
+                            className="flex items-center px-3 py-2.5 rounded-sm text-sm font-medium text-foreground hover:bg-muted"
+                          >
+                            Disputes
+                          </AppLink>
+                          <AppLink
+                            to="/admin?section=bookings"
+                            className="flex items-center px-3 py-2.5 rounded-sm text-sm font-medium text-foreground hover:bg-muted"
+                          >
+                            Bookings
+                          </AppLink>
+                          <AppLink
+                            to="/admin?section=users"
+                            className="flex items-center px-3 py-2.5 rounded-sm text-sm font-medium text-foreground hover:bg-muted"
+                          >
+                            Users
+                          </AppLink>
+                        </>
+                      ) : role === 'vendor' ? (
+                        <>
+                          <AppLink
+                            to="/vendor"
+                            className="flex items-center px-3 py-2.5 rounded-sm text-sm font-semibold text-brand hover:bg-brand/10"
+                          >
+                            Vendor Portal
+                          </AppLink>
+                          <AppLink
+                            to="/vendor?tab=inventory"
+                            className="flex items-center px-3 py-2.5 rounded-sm text-sm font-medium text-foreground hover:bg-muted"
+                          >
+                            Inventory
+                          </AppLink>
+                          <AppLink
+                            to="/vendor?tab=orders"
+                            className="flex items-center px-3 py-2.5 rounded-sm text-sm font-medium text-foreground hover:bg-muted"
+                          >
+                            Orders & returns
+                          </AppLink>
+                          <AppLink
+                            to="/vendor?tab=inbox"
+                            className="flex items-center px-3 py-2.5 rounded-sm text-sm font-medium text-foreground hover:bg-muted"
+                          >
+                            Messages
+                          </AppLink>
+                          <AppLink
+                            to="/vendor?tab=reviews"
+                            className="flex items-center px-3 py-2.5 rounded-sm text-sm font-medium text-foreground hover:bg-muted"
+                          >
+                            Reviews
+                          </AppLink>
+                          <AppLink
+                            to="/vendor?tab=profile"
+                            className="flex items-center px-3 py-2.5 rounded-sm text-sm font-medium text-foreground hover:bg-muted"
+                          >
+                            Business profile
+                          </AppLink>
+                        </>
+                      ) : (
+                        <>
+                          <AppLink
+                            to="/equipment"
+                            className="flex items-center px-3 py-2.5 rounded-sm text-sm font-medium text-foreground hover:bg-muted"
+                          >
+                            Browse equipment
+                          </AppLink>
 
-                      {/* Collapsed Categories list */}
-                      <div>
-                        <button
-                          type="button"
-                          onClick={() => setCategoriesOpen(!categoriesOpen)}
-                          className="w-full flex items-center justify-between px-3 py-2.5 rounded-sm text-sm font-medium text-foreground hover:bg-muted"
-                        >
-                          <span>Categories</span>
-                          <Icon
-                            name={categoriesOpen ? 'chevron-up' : 'chevron-down'}
-                            size={16}
-                            className="text-muted-foreground"
-                          />
-                        </button>
-                        {categoriesOpen && (
-                          <div className="pl-4 pr-2 py-1 space-y-1 border-l-2 border-brand/30 ml-3">
-                            {STRIP_CATEGORIES.map((c) => (
-                              <AppLink
-                                key={c.id}
-                                to={`/equipment?category=${c.id}`}
-                                className="block px-2.5 py-1.5 text-xs text-text-secondary hover:text-brand"
-                              >
-                                {c.name}
-                              </AppLink>
-                            ))}
+                          {/* Collapsed Categories list */}
+                          <div>
+                            <button
+                              type="button"
+                              onClick={() => setCategoriesOpen(!categoriesOpen)}
+                              className="w-full flex items-center justify-between px-3 py-2.5 rounded-sm text-sm font-medium text-foreground hover:bg-muted"
+                            >
+                              <span>Categories</span>
+                              <Icon
+                                name={categoriesOpen ? 'chevron-up' : 'chevron-down'}
+                                size={16}
+                                className="text-muted-foreground"
+                              />
+                            </button>
+                            {categoriesOpen && (
+                              <div className="pl-4 pr-2 py-1 space-y-1 border-l-2 border-brand/30 ml-3">
+                                {STRIP_CATEGORIES.map((c) => (
+                                  <AppLink
+                                    key={c.id}
+                                    to={`/equipment?category=${c.id}`}
+                                    className="block px-2.5 py-1.5 text-xs text-text-secondary hover:text-brand"
+                                  >
+                                    {c.name}
+                                  </AppLink>
+                                ))}
+                              </div>
+                            )}
                           </div>
-                        )}
-                      </div>
+
+                          {role === 'customer' && (
+                            <>
+                              <AppLink
+                                to="/account?tab=bookings"
+                                className="flex items-center px-3 py-2.5 rounded-sm text-sm font-medium text-foreground hover:bg-muted"
+                              >
+                                My bookings
+                              </AppLink>
+                              <AppLink
+                                to="/account?tab=wishlist"
+                                className="flex items-center px-3 py-2.5 rounded-sm text-sm font-medium text-foreground hover:bg-muted"
+                              >
+                                Wishlist
+                              </AppLink>
+                            </>
+                          )}
+
+                          {!role && (
+                            <AppLink
+                              to="/auth?mode=vendor"
+                              className="flex items-center px-3 py-2.5 rounded-sm text-sm font-semibold text-brand hover:bg-brand/10"
+                            >
+                              List your equipment
+                            </AppLink>
+                          )}
+                        </>
+                      )}
 
                       <AppLink
                         to="/help"
@@ -366,15 +634,6 @@ export function Navbar() {
                       >
                         Help and support
                       </AppLink>
-
-                      {role !== 'customer' && (
-                        <AppLink
-                          to="/vendor"
-                          className="flex items-center px-3 py-2.5 rounded-sm text-sm font-semibold text-brand hover:bg-brand/10"
-                        >
-                          Become a vendor
-                        </AppLink>
-                      )}
                     </nav>
 
                     <div className="pt-3 border-t border-border space-y-2">
@@ -390,7 +649,7 @@ export function Navbar() {
                         </div>
                       </button>
 
-                      {role === 'customer' ? (
+                      {user ? (
                         <button
                           type="button"
                           onClick={handleLogout}
@@ -417,8 +676,9 @@ export function Navbar() {
                 </SheetContent>
               </Sheet>
 
-              {/* Wordmark logo */}
-              <AppLink to="/" aria-label="Rent4Fraction home">
+              {/* Logo mark + wordmark */}
+              <AppLink to="/" aria-label="Rent4Fraction home" className="flex items-center gap-1.5">
+                <img src="/images/logo.svg" alt="" aria-hidden="true" className="size-7 shrink-0" />
                 <span className="text-lg font-bold tracking-tight text-foreground select-none">
                   Rent4Fraction
                 </span>
@@ -427,20 +687,38 @@ export function Navbar() {
 
             {/* Right: Cart and Account */}
             <div className="flex items-center gap-1">
-              <AppLink
-                to="/checkout"
-                aria-label={`Cart with ${cartCount} items`}
-                className="size-10 flex items-center justify-center text-foreground hover:text-brand relative rounded-sm"
-              >
-                <Icon name="cart" size={20} />
-                {cartCount > 0 && (
-                  <span className="absolute top-1 right-1 size-4 rounded-full bg-brand text-white text-[10px] font-bold flex items-center justify-center tabular-nums">
-                    {cartCount}
-                  </span>
-                )}
-              </AppLink>
+              {(role === 'customer' || !role) && (
+                <AppLink
+                  to="/checkout"
+                  aria-label={`Cart with ${cartCount} items`}
+                  className="size-10 flex items-center justify-center text-foreground hover:text-brand relative rounded-sm"
+                >
+                  <Icon name="cart" size={20} />
+                  {cartCount > 0 && (
+                    <span className="absolute top-1 right-1 size-4 rounded-full bg-brand text-white text-[10px] font-bold flex items-center justify-center tabular-nums">
+                      {cartCount}
+                    </span>
+                  )}
+                </AppLink>
+              )}
 
-              {role === 'customer' ? (
+              {role === 'admin' ? (
+                <AppLink
+                  to="/admin"
+                  aria-label="Admin console"
+                  className="size-10 flex items-center justify-center text-foreground hover:text-brand relative rounded-sm"
+                >
+                  <Icon name="user" size={20} />
+                </AppLink>
+              ) : role === 'vendor' ? (
+                <AppLink
+                  to="/vendor"
+                  aria-label="Vendor portal"
+                  className="size-10 flex items-center justify-center text-foreground hover:text-brand relative rounded-sm"
+                >
+                  <Icon name="user" size={20} />
+                </AppLink>
+              ) : role === 'customer' ? (
                 <AppLink
                   to="/account"
                   aria-label="My account"

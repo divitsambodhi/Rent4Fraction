@@ -73,8 +73,8 @@ export function LogoUploader({
         <input
           ref={fileInputRef}
           type="file"
-          accept="image/*"
-          capture="environment"
+          accept="image/jpeg,image/png,image/webp,image/heic,image/heif,.jpg,.jpeg,.png,.webp,.heic,.heif"
+          
           onChange={handleFileChange}
           disabled={disabled || isUploading}
           className="hidden"

@@ -6,7 +6,7 @@ from fastapi import APIRouter, Depends, Header, status
 from sqlalchemy.orm import Session
 
 from app.core.db import get_db
-from app.core.deps import CurrentUser, require_customer
+from app.core.deps import CurrentUser, require_customer_or_admin
 from app.integrations.razorpay import PaymentGateway, get_payment_gateway
 from app.models.accounts import User
 from app.schemas.booking import (
@@ -41,7 +41,7 @@ def _get_user(db: Session, current_user: CurrentUser) -> User:
 def place_checkout_order(
     payload: CheckoutOrderCreateRequest,
     idempotency_key: str = Header(..., alias="Idempotency-Key"),
-    current_user: CurrentUser = Depends(require_customer),
+    current_user: CurrentUser = Depends(require_customer_or_admin),
     db: Session = Depends(get_db),
     gateway: PaymentGateway = Depends(get_payment_gateway),
 ) -> Any:
@@ -64,7 +64,7 @@ def place_checkout_order(
 )
 def validate_coupon(
     payload: CouponValidateRequest,
-    current_user: CurrentUser = Depends(require_customer),
+    current_user: CurrentUser = Depends(require_customer_or_admin),
     db: Session = Depends(get_db),
 ) -> Any:
     user = _get_user(db, current_user)
@@ -84,7 +84,7 @@ def validate_coupon(
 )
 def estimate_checkout_quote(
     payload: CheckoutQuoteRequest,
-    current_user: CurrentUser = Depends(require_customer),
+    current_user: CurrentUser = Depends(require_customer_or_admin),
     db: Session = Depends(get_db),
 ) -> Any:
     user = _get_user(db, current_user)

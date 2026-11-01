@@ -627,7 +627,10 @@ def map_mysql_signal_message(raw_msg: str) -> tuple[str, str, int] | None:
 
 
 def get_request_id(request: Request) -> str:
-    return getattr(request.state, "request_id", "unknown-request-id")
+    req_id = getattr(request.state, "request_id", None)
+    if not req_id:
+        req_id = request.headers.get("X-Request-ID")
+    return req_id or "unknown-request-id"
 
 
 def build_error_response(
@@ -636,6 +639,7 @@ def build_error_response(
     status_code: int,
     request_id: str,
     details: Any | None = None,
+    request: Request | None = None,
 ) -> JSONResponse:
     payload = {
         "error": {
@@ -645,7 +649,28 @@ def build_error_response(
             "request_id": request_id,
         }
     }
-    return JSONResponse(status_code=status_code, content=payload)
+    response_headers: dict[str, str] = {
+        "X-Request-ID": request_id,
+    }
+    if request is not None:
+        origin = request.headers.get("origin")
+        if origin:
+            try:
+                from app.core.config import get_settings
+
+                settings = get_settings()
+                allowed_origins = settings.cors_origin_list
+                if "*" in allowed_origins or origin in allowed_origins:
+                    response_headers["Access-Control-Allow-Origin"] = origin
+                    response_headers["Access-Control-Allow-Credentials"] = "true"
+                    response_headers["Access-Control-Allow-Headers"] = (
+                        "Authorization, Content-Type, Idempotency-Key, X-Request-ID, Accept"
+                    )
+                    response_headers["Vary"] = "Origin"
+            except Exception:
+                pass
+
+    return JSONResponse(status_code=status_code, content=payload, headers=response_headers)
 
 
 def register_exception_handlers(app: FastAPI) -> None:
@@ -658,6 +683,7 @@ def register_exception_handlers(app: FastAPI) -> None:
             status_code=exc.status_code,
             request_id=req_id,
             details=exc.details,
+            request=request,
         )
 
     @app.exception_handler(RequestValidationError)
@@ -678,6 +704,7 @@ def register_exception_handlers(app: FastAPI) -> None:
             status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
             request_id=req_id,
             details=details,
+            request=request,
         )
 
     @app.exception_handler(HTTPException)
@@ -699,6 +726,7 @@ def register_exception_handlers(app: FastAPI) -> None:
             message=str(exc.detail),
             status_code=exc.status_code,
             request_id=req_id,
+            request=request,
         )
 
     @app.exception_handler(Exception)
@@ -717,13 +745,29 @@ def register_exception_handlers(app: FastAPI) -> None:
                     message=msg,
                     status_code=http_status,
                     request_id=req_id,
+                    request=request,
                 )
 
         # Log unhandled exceptions with full traceback internally; never leak to client
-        logger.exception("Unhandled server error [request_id=%s]: %s", req_id, exc)
+        logger.error(
+            "Unhandled server error [%s %s] [request_id=%s] %s: %s",
+            request.method,
+            request.url.path,
+            req_id,
+            exc.__class__.__name__,
+            exc,
+            exc_info=exc,
+            extra={
+                "request_id": req_id,
+                "http_method": request.method,
+                "http_path": request.url.path,
+                "exception_type": exc.__class__.__name__,
+            },
+        )
         return build_error_response(
             code="INTERNAL_SERVER_ERROR",
             message="An unexpected error occurred. Please try again later.",
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             request_id=req_id,
+            request=request,
         )

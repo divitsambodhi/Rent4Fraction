@@ -24,12 +24,12 @@ interface EquipmentPreviewProps {
 
 export function EquipmentPreview({
   formValues,
-  vendorName = 'Sargam Sound Systems',
+  vendorName = 'Vendor',
 }: EquipmentPreviewProps) {
   const primaryImg =
     formValues.images.find((img) => img.isPrimary)?.url ||
     formValues.images[0]?.url ||
-    'https://images.unsplash.com/photo-1598387993281-cecf8b71a8f8?auto=format&fit=crop&w=600&q=80'
+    ''
 
   const previewListing: EquipmentListingView = {
     equipment_id: 'preview-id',

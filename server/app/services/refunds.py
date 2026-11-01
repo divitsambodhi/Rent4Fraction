@@ -16,7 +16,7 @@ from app.core.money import quantize_money
 from app.core.time import utc_now
 from app.integrations.razorpay import PaymentGateway, get_payment_gateway
 from app.models.orders import Booking, VendorOrder
-from app.models.payments import Payment, PaymentStatus, PaymentType
+from app.models.payments import Payment, PaymentMethod, PaymentStatus, PaymentType
 from app.models.platform import OrderEvent
 from app.models.social import Notification
 

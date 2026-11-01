@@ -76,7 +76,7 @@ export function OverviewTab({
             <Skeleton key={i} className="h-28 rounded-2xl" />
           ))}
         </div>
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 min-w-0">
           <Skeleton className="lg:col-span-2 h-[340px] rounded-2xl" />
           <Skeleton className="h-[340px] rounded-2xl" />
         </div>
@@ -241,7 +241,7 @@ export function OverviewTab({
       </div>
 
       {/* Grid: Attention List FIRST on mobile, then Earnings Chart */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 min-w-0">
         <div className="order-1 lg:order-2">
           <AttentionList items={attentionItems} />
         </div>
@@ -258,7 +258,7 @@ export function OverviewTab({
       <RecentOrdersTable orders={overview.recent_orders} />
 
       {/* Two-Col: Top Equipment & Next 7 Days Schedule */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 min-w-0">
         <TopEquipmentCard items={overview.top_equipment} />
         <ScheduleCard schedule={overview.schedule} />
       </div>

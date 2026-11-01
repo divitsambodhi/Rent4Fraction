@@ -95,7 +95,7 @@ export function ComingSoonPage({
     <PageContainer size="narrow" className="py-16 sm:py-24">
       <EmptyState
         icon={<Icon className="size-8" />}
-        title={pageTitle || 'Module Coming Soon'}
+        title={pageTitle || 'Yet to be updated by admin.'}
         description={
           pageDesc ||
           'This section is part of the next development phase and will connect with the FastAPI backend services.'

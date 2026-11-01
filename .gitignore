@@ -254,3 +254,13 @@ Thumbs.db
 .cursor/
 _private_docs/
 !client/.env.example
+
+# Test & Autobug artifacts
+client/e2e/autobug/findings.json
+client/e2e/autobug/findings*.json
+test-results/
+**/test-results/
+playwright-report/
+**/playwright-report/
+blob-report/
+.playwright/

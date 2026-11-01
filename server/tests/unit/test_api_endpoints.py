@@ -546,7 +546,6 @@ def test_booking_cancellation_unpaid_vs_paid(api_test_setup: dict[str, Any]) -> 
     set_payment_gateway(FakePaymentGateway())
     charge = Payment(
         booking_id=b_paid.booking_id,
-        user_id=cust1.user_id,
         amount=Decimal("8850.00"),
         currency="INR",
         type=PaymentType.full,
