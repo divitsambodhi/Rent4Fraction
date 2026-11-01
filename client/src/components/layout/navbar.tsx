@@ -123,12 +123,18 @@ export function Navbar() {
       <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8">
         {/* DESKTOP NAVBAR (>= 1024px) */}
         <div className="hidden lg:flex items-center justify-between gap-6 h-16">
-          {/* 1. Wordmark logo */}
+          {/* 1. Logo mark + wordmark */}
           <AppLink
             to="/"
-            className="flex items-center focus:outline-none focus-visible:ring-2 focus-visible:ring-brand rounded-sm py-1 shrink-0"
+            className="flex items-center gap-2 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand rounded-sm py-1 shrink-0"
             aria-label="Rent4Fraction home"
           >
+            <img
+              src="/images/logo.svg"
+              alt=""
+              aria-hidden="true"
+              className="size-8 shrink-0"
+            />
             <span className="text-xl font-bold tracking-tight text-foreground">
               Rent4Fraction
             </span>
@@ -471,7 +477,8 @@ export function Navbar() {
                 </SheetTrigger>
                 <SheetContent side="left" className="w-[280px] p-0 bg-surface border-r border-border">
                   <SheetHeader className="p-4 border-b border-border">
-                    <SheetTitle className="font-bold text-lg text-foreground text-left">
+                    <SheetTitle className="font-bold text-lg text-foreground text-left flex items-center gap-2">
+                      <img src="/images/logo.svg" alt="" aria-hidden="true" className="size-7 shrink-0" />
                       Rent4Fraction
                     </SheetTitle>
                   </SheetHeader>
@@ -669,8 +676,9 @@ export function Navbar() {
                 </SheetContent>
               </Sheet>
 
-              {/* Wordmark logo */}
-              <AppLink to="/" aria-label="Rent4Fraction home">
+              {/* Logo mark + wordmark */}
+              <AppLink to="/" aria-label="Rent4Fraction home" className="flex items-center gap-1.5">
+                <img src="/images/logo.svg" alt="" aria-hidden="true" className="size-7 shrink-0" />
                 <span className="text-lg font-bold tracking-tight text-foreground select-none">
                   Rent4Fraction
                 </span>

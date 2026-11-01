@@ -12,9 +12,10 @@ export function Footer() {
           <div className="space-y-1">
             <AppLink
               to="/"
-              className="inline-block text-base font-bold tracking-tight text-foreground focus:outline-none focus-visible:ring-2 focus-visible:ring-brand rounded-sm"
+              className="inline-flex items-center gap-2 text-base font-bold tracking-tight text-foreground focus:outline-none focus-visible:ring-2 focus-visible:ring-brand rounded-sm"
               aria-label="Rent4Fraction Home"
             >
+              <img src="/images/logo.svg" alt="" aria-hidden="true" className="size-6 shrink-0" />
               Rent4Fraction
             </AppLink>
             <p className="text-xs text-text-secondary max-w-md">

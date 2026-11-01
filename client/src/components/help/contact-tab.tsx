@@ -41,7 +41,7 @@ export function ContactTab() {
               <Mail className="size-4 text-muted-foreground shrink-0 mt-0.5" />
               <div>
                 <span className="text-muted-foreground block text-[11px]">Support Email</span>
-                <span className="font-semibold text-foreground">hello@rent4fraction.example</span>
+                <span className="font-semibold text-foreground">divitsambodhi67@gmail.com</span>
               </div>
             </div>
 
@@ -49,7 +49,7 @@ export function ContactTab() {
               <Phone className="size-4 text-muted-foreground shrink-0 mt-0.5" />
               <div>
                 <span className="text-muted-foreground block text-[11px]">Phone Support</span>
-                <span className="font-semibold text-foreground">+91 80 4000 0000</span>
+                <span className="font-semibold text-foreground">+91 9316532780</span>
               </div>
             </div>
 
@@ -58,7 +58,7 @@ export function ContactTab() {
               <div>
                 <span className="text-muted-foreground block text-[11px]">Operations Centre</span>
                 <span className="font-semibold text-foreground">
-                  Indiranagar, Bengaluru, Karnataka 560038
+                  SVNIT, Surat, Gujarat 395007
                 </span>
               </div>
             </div>
