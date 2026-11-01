@@ -86,11 +86,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   // Firebase auth state subscription
   useEffect(() => {
     let mounted = true
+    // redirectHandled prevents onAuthStateChanged from duplicating a /auth/me call
+    // that getRedirectResult already made for the same session.
+    let redirectHandled = false
 
     // Check redirect result from Google Social Sign-In
     getRedirectResult(auth)
       .then(async (result) => {
         if (result && result.user && mounted) {
+          redirectHandled = true
           const intent = sessionStorage.getItem(ROLE_INTENT_KEY) as 'customer' | 'vendor' | null
           sessionStorage.removeItem(ROLE_INTENT_KEY)
           const profile = await fetchBackendUserProfile(result.user)
@@ -124,6 +128,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       if (!mounted) return
 
       if (fbUser) {
+        if (redirectHandled) {
+          redirectHandled = false
+          return
+        }
         const profile = await fetchBackendUserProfile(fbUser)
         const intent = sessionStorage.getItem(ROLE_INTENT_KEY) as 'customer' | 'vendor' | null
         if (mounted) {

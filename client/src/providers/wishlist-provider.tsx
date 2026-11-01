@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useEffect, useState } from 'react'
 import { apiClient } from '@/lib/api/client'
+import { useAuth } from '@/providers/auth-provider'
 
 interface WishlistContextType {
   wishlist: string[]
@@ -16,6 +17,7 @@ const CART_KEY = 'r4f-cart-count'
 const WishlistContext = createContext<WishlistContextType | undefined>(undefined)
 
 export function WishlistProvider({ children }: { children: React.ReactNode }) {
+  const { status, user } = useAuth()
   const [wishlist, setWishlist] = useState<string[]>(() => {
     if (typeof window === 'undefined') return []
     try {
@@ -45,6 +47,8 @@ export function WishlistProvider({ children }: { children: React.ReactNode }) {
   }, [wishlist])
 
   useEffect(() => {
+    if (status !== 'ready' || !user) return
+
     apiClient
       .get<Array<{ equipment_id: string }>>('/api/v1/wishlist')
       .then((serverItems) => {
@@ -71,7 +75,7 @@ export function WishlistProvider({ children }: { children: React.ReactNode }) {
     }
     window.addEventListener('r4f-account-store-updated', handleSync)
     return () => window.removeEventListener('r4f-account-store-updated', handleSync)
-  }, [])
+  }, [status, user])
 
   useEffect(() => {
     try {

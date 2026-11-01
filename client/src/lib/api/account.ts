@@ -234,16 +234,21 @@ export async function getNotifications(filter?: string): Promise<AppNotification
 }
 
 export async function markNotificationRead(id: string): Promise<void> {
-  await apiClient.put(`/api/v1/notifications/${id}/read`)
+  await apiClient.patch(`/api/v1/notifications/${id}/read`)
 }
 
 export async function markAllNotificationsRead(): Promise<void> {
-  await apiClient.put('/api/v1/notifications/read-all')
+  await apiClient.post('/api/v1/notifications/mark-all-read')
 }
 
 export async function getAccountBadges(): Promise<AccountBadges> {
   try {
-    return await apiClient.get<AccountBadges>('/api/v1/notifications/unread-count')
+    const res = await apiClient.get<{ unread_count: number }>('/api/v1/notifications/unread-count')
+    return {
+      active_bookings_count: 0,
+      unread_inbox_count: res.unread_count ?? 0,
+      wishlist_count: 0,
+    }
   } catch {
     return {
       active_bookings_count: 0,
