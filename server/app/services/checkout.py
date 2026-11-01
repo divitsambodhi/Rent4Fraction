@@ -24,7 +24,7 @@ from app.core.money import calculate_item_commission, quantize_money
 from app.core.time import utc_now
 from app.integrations.razorpay import PaymentGateway, get_payment_gateway
 from app.jobs.expire_bookings import expire_unpaid_bookings
-from app.models.accounts import Address, User, Vendor, VendorApprovalStatus
+from app.models.accounts import Address, User, UserRole, Vendor, VendorApprovalStatus
 from app.models.catalog import Category, Equipment, EquipmentStatus
 from app.models.orders import (
     Booking,
@@ -105,7 +105,11 @@ def create_checkout_order(
     # -------------------------------------------------------------------------
     # 1. Preconditions
     # -------------------------------------------------------------------------
-    if settings.REQUIRE_VERIFIED_EMAIL_FOR_CHECKOUT and not user.email_verified:
+    if (
+        user.role != UserRole.admin
+        and settings.REQUIRE_VERIFIED_EMAIL_FOR_CHECKOUT
+        and not user.email_verified
+    ):
         raise EmailNotVerifiedError(
             message="Email address must be verified before proceeding to checkout.",
             details={"email": user.email},

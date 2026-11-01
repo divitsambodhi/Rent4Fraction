@@ -6,7 +6,7 @@ from fastapi import APIRouter, Depends, status
 from sqlalchemy.orm import Session
 
 from app.core.db import get_db
-from app.core.deps import CurrentUser, require_customer
+from app.core.deps import CurrentUser, require_customer_or_admin
 from app.models.accounts import User
 from app.schemas.customer import (
     AddressCreateRequest,
@@ -38,7 +38,7 @@ def _get_user(db: Session, current_user: CurrentUser) -> User:
     include_in_schema=False,
 )
 def list_addresses(
-    current_user: CurrentUser = Depends(require_customer),
+    current_user: CurrentUser = Depends(require_customer_or_admin),
     db: Session = Depends(get_db),
 ) -> Any:
     user = _get_user(db, current_user)
@@ -55,7 +55,7 @@ def list_addresses(
 )
 def create_address(
     payload: AddressCreateRequest,
-    current_user: CurrentUser = Depends(require_customer),
+    current_user: CurrentUser = Depends(require_customer_or_admin),
     db: Session = Depends(get_db),
 ) -> Any:
     user = _get_user(db, current_user)
@@ -81,7 +81,7 @@ def create_address(
 def update_address(
     address_id: int,
     payload: AddressUpdateRequest,
-    current_user: CurrentUser = Depends(require_customer),
+    current_user: CurrentUser = Depends(require_customer_or_admin),
     db: Session = Depends(get_db),
 ) -> Any:
     user = _get_user(db, current_user)
@@ -107,7 +107,7 @@ def update_address(
 )
 def delete_address(
     address_id: int,
-    current_user: CurrentUser = Depends(require_customer),
+    current_user: CurrentUser = Depends(require_customer_or_admin),
     db: Session = Depends(get_db),
 ) -> dict[str, str]:
     user = _get_user(db, current_user)
@@ -124,7 +124,7 @@ def delete_address(
 )
 def set_default_address(
     address_id: int,
-    current_user: CurrentUser = Depends(require_customer),
+    current_user: CurrentUser = Depends(require_customer_or_admin),
     db: Session = Depends(get_db),
 ) -> Any:
     user = _get_user(db, current_user)

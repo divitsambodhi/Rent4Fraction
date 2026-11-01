@@ -452,6 +452,59 @@ def test_checkout_order_placement_and_snapshots(checkout_test_env: dict[str, Any
 
 
 @pytest.mark.unit
+def test_checkout_order_placement_as_admin(checkout_test_env: dict[str, Any]) -> None:
+    client: TestClient = checkout_test_env["client"]
+    db: Session = checkout_test_env["db"]
+    cust1: User = checkout_test_env["cust1"]
+    eq: Equipment = checkout_test_env["equipment"]
+    addr: Address = checkout_test_env["address"]
+    vendor: Vendor = checkout_test_env["vendor"]
+    auth = {"Authorization": "Bearer cust1-token"}
+
+    # Ensure COD enabled
+    cod_setting = db.query(PlatformSetting).filter(PlatformSetting.setting_key == "cod_enabled").first()
+    if cod_setting:
+        cod_setting.setting_value = "1"
+    else:
+        db.add(PlatformSetting(setting_key="cod_enabled", setting_value="1", description="COD enabled"))
+
+    # Set user role to admin to verify admins can test checkout
+    cust1.role = UserRole.admin
+    db.commit()
+
+    cart_item = CartItem(
+        user_id=cust1.user_id,
+        equipment_id=eq.equipment_id,
+        quantity=1,
+        start_date=date(2026, 12, 15),
+        end_date=date(2026, 12, 17),
+    )
+    db.add(cart_item)
+    db.commit()
+
+    order_payload = {
+        "period": {"start_date": "2026-12-15", "end_date": "2026-12-17"},
+        "address_id": addr.address_id,
+        "fulfilment": {str(vendor.vendor_id): "delivery"},
+        "event": {
+            "event_name": "Admin Test Shoot",
+            "event_type": "Corporate",
+            "event_date": "2026-12-16",
+            "venue_address": "Studio 1, Mumbai",
+        },
+        "payment_method": "cod",
+    }
+
+    headers = {**auth, "Idempotency-Key": "idem_admin_order_001"}
+    res = client.post("/api/v1/checkout/orders", headers=headers, json=order_payload)
+    assert res.status_code == 201, res.text
+    data = res.json()
+    assert data["status"] in ("pending", "confirmed")
+    assert data["payment_method"] == "cod"
+
+
+
+@pytest.mark.unit
 def test_checkout_idempotency_replay_and_conflict(checkout_test_env: dict[str, Any]) -> None:
     client: TestClient = checkout_test_env["client"]
     db: Session = checkout_test_env["db"]

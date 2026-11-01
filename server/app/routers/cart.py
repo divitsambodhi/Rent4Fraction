@@ -7,7 +7,7 @@ from fastapi import APIRouter, Depends, status
 from sqlalchemy.orm import Session
 
 from app.core.db import get_db
-from app.core.deps import CurrentUser, require_customer
+from app.core.deps import CurrentUser, require_customer_or_admin
 from app.models.accounts import User
 from app.schemas.customer import (
     CartApplyDatesRequest,
@@ -34,7 +34,7 @@ def _get_user(db: Session, current_user: CurrentUser) -> User:
     summary="Get customer cart with read-time status and period groupings",
 )
 def get_cart(
-    current_user: CurrentUser = Depends(require_customer),
+    current_user: CurrentUser = Depends(require_customer_or_admin),
     db: Session = Depends(get_db),
 ) -> Any:
     user = _get_user(db, current_user)
@@ -51,7 +51,7 @@ def get_cart(
 )
 def add_cart_item(
     payload: CartItemCreateRequest,
-    current_user: CurrentUser = Depends(require_customer),
+    current_user: CurrentUser = Depends(require_customer_or_admin),
     db: Session = Depends(get_db),
 ) -> Any:
     user = _get_user(db, current_user)
@@ -78,7 +78,7 @@ def add_cart_item(
 def update_cart_item(
     cart_item_id: int,
     payload: CartItemUpdateRequest,
-    current_user: CurrentUser = Depends(require_customer),
+    current_user: CurrentUser = Depends(require_customer_or_admin),
     db: Session = Depends(get_db),
 ) -> Any:
     user = _get_user(db, current_user)
@@ -102,7 +102,7 @@ def update_cart_item(
 )
 def remove_cart_item(
     cart_item_id: int,
-    current_user: CurrentUser = Depends(require_customer),
+    current_user: CurrentUser = Depends(require_customer_or_admin),
     db: Session = Depends(get_db),
 ) -> Any:
     user = _get_user(db, current_user)
@@ -117,7 +117,7 @@ def remove_cart_item(
     summary="Clear all items from the customer cart",
 )
 def clear_cart(
-    current_user: CurrentUser = Depends(require_customer),
+    current_user: CurrentUser = Depends(require_customer_or_admin),
     db: Session = Depends(get_db),
 ) -> dict[str, str]:
     user = _get_user(db, current_user)
@@ -134,7 +134,7 @@ def clear_cart(
 )
 def move_to_wishlist(
     cart_item_id: int,
-    current_user: CurrentUser = Depends(require_customer),
+    current_user: CurrentUser = Depends(require_customer_or_admin),
     db: Session = Depends(get_db),
 ) -> Any:
     user = _get_user(db, current_user)
@@ -150,7 +150,7 @@ def move_to_wishlist(
 )
 def apply_cart_dates(
     payload: CartApplyDatesRequest,
-    current_user: CurrentUser = Depends(require_customer),
+    current_user: CurrentUser = Depends(require_customer_or_admin),
     db: Session = Depends(get_db),
 ) -> Any:
     user = _get_user(db, current_user)

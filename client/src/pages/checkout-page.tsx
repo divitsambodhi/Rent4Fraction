@@ -10,6 +10,7 @@ import { ResultStep } from '@/components/checkout/result-step'
 import { OrderSummary } from '@/components/checkout/order-summary'
 import { MobileSummaryBar } from '@/components/checkout/mobile-summary-bar'
 import { useCart } from '@/providers/cart-provider'
+import { useAuth } from '@/providers/auth-provider'
 import { checkCartAvailability, getQuote, placeOrder } from '@/lib/api/cart'
 import { getEquipmentAvailability } from '@/lib/api/equipment-detail'
 import { getAddresses } from '@/lib/api/account'
@@ -33,6 +34,7 @@ const STEPS: StepItem[] = [
 const DRAFT_STORAGE_KEY = 'r4f-checkout-draft-v1'
 
 export function CheckoutPage() {
+  const { user } = useAuth()
   const [searchParams, setSearchParams] = useAppSearchParams()
   const headingRef = useRef<HTMLHeadingElement>(null)
 
@@ -324,7 +326,11 @@ export function CheckoutPage() {
     } catch (err: unknown) {
       let desc = 'Failed to place booking'
       if (err instanceof ApiError) {
-        if (err.details && Array.isArray((err.details as any).unavailable_lines)) {
+        if (err.code === 'forbidden_role') {
+          desc = `Only customer accounts can place bookings. Your account is currently registered as '${user?.role || 'a non-customer'}'.`
+        } else if (err.code === 'email_not_verified') {
+          desc = `Email verification required: Please verify ${user?.email || 'your email'} before requesting a Cash on Delivery booking.`
+        } else if (err.details && Array.isArray((err.details as any).unavailable_lines)) {
           const linesInfo = (err.details as any).unavailable_lines
             .map((u: any) => `${u.name}: ${u.reason}`)
             .join(' | ')

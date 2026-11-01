@@ -229,6 +229,13 @@ def require_vendor_or_admin(
     return current_user
 
 
+def require_customer_or_admin(
+    current_user: CurrentUser = Depends(require_roles("customer", "admin")),
+) -> CurrentUser:
+    """Requires authenticated user with role 'customer' or 'admin'."""
+    return current_user
+
+
 def require_approved_vendor(
     current_user: CurrentUser = Depends(require_vendor),
 ) -> CurrentUser:

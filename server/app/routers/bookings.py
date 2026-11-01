@@ -6,7 +6,7 @@ from fastapi import APIRouter, Depends, Query
 from sqlalchemy.orm import Session
 
 from app.core.db import get_db
-from app.core.deps import CurrentUser, require_customer
+from app.core.deps import CurrentUser, require_customer_or_admin
 from app.integrations.razorpay import PaymentGateway, get_payment_gateway
 from app.models.accounts import User
 from app.schemas.booking import (
@@ -52,7 +52,7 @@ def list_user_bookings(
     q: str | None = Query(None, description="Search by event name, type, or booking ID"),
     page: int = Query(1, ge=1, description="Page number"),
     page_size: int = Query(10, ge=1, le=50, alias="pageSize", description="Items per page"),
-    current_user: CurrentUser = Depends(require_customer),
+    current_user: CurrentUser = Depends(require_customer_or_admin),
     db: Session = Depends(get_db),
 ) -> Any:
     user = _get_user(db, current_user)
@@ -81,7 +81,7 @@ def list_user_bookings(
 )
 def get_booking_detail(
     booking_id: int,
-    current_user: CurrentUser = Depends(require_customer),
+    current_user: CurrentUser = Depends(require_customer_or_admin),
     db: Session = Depends(get_db),
 ) -> Any:
     user = _get_user(db, current_user)
@@ -104,7 +104,7 @@ def get_booking_detail(
 def cancel_unpaid_booking(
     booking_id: int,
     payload: BookingCancelRequest,
-    current_user: CurrentUser = Depends(require_customer),
+    current_user: CurrentUser = Depends(require_customer_or_admin),
     db: Session = Depends(get_db),
 ) -> dict[str, str]:
     user = _get_user(db, current_user)
@@ -130,7 +130,7 @@ def cancel_unpaid_booking(
 )
 def retry_booking_payment(
     booking_id: int,
-    current_user: CurrentUser = Depends(require_customer),
+    current_user: CurrentUser = Depends(require_customer_or_admin),
     db: Session = Depends(get_db),
     gateway: PaymentGateway = Depends(get_payment_gateway),
 ) -> Any:
@@ -155,7 +155,7 @@ def respond_to_damage_report(
     booking_id: int,
     item_id: int,
     payload: DamageReportResponseRequest,
-    current_user: CurrentUser = Depends(require_customer),
+    current_user: CurrentUser = Depends(require_customer_or_admin),
     db: Session = Depends(get_db),
 ) -> Any:
     user = _get_user(db, current_user)
@@ -183,7 +183,7 @@ def respond_to_delivery_fee(
     booking_id: int,
     vendor_order_id: int,
     payload: RespondDeliveryFeeRequest,
-    current_user: CurrentUser = Depends(require_customer),
+    current_user: CurrentUser = Depends(require_customer_or_admin),
     db: Session = Depends(get_db),
 ) -> Any:
     user = _get_user(db, current_user)

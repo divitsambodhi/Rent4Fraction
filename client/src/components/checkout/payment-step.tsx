@@ -1,5 +1,9 @@
 import { useState } from 'react'
-import { ArrowLeft, ArrowRight, Clock } from 'lucide-react'
+import { ArrowLeft, ArrowRight, Clock, Mail } from 'lucide-react'
+import { useAuth } from '@/providers/auth-provider'
+import { authService } from '@/lib/auth'
+import { useCooldown } from '@/hooks/use-cooldown'
+import { toast } from 'sonner'
 import { AppLink } from '@/components/shared/app-link'
 import { Button } from '@/components/ui/button'
 import { OrderReview } from './order-review'
@@ -30,9 +34,30 @@ export function PaymentStep({
   onCompletePayment,
 }: PaymentStepProps) {
   const [submitting, setSubmitting] = useState(false)
+  const { user, role } = useAuth()
+  const { secondsLeft: cooldown, start: startCooldown } = useCooldown(60)
+  const [resendingEmail, setResendingEmail] = useState(false)
+
+  const isEmailUnverified = Boolean(user && user.email_verified === false && role !== 'admin')
+
+  const handleResendEmail = async () => {
+    if (cooldown > 0 || resendingEmail) return
+    setResendingEmail(true)
+    try {
+      await authService.sendEmailVerification()
+      startCooldown(60)
+      toast.success('Verification email sent', {
+        description: `Check your inbox at ${user?.email || 'your email address'}.`,
+      })
+    } catch {
+      toast.error('Could not send verification email. Please try again shortly.')
+    } finally {
+      setResendingEmail(false)
+    }
+  }
 
   const handleRequestBooking = () => {
-    if (!draft.terms_agreed || submitting) return
+    if (!draft.terms_agreed || submitting || isEmailUnverified) return
     setSubmitting(true)
     onCompletePayment(true).finally(() => setSubmitting(false))
   }
@@ -75,6 +100,31 @@ export function PaymentStep({
         </div>
       </div>
 
+      {/* 3b. Email Verification Warning */}
+      {isEmailUnverified && (
+        <div className="p-4 rounded-[12px] bg-amber-500/10 border border-amber-500/30 space-y-2 text-xs">
+          <div className="flex items-center gap-2 font-semibold text-amber-700 dark:text-amber-400">
+            <Mail className="size-4 shrink-0" />
+            <span>Email Verification Required</span>
+          </div>
+          <p className="text-muted-foreground leading-relaxed">
+            Your email address (<span className="font-semibold text-foreground">{user?.email}</span>) has not been verified yet. Rent4Fraction requires a verified email before requesting Cash on Delivery bookings.
+          </p>
+          <div className="pt-1">
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              disabled={resendingEmail || cooldown > 0}
+              onClick={handleResendEmail}
+              className="text-xs h-8 cursor-pointer"
+            >
+              {resendingEmail ? 'Sending...' : cooldown > 0 ? `Resend email in ${cooldown}s` : 'Resend verification email'}
+            </Button>
+          </div>
+        </div>
+      )}
+
       {/* 4. Terms & Conditions Agreement */}
       <div className="p-4 rounded-[12px] bg-muted/30 border border-border/80 text-xs">
         <label className="flex items-start gap-3 cursor-pointer select-none">
@@ -114,7 +164,7 @@ export function PaymentStep({
         <Button
           type="button"
           onClick={handleRequestBooking}
-          disabled={!draft.terms_agreed || submitting}
+          disabled={!draft.terms_agreed || submitting || isEmailUnverified}
           className="h-12 px-8 text-sm font-semibold rounded-[12px] bg-brand hover:bg-brand-hover text-white shadow-sm gap-2 cursor-pointer"
         >
           <span>{submitting ? 'Submitting booking request…' : `Request Booking (Pay ${formatINR(quote.total)} on Delivery)`}</span>

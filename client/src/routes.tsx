@@ -175,7 +175,7 @@ export const router = createBrowserRouter([
       {
         path: 'checkout',
         element: (
-          <RequireRole roles={['customer']}>
+          <RequireRole roles={['customer', 'admin']}>
             <Suspense fallback={<PageFallback />}>
               <CheckoutPage />
             </Suspense>
@@ -185,7 +185,7 @@ export const router = createBrowserRouter([
       {
         path: 'account',
         element: (
-          <RequireRole roles={['customer']}>
+          <RequireRole roles={['customer', 'admin']}>
             <Suspense fallback={<PageFallback />}>
               <AccountPage />
             </Suspense>
