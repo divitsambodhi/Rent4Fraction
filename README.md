@@ -2,7 +2,9 @@
 
 <br />
 <div align="center">
-  <h1>Rent4Fraction</h1>
+  <a href="https://github.com/divitsambodhi/Rent4Fraction">
+    <img src="./client/assets/logo.svg" alt="Rent4Fraction Logo" width="120" height="120" />
+  </a>
 
   <p align="center">
     A vendor-to-customer marketplace for event equipment rental: sound, lighting, stage, AV and photography gear.
