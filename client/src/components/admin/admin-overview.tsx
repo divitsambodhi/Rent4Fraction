@@ -156,9 +156,9 @@ export function AdminOverview(props: AdminOverviewProps = {}) {
       </div>
 
       {/* CHARTS & ATTENTION GRID */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 min-w-0">
         {/* Bookings & Value Chart Card (2 cols) */}
-        <div className="lg:col-span-2 p-5 rounded-[14px] border border-border bg-surface shadow-none space-y-4">
+        <div className="lg:col-span-2 p-5 rounded-[14px] border border-border bg-surface shadow-none space-y-4 min-w-0">
           <div className="flex items-center justify-between">
             <div>
               <h2 className="text-sm font-semibold text-foreground">Bookings & Booking Volume</h2>
@@ -208,7 +208,7 @@ export function AdminOverview(props: AdminOverviewProps = {}) {
               </div>
             </div>
           ) : (
-            <div className="rounded-xl border border-border overflow-hidden">
+            <div className="rounded-xl border border-border overflow-x-auto">
               <table className="w-full text-xs text-left">
                 <thead className="bg-muted/40 text-muted-foreground font-semibold">
                   <tr>
@@ -292,7 +292,7 @@ export function AdminOverview(props: AdminOverviewProps = {}) {
       </div>
 
       {/* RECENT TABLES: BOOKINGS & APPLICATIONS */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 min-w-0">
         {/* Recent Bookings */}
         <div className="p-5 rounded-[14px] border border-border bg-surface shadow-none space-y-3">
           <div className="flex items-center justify-between">

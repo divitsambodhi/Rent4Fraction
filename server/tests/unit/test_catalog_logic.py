@@ -184,3 +184,54 @@ def test_categories_tree_and_item_counts(db_session) -> None:
     assert child_node["equipment_count"] == 1
 
 
+
+
+@pytest.mark.unit
+def test_equipment_availability_real_quantity_and_aliases(db_session) -> None:
+    from datetime import date, timedelta
+    from app.services.catalog import CatalogService
+
+    u = User(
+        firebase_uid="uid-avail-test",
+        email="avail@test.com",
+        role=UserRole.vendor,
+        name="Avail Vendor",
+        is_active=True,
+    )
+    db_session.add(u)
+    db_session.flush()
+
+    v = Vendor(
+        user_id=u.user_id,
+        business_name="Stage Sound Co",
+        approval_status=VendorApprovalStatus.approved,
+    )
+    db_session.add(v)
+    db_session.flush()
+
+    cat = Category(name="Staging", is_active=1)
+    db_session.add(cat)
+    db_session.flush()
+
+    # Equipment with 10 units in stock
+    eq = Equipment(
+        vendor_id=v.vendor_id,
+        category_id=cat.category_id,
+        name="Heavy Duty Truss",
+        description="Aluminium box truss",
+        status=EquipmentStatus.active,
+        price_per_day=Decimal("1200.00"),
+        security_deposit=Decimal("2500.00"),
+        quantity=10,
+    )
+    db_session.add(eq)
+    db_session.commit()
+
+    service = CatalogService(db_session)
+    start = date.today() + timedelta(days=2)
+    end = start + timedelta(days=3)
+
+    avail_res = service.get_equipment_availability(eq.equipment_id, start, end)
+    # Must report real total stock of 10, not 1
+    assert avail_res["available_quantity"] == 10
+    assert avail_res["unavailable_days"] == []

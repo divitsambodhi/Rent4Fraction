@@ -23,5 +23,4 @@ export const authService = {
   },
 }
 
-export const mockAuthService = authService
 

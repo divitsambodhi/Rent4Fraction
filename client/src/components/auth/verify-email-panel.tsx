@@ -3,7 +3,7 @@ import { CheckCircle2, Loader2, Mail, RefreshCw } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { FormAlert } from './form-alert'
 import { useCooldown } from '@/hooks/use-cooldown'
-import { mockAuthService } from '@/lib/auth'
+import { authService } from '@/lib/auth'
 
 export interface VerifyEmailPanelProps {
   email: string
@@ -28,7 +28,7 @@ export function VerifyEmailPanel({
     setResending(true)
     setFeedback(null)
     try {
-      await mockAuthService.sendEmailVerification()
+      await authService.sendEmailVerification()
       start(60)
       setFeedback({
         type: 'success',
@@ -48,8 +48,8 @@ export function VerifyEmailPanel({
     setVerifying(true)
     setFeedback(null)
     try {
-      await mockAuthService.reloadUser()
-      const currentUser = mockAuthService.getCurrentUser()
+      await authService.reloadUser()
+      const currentUser = authService.getCurrentUser()
       if (currentUser) {
         // Reloaded user has updated emailVerified state
       }

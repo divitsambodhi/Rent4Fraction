@@ -158,6 +158,12 @@ def create_checkout_order(
     # Event date within rental duration
     start_d = payload.period.start_date
     end_d = payload.period.end_date
+    from datetime import date as dt_date
+    if start_d < dt_date.today():
+        raise ValidationFailedError(
+            "Rental start date cannot be in the past",
+            details=[{"field": "period.start_date", "message": "Rental start date cannot be in the past"}],
+        )
     if end_d < start_d:
         raise ValidationFailedError(
             "Rental end date cannot precede start date",
@@ -259,6 +265,12 @@ def create_checkout_order(
                 }
             )
             continue
+
+        if vendor.user_id == user.user_id:
+            raise ValidationFailedError(
+                "You cannot book your own equipment listing",
+                details=[{"field": "equipment_id", "message": "You cannot book your own equipment listing"}],
+            )
 
         # Min rental days check
         if rental_days < eq.min_rental_days:
@@ -577,11 +589,24 @@ def create_checkout_order(
     db.add(
         Notification(
             user_id=user.user_id,
-            title="Booking Placed",
-            message=f"Booking BK-{booking.booking_id:04d} created. Please complete payment before hold expires.",
+            title="Booking Request Placed",
+            message=f"Booking request BK-{booking.booking_id:04d} placed successfully. Awaiting vendor confirmation.",
             type="new_order",
         )
     )
+
+    # Vendor in-app notification for each vendor partner
+    for v_id in vendor_groups.keys():
+        v_partner = db.query(Vendor).filter(Vendor.vendor_id == v_id).first()
+        if v_partner and v_partner.user_id:
+            db.add(
+                Notification(
+                    user_id=v_partner.user_id,
+                    title="New Booking Request",
+                    message=f"New booking request BK-{booking.booking_id:04d} received. Please review and accept or reject.",
+                    type="new_order",
+                )
+            )
 
     # Delete cart lines for this period
     for item in cart_lines:

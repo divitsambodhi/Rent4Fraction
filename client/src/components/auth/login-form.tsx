@@ -31,9 +31,10 @@ type LoginFormData = z.infer<typeof loginSchema>
 export interface LoginFormProps {
   onSwitchMode: (mode: AuthMode) => void
   redirectParam?: string | null
+  roleParam?: 'customer' | 'vendor' | null
 }
 
-export function LoginForm({ onSwitchMode, redirectParam }: LoginFormProps) {
+export function LoginForm({ onSwitchMode, redirectParam, roleParam }: LoginFormProps) {
   const navigate = useAppNavigate()
   const { login } = useAuth()
   const [formError, setFormError] = useState<string | null>(null)
@@ -59,7 +60,12 @@ export function LoginForm({ onSwitchMode, redirectParam }: LoginFormProps) {
   const onSubmit = async (data: LoginFormData) => {
     setFormError(null)
     try {
-      const user = await login(data.email, data.password)
+      const user = await login(
+        data.email,
+        data.password,
+        data.rememberMe,
+        roleParam || undefined
+      )
       const sanitized = sanitizeRedirect(redirectParam)
       if (sanitized) {
         navigate(sanitized || '/')
@@ -67,8 +73,12 @@ export function LoginForm({ onSwitchMode, redirectParam }: LoginFormProps) {
         navigate(getHomeForRole(user.role))
       }
     } catch (err: unknown) {
-      const errCode = (err as { code?: string })?.code || 'auth/unknown'
-      setFormError(mapAuthError(errCode))
+      if (err instanceof Error && err.message && !err.message.startsWith('Firebase:')) {
+        setFormError(err.message)
+      } else {
+        const errCode = (err as { code?: string })?.code || 'auth/unknown'
+        setFormError(mapAuthError(errCode))
+      }
     }
   }
 
@@ -94,6 +104,7 @@ export function LoginForm({ onSwitchMode, redirectParam }: LoginFormProps) {
       {/* Google Social Sign-In */}
       <div className="space-y-3">
         <GoogleSignInButton
+          initialRole={roleParam || 'customer'}
           onSuccess={() => {
             const sanitized = sanitizeRedirect(redirectParam)
             navigate(sanitized || '/')

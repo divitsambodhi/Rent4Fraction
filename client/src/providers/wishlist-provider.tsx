@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useEffect, useState } from 'react'
+import { apiClient } from '@/lib/api/client'
 
 interface WishlistContextType {
   wishlist: string[]
@@ -44,6 +45,35 @@ export function WishlistProvider({ children }: { children: React.ReactNode }) {
   }, [wishlist])
 
   useEffect(() => {
+    apiClient
+      .get<Array<{ equipment_id: string }>>('/api/v1/wishlist')
+      .then((serverItems) => {
+        if (Array.isArray(serverItems) && serverItems.length > 0) {
+          setWishlist((prev) => {
+            const serverIds = serverItems.map((it) => String(it.equipment_id))
+            return Array.from(new Set([...prev, ...serverIds]))
+          })
+        }
+      })
+      .catch(() => {
+        // Visitor or unauthenticated; ignore
+      })
+
+    const handleSync = () => {
+      try {
+        const saved = localStorage.getItem(WISHLIST_KEY)
+        if (saved) {
+          setWishlist(JSON.parse(saved))
+        }
+      } catch {
+        // ignore
+      }
+    }
+    window.addEventListener('r4f-account-store-updated', handleSync)
+    return () => window.removeEventListener('r4f-account-store-updated', handleSync)
+  }, [])
+
+  useEffect(() => {
     try {
       localStorage.setItem(CART_KEY, String(cartCount))
     } catch {
@@ -52,9 +82,19 @@ export function WishlistProvider({ children }: { children: React.ReactNode }) {
   }, [cartCount])
 
   const toggleWishlist = (id: string) => {
-    setWishlist((prev) =>
-      prev.includes(id) ? prev.filter((item) => item !== id) : [...prev, id],
-    )
+    setWishlist((prev) => {
+      const willRemove = prev.includes(id)
+      const next = willRemove ? prev.filter((item) => item !== id) : [...prev, id]
+      const numericId = id.replace(/\D/g, '') || id
+      if (numericId) {
+        if (willRemove) {
+          apiClient.delete(`/api/v1/wishlist/${numericId}`).catch(() => {})
+        } else {
+          apiClient.post(`/api/v1/wishlist/${numericId}`).catch(() => {})
+        }
+      }
+      return next
+    })
   }
 
   const isWishlisted = (id: string) => wishlist.includes(id)

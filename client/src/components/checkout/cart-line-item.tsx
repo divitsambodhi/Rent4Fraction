@@ -157,7 +157,7 @@ export function CartLineItem({
           <QuantityStepper
             quantity={line.quantity}
             onChange={onUpdateQuantity}
-            max={Math.max(line.quantity, maxAvailable)}
+            max={Math.max(1, maxAvailable)}
             min={1}
             disabled={maxAvailable === 0}
             className="w-36"

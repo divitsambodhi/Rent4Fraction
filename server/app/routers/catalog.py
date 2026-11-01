@@ -129,16 +129,23 @@ def get_equipment_detail(
 def get_equipment_availability(
     response: Response,
     equipment_id: int,
-    from_date: date = Query(..., alias="from", description="Rental start date (inclusive)"),
-    to_date: date = Query(..., alias="to", description="Rental end date (inclusive)"),
+    from_date: date | None = Query(None, alias="from", description="Rental start date (inclusive)"),
+    to_date: date | None = Query(None, alias="to", description="Rental end date (inclusive)"),
+    start_date: date | None = Query(None, description="Rental start date alias"),
+    end_date: date | None = Query(None, description="Rental end date alias"),
     db: Session = Depends(get_db),
 ) -> Any:
     response.headers["Cache-Control"] = "no-store"
+    f_date = from_date or start_date
+    t_date = to_date or end_date
+    if not f_date or not t_date:
+        from app.core.errors import ValidationFailedError
+        raise ValidationFailedError("Both start date and end date are required for availability query")
     service = CatalogService(db)
     return service.get_equipment_availability(
         equipment_id=equipment_id,
-        from_date=from_date,
-        to_date=to_date,
+        from_date=f_date,
+        to_date=t_date,
     )
 
 

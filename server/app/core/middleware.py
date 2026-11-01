@@ -57,6 +57,25 @@ class RequestContextMiddleware(BaseHTTPMiddleware):
         try:
             response = await call_next(request)
             return response
+        except Exception as exc:
+            from app.core.errors import build_error_response
+
+            logger.error(
+                "Unhandled error in middleware execution [%s %s] [request_id=%s]: %s",
+                request.method,
+                request.url.path,
+                req_id,
+                exc,
+                exc_info=exc,
+            )
+            response = build_error_response(
+                code="INTERNAL_SERVER_ERROR",
+                message="An unexpected error occurred. Please try again later.",
+                status_code=500,
+                request_id=req_id,
+                request=request,
+            )
+            return response
         finally:
             duration_ms = round((time.perf_counter() - start_time) * 1000, 2)
             status_code = response.status_code if response else 500

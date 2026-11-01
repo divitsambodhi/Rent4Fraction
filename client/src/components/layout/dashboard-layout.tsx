@@ -31,6 +31,7 @@ import { useAuth } from '@/providers/auth-provider'
 import { useTheme } from '@/providers/theme-provider'
 import { getVendorOverview, getVendorReviews } from '@/lib/api/vendor'
 import { getNotifications, getConversations } from '@/lib/api/account'
+import { getAdminOverview } from '@/lib/api/admin'
 import { cn } from '@/lib/utils'
 
 export interface NavItem {
@@ -75,9 +76,9 @@ export const vendorNav: NavItem[] = vendorNavSections.flatMap((s) => s.items)
 
 export const adminNav: NavItem[] = [
   { title: 'Overview', href: '/admin?section=overview', tabKey: 'overview', icon: LayoutDashboard },
-  { title: 'Vendors', href: '/admin?section=vendors', tabKey: 'vendors', icon: Building2, badge: '2' },
+  { title: 'Vendors', href: '/admin?section=vendors', tabKey: 'vendors', icon: Building2 },
   { title: 'Equipment', href: '/admin?section=equipment', tabKey: 'equipment', icon: Package },
-  { title: 'Disputes', href: '/admin?section=disputes', tabKey: 'disputes', icon: Scale, badge: '2' },
+  { title: 'Disputes', href: '/admin?section=disputes', tabKey: 'disputes', icon: Scale },
   { title: 'Categories', href: '/admin?section=categories', tabKey: 'categories', icon: Package },
   { title: 'Coupons', href: '/admin?section=coupons', tabKey: 'coupons', icon: ShoppingBag },
   { title: 'Users', href: '/admin?section=users', tabKey: 'users', icon: UserIcon },
@@ -104,6 +105,7 @@ export function DashboardLayout({
   const [collapsed, setCollapsed] = useState(false)
   const [mobileOpen, setMobileOpen] = useState(false)
   const [vendorBadges, setVendorBadges] = useState<{ orders?: number; reviews?: number; inbox?: number }>({})
+  const [adminBadges, setAdminBadges] = useState<{ vendors?: number; disputes?: number }>({})
 
   useEffect(() => {
     if (type !== 'vendor' || !user) return
@@ -111,33 +113,52 @@ export function DashboardLayout({
     let isMounted = true
     const loadBadges = async () => {
       try {
-        const [ov, revs, notifs, convs] = await Promise.all([
-          getVendorOverview().catch(() => null),
-          getVendorReviews().catch(() => null),
-          getNotifications('unread').catch(() => []),
-          getConversations().catch(() => []),
-        ])
+        if (type === 'vendor') {
+          const [ov, revs, notifs, convs] = await Promise.all([
+            getVendorOverview().catch(() => null),
+            getVendorReviews().catch(() => null),
+            getNotifications('unread').catch(() => []),
+            getConversations().catch(() => []),
+          ])
 
-        if (!isMounted) return
+          if (!isMounted) return
 
-        const pendingOrders = ov?.attention?.new_orders_waiting ?? 0
-        const reviewsNeedingReply = (revs as any)?.summary?.needs_reply_count ?? 0
-        const unreadInbox = (Array.isArray(notifs) ? notifs.length : 0) +
-          (Array.isArray(convs) ? convs.reduce((acc: number, c: any) => acc + (c.unread_count || 0), 0) : 0)
+          const pendingOrders = ov?.attention?.new_orders_waiting ?? 0
+          const reviewsNeedingReply = (revs as any)?.summary?.needs_reply_count ?? 0
+          const unreadInbox = (Array.isArray(notifs) ? notifs.length : 0) +
+            (Array.isArray(convs) ? convs.reduce((acc: number, c: any) => acc + (c.unread_count || 0), 0) : 0)
 
-        setVendorBadges({
-          orders: pendingOrders > 0 ? pendingOrders : undefined,
-          reviews: reviewsNeedingReply > 0 ? reviewsNeedingReply : undefined,
-          inbox: unreadInbox > 0 ? unreadInbox : undefined,
-        })
+          setVendorBadges({
+            orders: pendingOrders > 0 ? pendingOrders : undefined,
+            reviews: reviewsNeedingReply > 0 ? reviewsNeedingReply : undefined,
+            inbox: unreadInbox > 0 ? unreadInbox : undefined,
+          })
+        } else if (type === 'admin') {
+          const ov = await getAdminOverview().catch(() => null)
+          if (!isMounted) return
+
+          setAdminBadges({
+            vendors: ov?.pendingApplicationsCount && ov.pendingApplicationsCount > 0 ? ov.pendingApplicationsCount : undefined,
+            disputes: ov?.openDisputesCount && ov.openDisputesCount > 0 ? ov.openDisputesCount : undefined,
+          })
+        }
       } catch {
         // Silently preserve empty badges on error
       }
     }
 
     loadBadges()
+
+    const handleUpdate = () => {
+      loadBadges()
+    }
+    window.addEventListener('r4f-account-store-updated', handleUpdate)
+    window.addEventListener('r4f-order-updated', handleUpdate)
+
     return () => {
       isMounted = false
+      window.removeEventListener('r4f-account-store-updated', handleUpdate)
+      window.removeEventListener('r4f-order-updated', handleUpdate)
     }
   }, [type, user, pathname, searchParams])
 
@@ -213,11 +234,14 @@ export function DashboardLayout({
                     )}
                   </span>
                 )}
-                {!collapsed && item.badge && (
-                  <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded-full bg-brand/10 text-brand tabular-nums">
-                    {item.badge}
-                  </span>
-                )}
+                {!collapsed && (() => {
+                  const bCount = item.tabKey === 'vendors' ? adminBadges.vendors : item.tabKey === 'disputes' ? adminBadges.disputes : item.badge
+                  return bCount ? (
+                    <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded-full bg-brand/10 text-brand tabular-nums">
+                      {bCount}
+                    </span>
+                  ) : null
+                })()}
               </AppLink>
             )
           })}

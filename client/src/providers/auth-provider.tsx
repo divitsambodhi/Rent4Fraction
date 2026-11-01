@@ -41,7 +41,7 @@ interface AuthContextType {
   user: AuthUser | null
   role: UserRole
   status: 'loading' | 'ready'
-  login: (email: string, password?: string, rememberMe?: boolean) => Promise<AuthUser>
+  login: (email: string, password?: string, rememberMe?: boolean, intent?: 'customer' | 'vendor') => Promise<AuthUser>
   loginWithGoogle: (initialRole?: 'customer' | 'vendor') => Promise<AuthUser | { needsProfile: true; email: string; name: string }>
   signupCustomer: (data: CustomerSignUpData) => Promise<AuthUser>
   signupVendor: (data: VendorSignUpData) => Promise<AuthUser>
@@ -53,6 +53,7 @@ interface AuthContextType {
 }
 
 const AUTH_STORAGE_KEY = 'r4f-auth-user-v1'
+const ROLE_INTENT_KEY = 'r4f-role-intent-v1'
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
 
@@ -90,14 +91,27 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     getRedirectResult(auth)
       .then(async (result) => {
         if (result && result.user && mounted) {
+          const intent = sessionStorage.getItem(ROLE_INTENT_KEY) as 'customer' | 'vendor' | null
+          sessionStorage.removeItem(ROLE_INTENT_KEY)
           const profile = await fetchBackendUserProfile(result.user)
           if (profile) {
+            if (intent && profile.role !== intent && profile.role !== 'admin') {
+              await firebaseSignOut(auth)
+              setUser(null)
+              localStorage.removeItem(AUTH_STORAGE_KEY)
+              toast.error('Role conflict', {
+                description: `This email is registered as a ${profile.role}. Please log in as a ${profile.role} or use a different email to register as a ${intent}.`,
+              })
+              setStatus('ready')
+              return
+            }
             setUser(profile)
             localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(profile))
           } else {
             setNeedsProfileUser({
               email: result.user.email || '',
               name: result.user.displayName || '',
+              initialRole: intent || 'customer',
             })
           }
         }
@@ -111,8 +125,21 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
       if (fbUser) {
         const profile = await fetchBackendUserProfile(fbUser)
+        const intent = sessionStorage.getItem(ROLE_INTENT_KEY) as 'customer' | 'vendor' | null
         if (mounted) {
           if (profile) {
+            if (intent && profile.role !== intent && profile.role !== 'admin') {
+              sessionStorage.removeItem(ROLE_INTENT_KEY)
+              await firebaseSignOut(auth)
+              setUser(null)
+              localStorage.removeItem(AUTH_STORAGE_KEY)
+              toast.error('Role conflict', {
+                description: `This email is registered as a ${profile.role}. Please log in as a ${profile.role} or use a different email to register as a ${intent}.`,
+              })
+              setStatus('ready')
+              return
+            }
+            sessionStorage.removeItem(ROLE_INTENT_KEY)
             setUser(profile)
             try {
               localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(profile))
@@ -124,7 +151,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             setNeedsProfileUser({
               email: fbUser.email || '',
               name: fbUser.displayName || '',
+              initialRole: intent || 'customer',
             })
+            sessionStorage.removeItem(ROLE_INTENT_KEY)
           }
           setStatus('ready')
         }
@@ -154,12 +183,25 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, [user])
 
   // Login
-  const login = async (email: string, password?: string, rememberMe = true): Promise<AuthUser> => {
+  const login = async (
+    email: string,
+    password?: string,
+    rememberMe = true,
+    intent?: 'customer' | 'vendor'
+  ): Promise<AuthUser> => {
     await setPersistence(auth, rememberMe ? browserLocalPersistence : browserSessionPersistence)
     const cred = await signInWithEmailAndPassword(auth, email, password || '')
     const profile = await fetchBackendUserProfile(cred.user)
     if (!profile) {
       throw new Error('Account exists in Firebase but not registered in database. Please complete registration.')
+    }
+    if (intent && profile.role !== intent && profile.role !== 'admin') {
+      await firebaseSignOut(auth)
+      setUser(null)
+      localStorage.removeItem(AUTH_STORAGE_KEY)
+      throw new Error(
+        `This email is registered as a ${profile.role}. Please log in as a ${profile.role} or use a different email to register as a ${intent}.`
+      )
     }
     setUser(profile)
     try {
@@ -172,6 +214,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   // Google Social Sign-In
   const loginWithGoogle = async (initialRole: 'customer' | 'vendor' = 'customer'): Promise<AuthUser | { needsProfile: true; email: string; name: string }> => {
+    sessionStorage.setItem(ROLE_INTENT_KEY, initialRole)
     let cred
     try {
       cred = await signInWithPopup(auth, googleProvider)
@@ -184,8 +227,19 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       throw popupErr
     }
 
+    const intent = (sessionStorage.getItem(ROLE_INTENT_KEY) as 'customer' | 'vendor' | null) || initialRole
+    sessionStorage.removeItem(ROLE_INTENT_KEY)
+
     const profile = await fetchBackendUserProfile(cred.user)
     if (profile) {
+      if (intent && profile.role !== intent && profile.role !== 'admin') {
+        await firebaseSignOut(auth)
+        setUser(null)
+        localStorage.removeItem(AUTH_STORAGE_KEY)
+        const mismatchMsg = `This email is registered as a ${profile.role}. Please log in as a ${profile.role} or use a different email to register as a ${intent}.`
+        toast.error('Role conflict', { description: mismatchMsg })
+        throw new Error(mismatchMsg)
+      }
       setUser(profile)
       try {
         localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(profile))
@@ -198,7 +252,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setNeedsProfileUser({
       email: cred.user.email || '',
       name: cred.user.displayName || '',
-      initialRole,
+      initialRole: intent,
     })
 
     return {
@@ -314,6 +368,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setNeedsProfileUser(null)
     try {
       localStorage.removeItem(AUTH_STORAGE_KEY)
+      sessionStorage.removeItem(ROLE_INTENT_KEY)
+      sessionStorage.removeItem('r4f-checkout-draft-v1')
     } catch {
       // Ignore
     }

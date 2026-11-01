@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import re
-from datetime import date
+from datetime import date, timedelta
 from decimal import Decimal
 from typing import Any
 
@@ -236,6 +236,14 @@ class CustomerService:
                 [{"field": "quantity", "message": "Quantity must be between 1 and 100"}],
             )
 
+        from app.models.catalog import Equipment
+        eq = self.db.query(Equipment).filter(Equipment.equipment_id == equipment_id).first()
+        if eq and eq.vendor and eq.vendor.user_id == user.user_id:
+            raise ValidationFailedError(
+                "You cannot book your own equipment listing",
+                [{"field": "equipment_id", "message": "You cannot book your own equipment listing"}],
+            )
+
         self.repo.add_cart_item(
             user_id=user.user_id,
             equipment_id=equipment_id,
@@ -389,20 +397,27 @@ class CustomerService:
         if from_date and to_date and to_date >= from_date:
             days = (to_date - from_date).days + 1
 
+        check_start = from_date or (date.today() + timedelta(days=1))
+        check_end = to_date or check_start
+
         for w in wishlist_items:
             eq = w.equipment
             if not eq:
                 continue
 
-            avail_qty = eq.quantity
-            if from_date and to_date:
-                avail_qty = get_equipment_available_quantity(
-                    self.db,
-                    eq.equipment_id,
-                    eq.quantity,
-                    from_date,
-                    to_date,
-                )
+            is_active = (eq.status == EquipmentStatus.active)
+            is_approved = bool(
+                eq.vendor and eq.vendor.approval_status == VendorApprovalStatus.approved
+            )
+            is_archived = not (is_active and is_approved)
+
+            avail_qty = 0 if is_archived else get_equipment_available_quantity(
+                self.db,
+                eq.equipment_id,
+                eq.quantity,
+                check_start,
+                check_end,
+            )
 
             img = eq.images[0].url if eq.images else ""
             line_cost = float(line_total(eq.price_per_day, 1, days))
@@ -416,6 +431,7 @@ class CustomerService:
                     "price_per_day": float(eq.price_per_day),
                     "security_deposit": float(eq.security_deposit),
                     "quantity": eq.quantity,
+                    "available_quantity": avail_qty,
                     "min_rental_days": eq.min_rental_days,
                     "delivery_available": bool(eq.delivery_available),
                     "avg_rating": float(eq.avg_rating),
@@ -426,7 +442,9 @@ class CustomerService:
                     "vendor_name": eq.vendor.business_name if eq.vendor else "",
                     "category_id": str(eq.category_id),
                     "category_name": eq.category.name if eq.category else "",
-                    "available_quantity": avail_qty,
+                    "is_available": avail_qty > 0 and not is_archived,
+                    "is_archived": is_archived,
+                    "total_price": line_cost,
                     "price_for_days": line_cost,
                     "created_at": w.created_at.isoformat(),
                 }

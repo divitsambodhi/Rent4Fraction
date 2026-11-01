@@ -124,13 +124,45 @@ export function removeCartLine(cart_item_id: string): { updatedLines: CartLine[]
 export async function moveCartLineToWishlist(cart_item_id: string): Promise<CartLine[]> {
   const { updatedLines, removed } = removeCartLine(cart_item_id)
   if (removed) {
+    const numericId = removed.equipment_id.replace(/\D/g, '') || removed.equipment_id
     try {
-      await apiClient.post('/api/v1/wishlist', { equipment_id: removed.equipment_id })
+      await apiClient.post(`/api/v1/wishlist/${numericId}`)
     } catch (err) {
       console.warn('Could not sync to wishlist endpoint', err)
     }
+
+    // Keep client-side localStorage synchronized
+    if (typeof window !== 'undefined') {
+      try {
+        const WISHLIST_KEY = 'r4f-wishlist'
+        const saved = localStorage.getItem(WISHLIST_KEY)
+        const list: string[] = saved ? JSON.parse(saved) : []
+        if (!list.includes(removed.equipment_id)) {
+          list.push(removed.equipment_id)
+          localStorage.setItem(WISHLIST_KEY, JSON.stringify(list))
+        }
+        window.dispatchEvent(new Event('r4f-account-store-updated'))
+      } catch {
+        // ignore
+      }
+    }
   }
   return updatedLines
+}
+
+/**
+ * Fetches saved wishlist items with live pricing and availability.
+ */
+export async function getWishlist(params?: {
+  sort?: string
+  from?: string
+  to?: string
+}): Promise<any[]> {
+  try {
+    return await apiClient.get<any[]>('/api/v1/wishlist', { params })
+  } catch {
+    return []
+  }
 }
 
 /**
@@ -194,7 +226,8 @@ export interface LineAvailabilityResult {
  */
 export function checkCartAvailability(
   lines: CartLine[],
-  simulate?: string,
+  simulate?: string | null,
+  liveOverrides?: Record<string, number>,
 ): Record<string, LineAvailabilityResult> {
   const results: Record<string, LineAvailabilityResult> = {}
 
@@ -209,29 +242,35 @@ export function checkCartAvailability(
       return
     }
 
+    const override = liveOverrides?.[line.cart_item_id]
     const computed = computeMockAvailability(line.equipment_id, line.start_date, line.end_date)
-    const avail = computed !== undefined ? computed : (line.max_available_quantity ?? 6)
+    const avail =
+      override !== undefined
+        ? override
+        : computed !== undefined
+        ? computed
+        : (line.max_available_quantity ?? 6)
 
     if (avail === 0) {
       results[line.cart_item_id] = {
         available_quantity: 0,
         is_blocked: true,
         warning_type: 'unavailable',
-        message: 'No longer available for these dates',
+        message: 'Out of stock for these dates',
       }
     } else if (line.quantity > avail) {
       results[line.cart_item_id] = {
         available_quantity: avail,
         is_blocked: true,
-        warning_type: 'low_stock',
+        warning_type: 'unavailable',
         message: `Only ${avail} available for these dates (you selected ${line.quantity})`,
       }
-    } else if (avail === 1 && line.quantity === 1) {
+    } else if (avail <= 2) {
       results[line.cart_item_id] = {
         available_quantity: avail,
         is_blocked: false,
         warning_type: 'low_stock',
-        message: 'Only 1 left for these dates',
+        message: `Only ${avail} left for these dates`,
       }
     } else {
       results[line.cart_item_id] = {
@@ -321,17 +360,13 @@ export interface PlaceOrderInput {
 export async function placeOrder(input: PlaceOrderInput): Promise<PlaceOrderResult> {
   // Sync cart lines to backend cart table (exact quantity override)
   for (const line of input.lines) {
-    try {
-      await apiClient.post('/api/v1/cart/items', {
-        equipment_id: parseInt(line.equipment_id, 10),
-        quantity: line.quantity,
-        start_date: input.period.start_date,
-        end_date: input.period.end_date,
-        override_quantity: true,
-      })
-    } catch {
-      // Line sync attempt
-    }
+    await apiClient.post('/api/v1/cart/items', {
+      equipment_id: parseInt(line.equipment_id, 10),
+      quantity: line.quantity,
+      start_date: input.period.start_date,
+      end_date: input.period.end_date,
+      override_quantity: true,
+    })
   }
 
   const rawId = (input.address as { id?: string | number }).id ?? '1'

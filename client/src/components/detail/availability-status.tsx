@@ -71,7 +71,7 @@ export function AvailabilityStatus({
   }
 
   // Case 2: Limited inventory (1..3 units left)
-  if (typeof availableQuantity === 'number' && availableQuantity <= 3) {
+  if (typeof availableQuantity === 'number' && availableQuantity > 0 && availableQuantity <= 2) {
     return (
       <div
         className={cn(

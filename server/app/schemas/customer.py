@@ -93,6 +93,7 @@ class WishlistItemResponse(BaseModel):
     price_per_day: float
     security_deposit: float
     quantity: int
+    available_quantity: int = 1
     min_rental_days: int
     delivery_available: bool
     avg_rating: float
@@ -104,6 +105,7 @@ class WishlistItemResponse(BaseModel):
     category_name: str
     primary_image_url: str = ""
     is_available: bool = True
+    is_archived: bool = False
     total_price: float | None = None
     created_at: str | None = None
 

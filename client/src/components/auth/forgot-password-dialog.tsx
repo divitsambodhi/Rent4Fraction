@@ -6,7 +6,7 @@ import { Input } from '@/components/ui/input'
 import { FormField } from '@/components/shared/form-field'
 import { FormAlert } from './form-alert'
 import { useCooldown } from '@/hooks/use-cooldown'
-import { mockAuthService } from '@/lib/auth'
+import { authService } from '@/lib/auth'
 
 export interface ForgotPasswordDialogProps {
   open: boolean
@@ -50,7 +50,7 @@ export function ForgotPasswordDialog({
     setLoading(true)
     setError(null)
     try {
-      await mockAuthService.sendPasswordReset(trimmed)
+      await authService.sendPasswordReset(trimmed)
       setSubmittedEmail(trimmed)
       setIsSubmitted(true)
       start(60)
@@ -67,7 +67,7 @@ export function ForgotPasswordDialog({
     if (secondsLeft > 0 || !submittedEmail) return
     setLoading(true)
     try {
-      await mockAuthService.sendPasswordReset(submittedEmail)
+      await authService.sendPasswordReset(submittedEmail)
       start(60)
     } finally {
       setLoading(false)

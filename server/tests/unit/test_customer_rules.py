@@ -256,3 +256,78 @@ def test_review_validation_rules(db_session) -> None:
     long_comment = "A" * 501
     with pytest.raises(ValidationFailedError):
         service.create_review(user=cust, rating=5, comment=long_comment)
+
+
+@pytest.mark.unit
+def test_wishlist_never_reserves_inventory_and_computes_real_availability(db_session) -> None:
+    from app.services.customer import CustomerService
+    from app.repositories.catalog import get_equipment_available_quantity
+
+    # 1. Create vendor, category, equipment
+    vendor_user = User(
+        firebase_uid="uid-wl-vendor",
+        email="wl-vendor@test.com",
+        role=UserRole.vendor,
+        name="WL Vendor",
+    )
+    db_session.add(vendor_user)
+    db_session.flush()
+
+    vendor = Vendor(
+        user_id=vendor_user.user_id,
+        business_name="Wishlist Sound",
+        approval_status=VendorApprovalStatus.approved,
+    )
+    db_session.add(vendor)
+    db_session.flush()
+
+    cat = Category(name="Wishlist Audio")
+    db_session.add(cat)
+    db_session.flush()
+
+    eq = Equipment(
+        vendor_id=vendor.vendor_id,
+        category_id=cat.category_id,
+        name="Pro Speaker",
+        price_per_day=Decimal("1500.00"),
+        security_deposit=Decimal("3000.00"),
+        quantity=5,
+        min_rental_days=1,
+        status=EquipmentStatus.active,
+    )
+    db_session.add(eq)
+    db_session.flush()
+
+    # Customer
+    cust = User(
+        firebase_uid="uid-wl-cust",
+        email="wl-cust@test.com",
+        role=UserRole.customer,
+        name="Wishlist Customer",
+    )
+    db_session.add(cust)
+    db_session.commit()
+
+    service = CustomerService(db_session)
+
+    # 2. Add to wishlist
+    service.add_to_wishlist(cust, eq.equipment_id)
+
+    # Invariant: Adding to wishlist NEVER decreases available quantity
+    tomorrow = date.today()
+    avail_qty = get_equipment_available_quantity(
+        db_session,
+        eq.equipment_id,
+        eq.quantity,
+        tomorrow,
+        tomorrow,
+    )
+    assert avail_qty == 5, "Wishlist items must never reserve inventory"
+
+    # 3. Query wishlist without explicit dates -> defaults to tomorrow and returns available_quantity=5
+    items = service.get_wishlist(cust)
+    assert len(items) == 1
+    assert items[0]["equipment_id"] == str(eq.equipment_id)
+    assert items[0]["available_quantity"] == 5
+    assert items[0]["is_available"] is True
+    assert items[0]["is_archived"] is False

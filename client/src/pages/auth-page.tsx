@@ -128,6 +128,7 @@ export function AuthPage() {
               <LoginForm
                 onSwitchMode={handleSwitchMode}
                 redirectParam={redirectParam}
+                roleParam={(searchParams.get('role') as 'customer' | 'vendor' | null)}
               />
             )}
 

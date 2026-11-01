@@ -1,10 +1,12 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { AppLink, useAppSearchParams } from '@/components/shared/app-link'
 import { EquipmentCard } from '@/components/shared/equipment-card'
 import { DateRangePicker } from '@/components/catalog/date-range-picker'
 import { EmptyState } from '@/components/shared/empty-state'
 import { Button } from '@/components/ui/button'
 import { useWishlist } from '@/providers/wishlist-provider'
+import { getWishlist } from '@/lib/api/cart'
+import { getEquipmentDetail, getEquipmentAvailability } from '@/lib/api/equipment-detail'
 
 import { Heart, Trash2, ArrowRight } from 'lucide-react'
 import { toast } from 'sonner'
@@ -21,6 +23,8 @@ export function WishlistTab() {
   const to = searchParams.get('to') || undefined
 
   const [availableOnly, setAvailableOnly] = useState(false)
+  const [items, setItems] = useState<any[]>([])
+  const [loading, setLoading] = useState(false)
 
   // Calculate rental days if dates chosen
   const rentalDays = useMemo(() => {
@@ -57,10 +61,91 @@ export function WishlistTab() {
     })
   }
 
+  // Fetch wishlist items from server or fallback per-item
+  useEffect(() => {
+    let active = true
+
+    async function loadWishlist() {
+      if (wishlist.length === 0) {
+        setItems([])
+        return
+      }
+
+      setLoading(true)
+      try {
+        const serverData = await getWishlist({
+          sort: sort === 'rating' ? 'newest' : sort,
+          from,
+          to,
+        })
+
+        if (!active) return
+
+        if (Array.isArray(serverData) && serverData.length > 0) {
+          const mapped = serverData.map((item) => ({
+            ...item,
+            availableQuantity: item.available_quantity ?? item.quantity,
+            isArchived: item.is_archived ?? false,
+          }))
+          setItems(mapped)
+          setLoading(false)
+          return
+        }
+
+        // Fallback: If guest or server returned empty, fetch details individually
+        const details = await Promise.all(
+          wishlist.map(async (id) => {
+            try {
+              const [detail, avail] = await Promise.all([
+                getEquipmentDetail(id),
+                getEquipmentAvailability(id, from, to),
+              ])
+              return {
+                ...detail,
+                availableQuantity: avail.available_quantity,
+                isArchived: detail.status === 'archived' || detail.status === 'inactive',
+              }
+            } catch {
+              return null
+            }
+          })
+        )
+
+        if (!active) return
+        setItems(details.filter(Boolean))
+      } catch (err) {
+        console.error('Failed to load wishlist items', err)
+      } finally {
+        if (active) setLoading(false)
+      }
+    }
+
+    loadWishlist()
+
+    return () => {
+      active = false
+    }
+  }, [wishlist, from, to, sort])
+
   // Filter and sort items
   const resolvedItems = useMemo(() => {
-    return [] as any[]
-  }, [wishlist, from, to, availableOnly, sort])
+    let list = items.filter((item) => wishlist.includes(String(item.equipment_id)))
+
+    if (availableOnly) {
+      list = list.filter((item) => (item.availableQuantity ?? item.quantity) > 0 && !item.isArchived)
+    }
+
+    const sorted = [...list]
+    if (sort === 'price_asc') {
+      sorted.sort((a, b) => a.price_per_day - b.price_per_day)
+    } else if (sort === 'price_desc') {
+      sorted.sort((a, b) => b.price_per_day - a.price_per_day)
+    } else if (sort === 'rating') {
+      sorted.sort((a, b) => (b.avg_rating || 0) - (a.avg_rating || 0))
+    }
+
+    return sorted
+  }, [items, wishlist, availableOnly, sort])
 
   return (
     <div className="space-y-6">
@@ -124,7 +209,7 @@ export function WishlistTab() {
           actionLabel="Browse equipment"
           actionHref="/equipment"
         />
-      ) : resolvedItems.length === 0 ? (
+      ) : resolvedItems.length === 0 && !loading ? (
         <EmptyState
           icon={<Heart className="size-7" />}
           title="No available items for these dates"

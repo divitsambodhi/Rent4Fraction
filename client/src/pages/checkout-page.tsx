@@ -11,6 +11,7 @@ import { OrderSummary } from '@/components/checkout/order-summary'
 import { MobileSummaryBar } from '@/components/checkout/mobile-summary-bar'
 import { useCart } from '@/providers/cart-provider'
 import { checkCartAvailability, getQuote, placeOrder } from '@/lib/api/cart'
+import { getEquipmentAvailability } from '@/lib/api/equipment-detail'
 import { getAddresses } from '@/lib/api/account'
 import { ApiError } from '@/lib/api/client'
 import { toast } from 'sonner'
@@ -107,10 +108,42 @@ export function CheckoutPage() {
     return groupedPeriods[0]
   }, [groupedPeriods, periodParam])
 
+  const [liveAvailability, setLiveAvailability] = useState<Record<string, number>>({})
+
+  useEffect(() => {
+    let active = true
+    if (!selectedPeriod) return
+
+    async function fetchAvail() {
+      const updates: Record<string, number> = {}
+      await Promise.all(
+        (selectedPeriod?.lines || []).map(async (l) => {
+          try {
+            const res = await getEquipmentAvailability(l.equipment_id, l.start_date, l.end_date)
+            if (typeof res.available_quantity === 'number') {
+              updates[l.cart_item_id] = res.available_quantity
+            }
+          } catch {
+            // retain fallback
+          }
+        })
+      )
+      if (active && Object.keys(updates).length > 0) {
+        setLiveAvailability((prev) => ({ ...prev, ...updates }))
+      }
+    }
+
+    fetchAvail()
+
+    return () => {
+      active = false
+    }
+  }, [selectedPeriod])
+
   // Availability map for all cart lines
   const availabilityMap = useMemo(() => {
-    return checkCartAvailability(lines, simulateParam)
-  }, [lines, simulateParam])
+    return checkCartAvailability(lines, simulateParam, liveAvailability)
+  }, [lines, simulateParam, liveAvailability])
 
   const hasAvailabilityIssues = useMemo(() => {
     if (!selectedPeriod) return false
@@ -296,13 +329,17 @@ export function CheckoutPage() {
             .map((u: any) => `${u.name}: ${u.reason}`)
             .join(' | ')
           desc = linesInfo || err.message
+        } else if (Array.isArray(err.details)) {
+          desc = err.details.map((d: any) => d.message || JSON.stringify(d)).join(' | ') || err.message
+        } else if (typeof err.details === 'string') {
+          desc = err.details
         } else if (err.message) {
           desc = err.message
         }
       } else if (err instanceof Error) {
         desc = err.message
       }
-      toast.error('Order placement error', { description: desc })
+      toast.error('Could not request booking', { description: desc, duration: 6000 })
     }
   }
 
