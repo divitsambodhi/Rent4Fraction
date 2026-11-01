@@ -484,7 +484,7 @@ One easing curve is used everywhere: `cubic-bezier(0.16, 1, 0.3, 1)`, a fast ent
 
 * **Z-index stack (8 layers):** content (0), sticky header (30), sticky bar (40), navbar (50), sheet (60), dialog (70), toast (80).
 * **Shape:** controls `4px`, cards `8px`, pills `9999px` (fully round), search bars as full pills.
-* **Elevation:** flat at rest (border only), `shadow-sm` on hover, `shadow-md` for popovers, `shadow-xl` for modals.
+* **Elevation:** flat at rest (border only), `shadow-sm` on hover, `shadow-md` for popovers, `shadow-xl` for modals. 
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
