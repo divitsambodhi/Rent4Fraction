@@ -140,15 +140,55 @@ To get a local copy running, follow these steps.
 
 ### Installation
 
-All commands are for Windows PowerShell.
+#### macOS & Linux
+1. **Set up the database** (from the repository root)
+```bash
+   cp database/.env.example database/.env
+   # Ensure MySQL 8.0+ is running (e.g. brew services start mysql)
+   # If binary logging is enabled on your MySQL server, execute once as root:
+   # SET GLOBAL log_bin_trust_function_creators = 1;
 
+   python database/scripts/migrate.py up
+   python database/scripts/seed.py
+   python database/scripts/run_checks.py
+```
+
+2. **Set up and start the backend**
+```bash
+   cd server
+   python3 -m venv .venv312
+   source .venv312/bin/activate
+   pip install -r requirements.txt
+   pip install -r requirements-dev.txt
+   cp .env.example .env
+   python -m uvicorn app.main:app --reload --port 8000
+```
+   Interactive API docs are available locally at `http://127.0.0.1:8000/docs` and `/redoc` (disabled in production).
+
+3. **Set up and start the frontend** (in a new terminal)
+```bash
+   cd client
+   npm install
+   cp .env.example .env.local
+   npm run dev
+```
+   The app runs at `http://localhost:5173`.
+
+4. **Create the first admin.** Register the account through the app, then promote it:
+```bash
+   cd server
+   python scripts/create_admin.py --email <your-email> --yes
+```
+
+#### Windows (PowerShell)
 1. **Set up the database** (from the repository root)
 ```powershell
-   cp database\.env.example database\.env
+   cp database\env.example database\.env
    # Edit database\.env with your MySQL credentials, for example:
    # DATABASE_URL=mysql+pymysql://rental_user:password@127.0.0.1:3306/event_rental?charset=utf8mb4
 
    python database\scripts\migrate.py up
+   python database\scripts\seed.py
    python database\scripts\run_checks.py
 ```
 
@@ -156,7 +196,7 @@ All commands are for Windows PowerShell.
 ```powershell
    cd server
    python -m venv .venv312
-   .\.venv312\Scripts\Activate.ps1
+   .\venv312\Scripts\Activate.ps1
    pip install -r requirements.txt
    pip install -r requirements-dev.txt
    cp .env.example .env
@@ -178,11 +218,6 @@ All commands are for Windows PowerShell.
    cd server
    python scripts/create_admin.py --email <your-email> --yes
 ```
-
-<p align="right">(<a href="#readme-top">back to top</a>)</p>
-
-<!-- ENVIRONMENT VARIABLES -->
-## Environment Variables
 
 Never commit real values. Only the `.env.example` files with empty values belong in the repository.
 
