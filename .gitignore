@@ -244,6 +244,11 @@ firebase-service-account*.json
 
 
 
+# OS metadata
+.DS_Store
+**/.DS_Store
+Thumbs.db
+
 # Agent & Private Docs
 .agents/
 .cursor/
