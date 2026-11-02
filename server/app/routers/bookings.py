@@ -7,6 +7,11 @@ from sqlalchemy.orm import Session
 
 from app.core.db import get_db
 from app.core.deps import CurrentUser, require_customer_or_admin
+from app.core.identifiers import (
+    resolve_booking_id,
+    resolve_item_id,
+    resolve_vendor_order_id,
+)
 from app.integrations.razorpay import PaymentGateway, get_payment_gateway
 from app.models.accounts import User
 from app.schemas.booking import (
@@ -80,13 +85,14 @@ def list_user_bookings(
     include_in_schema=False,
 )
 def get_booking_detail(
-    booking_id: int,
+    booking_id: str,
     current_user: CurrentUser = Depends(require_customer_or_admin),
     db: Session = Depends(get_db),
 ) -> Any:
     user = _get_user(db, current_user)
+    numeric_booking_id = resolve_booking_id(booking_id)
     service = BookingService(db)
-    return service.get_booking_detail(user, booking_id)
+    return service.get_booking_detail(user, numeric_booking_id)
 
 
 @router.post(
@@ -102,16 +108,17 @@ def get_booking_detail(
     include_in_schema=False,
 )
 def cancel_unpaid_booking(
-    booking_id: int,
+    booking_id: str,
     payload: BookingCancelRequest,
     current_user: CurrentUser = Depends(require_customer_or_admin),
     db: Session = Depends(get_db),
 ) -> dict[str, str]:
     user = _get_user(db, current_user)
+    numeric_booking_id = resolve_booking_id(booking_id)
     service = BookingService(db)
     return service.cancel_booking(
         user=user,
-        booking_id=booking_id,
+        booking_id=numeric_booking_id,
         reason=payload.reason,
     )
 
@@ -129,14 +136,15 @@ def cancel_unpaid_booking(
     include_in_schema=False,
 )
 def retry_booking_payment(
-    booking_id: int,
+    booking_id: str,
     current_user: CurrentUser = Depends(require_customer_or_admin),
     db: Session = Depends(get_db),
     gateway: PaymentGateway = Depends(get_payment_gateway),
 ) -> Any:
     user = _get_user(db, current_user)
+    numeric_booking_id = resolve_booking_id(booking_id)
     service = PaymentService(db, gateway=gateway)
-    return service.retry_booking_payment(user_id=user.user_id, booking_id=booking_id)
+    return service.retry_booking_payment(user_id=user.user_id, booking_id=numeric_booking_id)
 
 
 @router.post(
@@ -152,18 +160,20 @@ def retry_booking_payment(
     include_in_schema=False,
 )
 def respond_to_damage_report(
-    booking_id: int,
-    item_id: int,
+    booking_id: str,
+    item_id: str,
     payload: DamageReportResponseRequest,
     current_user: CurrentUser = Depends(require_customer_or_admin),
     db: Session = Depends(get_db),
 ) -> Any:
     user = _get_user(db, current_user)
+    numeric_booking_id = resolve_booking_id(booking_id)
+    numeric_item_id = resolve_item_id(item_id)
     service = BookingService(db)
     return service.respond_to_damage_report(
         user=user,
-        booking_id=booking_id,
-        item_id=item_id,
+        booking_id=numeric_booking_id,
+        item_id=numeric_item_id,
         action=payload.action,
         dispute_reason=payload.dispute_reason,
     )
@@ -180,17 +190,19 @@ def respond_to_damage_report(
     include_in_schema=False,
 )
 def respond_to_delivery_fee(
-    booking_id: int,
-    vendor_order_id: int,
+    booking_id: str,
+    vendor_order_id: str,
     payload: RespondDeliveryFeeRequest,
     current_user: CurrentUser = Depends(require_customer_or_admin),
     db: Session = Depends(get_db),
 ) -> Any:
     user = _get_user(db, current_user)
+    numeric_booking_id = resolve_booking_id(booking_id)
+    numeric_vo_id = resolve_vendor_order_id(vendor_order_id)
     service = BookingService(db)
     return service.respond_to_delivery_fee(
         user=user,
-        booking_id=booking_id,
-        vendor_order_id=vendor_order_id,
+        booking_id=numeric_booking_id,
+        vendor_order_id=numeric_vo_id,
         action=payload.action,
     )

@@ -13,7 +13,7 @@ from app.core.errors import (
 )
 from app.core.money import to_decimal
 from app.core.time import utc_now
-from app.models.accounts import Address, User, Vendor
+from app.models.accounts import Address, User, UserRole, Vendor
 from app.models.orders import (
     Booking,
     BookingItem,
@@ -302,7 +302,7 @@ class BookingService:
     def get_booking_detail(self, user: User, booking_id: int) -> dict[str, Any]:
         detail = self.repo.get_booking_detail(
             booking_id=booking_id,
-            user_id=user.user_id,
+            user_id=user.user_id if user.role != UserRole.admin else None,
         )
         if not detail:
             raise NotFoundError("Booking", str(booking_id))
@@ -321,12 +321,10 @@ class BookingService:
           records refund payment rows, sets booking/items/orders cancelled,
           and releases reserved coupons.
         """
-        booking = (
-            self.db.query(Booking)
-            .filter(Booking.booking_id == booking_id, Booking.user_id == user.user_id)
-            .with_for_update()
-            .first()
-        )
+        booking_query = self.db.query(Booking).filter(Booking.booking_id == booking_id)
+        if user.role != UserRole.admin:
+            booking_query = booking_query.filter(Booking.user_id == user.user_id)
+        booking = booking_query.with_for_update().first()
         if not booking:
             raise NotFoundError("Booking", str(booking_id))
 

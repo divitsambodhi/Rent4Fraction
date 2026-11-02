@@ -7,6 +7,7 @@ from sqlalchemy.orm import Session
 
 from app.core.db import get_db
 from app.core.deps import CurrentUser, require_customer
+from app.core.identifiers import resolve_booking_id, resolve_item_id
 from app.models.accounts import User
 from app.schemas.social import (
     CustomerReviewItemResponse,
@@ -46,16 +47,19 @@ def create_equipment_review(
 ) -> Any:
     user = _get_user(db, current_user)
     service = SocialService(db)
-    b_item_id = (
-        int(payload.booking_item_id)
-        if payload.booking_item_id is not None and str(payload.booking_item_id).isdigit()
-        else None
-    )
-    b_id = (
-        int(payload.booking_id)
-        if payload.booking_id is not None and str(payload.booking_id).isdigit()
-        else None
-    )
+    b_item_id = None
+    if payload.booking_item_id is not None:
+        try:
+            b_item_id = resolve_item_id(payload.booking_item_id)
+        except Exception:
+            b_item_id = None
+
+    b_id = None
+    if payload.booking_id is not None:
+        try:
+            b_id = resolve_booking_id(payload.booking_id)
+        except Exception:
+            b_id = None
     eq_id = (
         int(payload.equipment_id)
         if payload.equipment_id is not None and str(payload.equipment_id).isdigit()

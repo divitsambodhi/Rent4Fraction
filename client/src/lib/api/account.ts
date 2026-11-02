@@ -90,8 +90,10 @@ export async function getBookings(params: GetBookingsParams = {}): Promise<GetBo
 
 export async function getBookingDetail(bookingId: string): Promise<BookingDetail | null> {
   try {
-    return await apiClient.get<BookingDetail>(`/api/v1/bookings/${bookingId}`)
-  } catch {
+    const cleanId = encodeURIComponent(bookingId.trim())
+    return await apiClient.get<BookingDetail>(`/api/v1/bookings/${cleanId}`)
+  } catch (err) {
+    console.error(`Failed to load booking detail for #${bookingId}:`, err)
     return null
   }
 }
@@ -99,7 +101,8 @@ export async function getBookingDetail(bookingId: string): Promise<BookingDetail
 export const getBookingById = getBookingDetail
 
 export async function cancelBooking(bookingId: string, reason: string): Promise<void> {
-  await apiClient.post(`/api/v1/bookings/${bookingId}/cancel`, { reason })
+  const cleanId = encodeURIComponent(bookingId.trim())
+  await apiClient.post(`/api/v1/bookings/${cleanId}/cancel`, { reason })
 }
 
 export async function getReviews(tab = 'posted', page = 1, pageSize = 10): Promise<GetReviewsResult> {
@@ -286,7 +289,9 @@ export async function respondToDamageReport(
   action: 'accept' | 'dispute' | string,
   reason?: string
 ): Promise<void> {
-  await apiClient.post(`/api/v1/bookings/${bookingId}/damage-reports/${reportId}/respond`, {
+  const cleanBookingId = encodeURIComponent(bookingId.trim())
+  const cleanReportId = encodeURIComponent(reportId.trim())
+  await apiClient.post(`/api/v1/bookings/${cleanBookingId}/damage-reports/${cleanReportId}/respond`, {
     action,
     dispute_reason: reason,
   })
@@ -297,8 +302,10 @@ export async function respondToDeliveryFee(
   vendorOrderId: string,
   action: 'accept' | 'switch_to_pickup'
 ): Promise<any> {
+  const cleanBookingId = encodeURIComponent(bookingId.trim())
+  const cleanVendorOrderId = encodeURIComponent(vendorOrderId.trim())
   return await apiClient.post(
-    `/api/v1/bookings/${bookingId}/vendor-orders/${vendorOrderId}/respond-delivery-fee`,
+    `/api/v1/bookings/${cleanBookingId}/vendor-orders/${cleanVendorOrderId}/respond-delivery-fee`,
     { action }
   )
 }

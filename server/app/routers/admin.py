@@ -9,6 +9,7 @@ from sqlalchemy.orm import Session
 
 from app.core.db import get_db
 from app.core.deps import require_admin
+from app.core.identifiers import resolve_booking_id
 from app.models.accounts import User
 from app.schemas.admin import (
     AdminCouponResponse,
@@ -669,12 +670,13 @@ def list_bookings(
 
 @router.get("/bookings/{booking_id}")
 def get_booking_detail(
-    booking_id: int,
+    booking_id: str,
     db: Session = Depends(get_db),
     _admin: User = Depends(require_admin),
 ) -> dict[str, Any]:
+    numeric_id = resolve_booking_id(booking_id)
     service = AdminService(db)
-    return service.get_booking_detail(booking_id=booking_id)
+    return service.get_booking_detail(booking_id=numeric_id)
 
 
 # -----------------------------------------------------------------------------

@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import re
 from datetime import UTC, date, datetime
 from typing import Any
 
@@ -112,14 +113,19 @@ class BookingRepository:
 
         # Apply search query (event name, event type, or booking ID)
         if search_query and search_query.strip():
-            sq = f"%{search_query.strip()}%"
-            query = query.filter(
-                or_(
-                    Booking.event_name.ilike(sq),
-                    Booking.event_type.ilike(sq),
-                    func.cast(Booking.booking_id, String).ilike(sq),
-                )
-            )
+            raw_sq = search_query.strip()
+            sq_pattern = f"%{raw_sq}%"
+            search_filters = [
+                Booking.event_name.ilike(sq_pattern),
+                Booking.event_type.ilike(sq_pattern),
+                func.cast(Booking.booking_id, String).ilike(sq_pattern),
+            ]
+            m = re.match(r"^(?:[Bb][Kk]-?0*|0*)?(\d+)$", raw_sq)
+            if m:
+                num_id = int(m.group(1))
+                if num_id > 0:
+                    search_filters.append(Booking.booking_id == num_id)
+            query = query.filter(or_(*search_filters))
 
         total_for_filter = query.count()
         bookings = (
